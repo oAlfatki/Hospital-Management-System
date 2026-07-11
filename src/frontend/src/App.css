@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+
+  /* ========================
+      Brand
+  ========================= */
+
+  --color-brand: #14B8A6;
+  --color-brand-dark: #0F766E;
+  --color-brand-soft: #CCFBF1;
+
+  /* ========================
+      Sidebar
+  ========================= */
+
+  --color-sidebar: #0B2E36;
+  --color-sidebar-border: #153B47;
+  --color-sidebar-hover: #1E4D5A;
+  --color-sidebar-card: #082229;
+  --color-sidebar-footer: #09252C;
+
+  /* ========================
+      Surface
+  ========================= */
+
+  --color-surface-page: #F8FAFC;
+  --color-surface-card: #FFFFFF;
+  --color-surface-muted: #F1F5F9;
+
+  /* ========================
+      Layout
+  ========================= */
+
+  --spacing-sidebar: 16rem;
+  --spacing-sidebar-collapsed: 5rem;
+  --spacing-header: 4rem;
+  --spacing-page: 2rem;
+
+  /* ========================
+      Radius
+  ========================= */
+
+  --radius-card: 12px;
+
+  /* ========================
+      Shadow
+  ========================= */
+
+  --shadow-card: 0 8px 24px rgb(0 0 0 / .12);
+
+  /* ========================
+      Font
+  ========================= */
+
+  --text-tiny: 10px;
+
+  /* ========================
+      Animation
+  ========================= */
+
+  --duration-normal: 300ms;
+
+}
