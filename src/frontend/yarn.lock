@@ -776,7 +776,7 @@ cross-spawn@^7.0.6:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-csstype@^3.2.2:
+csstype@^3.1.3, csstype@^3.2.2:
   version "3.2.3"
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.2.3.tgz#ec48c0f3e993e50648c86da559e2610995cf989a"
   integrity sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==
@@ -1031,6 +1031,15 @@ form-data@^4.0.5:
     hasown "^2.0.4"
     mime-types "^2.1.35"
 
+framer-motion@^12.42.2:
+  version "12.42.2"
+  resolved "https://registry.yarnpkg.com/framer-motion/-/framer-motion-12.42.2.tgz#8628ad31a9b5c1ea6f908ea1764784e33870b711"
+  integrity sha512-5XY9luDiu0oHfHBjpDthFMh0ES+122w6p/papSJBweMkO8Sn+PW2QaEgRblQBpWFnuvZS5qvarpt/hO2pjGmnw==
+  dependencies:
+    motion-dom "^12.42.2"
+    motion-utils "^12.39.0"
+    tslib "^2.4.0"
+
 fsevents@~2.3.3:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
@@ -1081,6 +1090,11 @@ globals@^17.7.0:
   version "17.7.0"
   resolved "https://registry.yarnpkg.com/globals/-/globals-17.7.0.tgz#553d55090b4dde8209ec2da42580d6e7e7d8b10d"
   integrity sha512-Czmyns5dUsq4seFBR/Kdydhmo8y9kC79hiSkPn0YcGtNnYWnrgt0vjrSjx9tspoDGWm2CMarffRuLjM4xUz8xg==
+
+goober@^2.1.16:
+  version "2.1.19"
+  resolved "https://registry.yarnpkg.com/goober/-/goober-2.1.19.tgz#a4b4dcdbba9325b8c4d7380099f9f281f27c6a6f"
+  integrity sha512-U7veizMqxyKlM58+Z5j2ngJBH/r9siDmxpvNxSw0PylF6WQvrASJEZrxh1hidRBJc2jqoBVSyOban5u8m+6Rxg==
 
 gopd@^1.2.0:
   version "1.2.0"
@@ -1337,6 +1351,26 @@ minimatch@^10.2.2, minimatch@^10.2.4:
   dependencies:
     brace-expansion "^5.0.5"
 
+motion-dom@^12.42.2:
+  version "12.42.2"
+  resolved "https://registry.yarnpkg.com/motion-dom/-/motion-dom-12.42.2.tgz#b4661b9b3394ae7e990d76dc954bc1e321c59305"
+  integrity sha512-5gIMWLp/PycBtJRJWRgjxke5n8dlvkSn2DrYW+tr3XcqAZY1xZh6BJyooJXCM8wdfM7wfMjkBJNLge1CKPUIRA==
+  dependencies:
+    motion-utils "^12.39.0"
+
+motion-utils@^12.39.0:
+  version "12.39.0"
+  resolved "https://registry.yarnpkg.com/motion-utils/-/motion-utils-12.39.0.tgz#e1c66f0e912999804bc5e69b4630c3bc794ef29f"
+  integrity sha512-8nadJAJjTtqRkmRF36FoJTrywK9nnFmnPwnSMyxaOCU7GDjN9RTMJIxx9De8ErM+vpPhMccr/6fo5WciyQLnMQ==
+
+motion@^12.42.2:
+  version "12.42.2"
+  resolved "https://registry.yarnpkg.com/motion/-/motion-12.42.2.tgz#7a0954acb1975e1899ad65639a46fc12a3d24999"
+  integrity sha512-Atvv11yUKIid41cVrRBDVX5m8tF8kNpExRSlbpt6APClhDjtwQssgFHhQzejxw7/7YYbjHSPKBVbHo05BuJT5Q==
+  dependencies:
+    framer-motion "^12.42.2"
+    tslib "^2.4.0"
+
 ms@^2.1.3:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
@@ -1443,6 +1477,14 @@ react-hook-form@^7.81.0:
   version "7.81.0"
   resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.81.0.tgz#003f1b4fd13102ab1142aec220572401ad1edac4"
   integrity sha512-ocbmr2p5KBMoAfj4WCUvped33lVi1Kd5DuDUvQDnB6VEAacOjPI/jMbtDdbhco4y9ct4xUuCmMY0b/C9L0QHjw==
+
+react-hot-toast@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/react-hot-toast/-/react-hot-toast-2.6.0.tgz#4ada6ed3c75c5e42a90d562f55665ff37ee1442b"
+  integrity sha512-bH+2EBMZ4sdyou/DPrfgIouFpcRLCJ+HoCA32UoAYHn6T3Ur5yfcDCeSr5mwldl6pFOsiocmrXMuoCJ1vV8bWg==
+  dependencies:
+    csstype "^3.1.3"
+    goober "^2.1.16"
 
 react-router-dom@^7.18.1:
   version "7.18.1"

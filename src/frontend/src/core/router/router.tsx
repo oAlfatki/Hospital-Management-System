@@ -6,10 +6,11 @@ import {
 //import ProtectedRoute from "./ProtectedRoute";
 import ErrorHandler from "../components/errors/ErrorHandler";
 import RootLayout from "../layouts/RootLayout";
-import ProductsPage from "../../features/products/pages/productsPage";
+
 import { AuthLayout } from "../layouts/AuthLayout";
 import { LoginPage } from "../../features/users/pages/LoginPage";
 import { DashboardLayout } from "../layouts/DashboardLayout";
+import { PatientsPage } from "../../features/patients/pages/PatientsPage";
 
 
 const router = createBrowserRouter(
@@ -34,7 +35,7 @@ const router = createBrowserRouter(
             /*<ProtectedRoute>
               <h2>Profile page</h2>
             </ProtectedRoute>*/
-            <ProductsPage />
+            <h2>products page</h2>
             
           }
         />
@@ -53,7 +54,7 @@ const router = createBrowserRouter(
               <HomePage />
             </ProtectedRoute>*/
           
-            <h2>Profile page</h2>
+            <PatientsPage/>
           }
         />
         <Route
