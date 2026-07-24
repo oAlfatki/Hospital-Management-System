@@ -48,3 +48,22 @@ export function generateId(prefix: string): string {
   const random = String(Math.floor(1000 + Math.random() * 9000));
   return `${prefix}-${yyyy}${mm}${dd}-${random}`;
 }
+
+
+export const calculateAge = (dateOfBirth: string): number => {
+  const birthDate = new Date(dateOfBirth);
+  const today = new Date();
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+};
