@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+
+  /* ========================
+      Brand
+  ========================= */
+
+  --color-brand: #14B8A6;
+  --color-brand-dark: #0F766E;
+  --color-brand-soft: #CCFBF1;
+
+  /* ========================
+      Sidebar
+  ========================= */
+
+  --color-sidebar: #0B2E36;
+  --color-sidebar-border: #153B47;
+  --color-sidebar-hover: #1E4D5A;
+  --color-sidebar-card: #082229;
+  --color-sidebar-footer: #09252C;
+
+  /* ========================
+      Surface
+  ========================= */
+
+  --color-surface-page: #F8FAFC;
+  --color-surface-card: #FFFFFF;
+  --color-surface-muted: #F1F5F9;
+
+  /* ========================
+      Text
+  ========================= */
+
+  --color-text: #0F172A;
+  --color-text-muted: #475569;
+  --color-text-light: #94A3B8;
+  --color-text-inverse: #FFFFFF;
+
+  /* ========================
+      Border
+  ========================= */
+
+  --color-border: #E2E8F0;
+  --color-border-muted: #CBD5E1;
+
+  /* ========================
+      Status
+  ========================= */
+
+  --color-success: #10B981;
+  --color-success-soft: #D1FAE5;
+
+  --color-warning: #F59E0B;
+  --color-warning-soft: #FEF3C7;
+
+  --color-error: #EF4444;
+  --color-error-soft: #FEE2E2;
+
+  --color-info: #3B82F6;
+  --color-info-soft: #DBEAFE;
+
+  /* ========================
+      Layout
+  ========================= */
+
+  --spacing-sidebar: 16rem;
+  --spacing-sidebar-collapsed: 5rem;
+  --spacing-header: 4rem;
+  --spacing-page: 2rem;
+
+  /* ========================
+      Radius
+  ========================= */
+
+  --radius-card: 12px;
+  --radius-input: 8px;
+  --radius-button: 8px;
+  --radius-badge: 9999px;
+
+  /* ========================
+      Shadow
+  ========================= */
+
+  --shadow-card: 0 8px 24px rgb(15 23 42 / 0.08);
+  --shadow-dropdown: 0 12px 32px rgb(15 23 42 / 0.12);
+
+  /* ========================
+      Typography
+  ========================= */
+
+  --text-tiny: 10px;
+
+  /* ========================
+      Animation
+  ========================= */
+
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+}
