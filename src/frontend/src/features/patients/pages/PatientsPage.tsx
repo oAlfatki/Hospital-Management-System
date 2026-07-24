@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Plus, Search, Edit3, Filter } from "lucide-react";
 import { RegisterPatientSchema as PatientSchema } from "../validation/RegisterPatientSchema";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -18,6 +18,8 @@ import { PatientMapper } from "../mappers/patientMapper";
 import { PatientDialog } from "../components/PatientDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Paginated } from "../../../core/types/PaginatedResponse";
+import { LoadingState } from "../../../core/components/ui/LoadingState";
+import { ErrorState } from "../../../core/components/ui/ErrorState";
 type PatientStatusType = "Active" | "Inactive" | "Deceased";
 
 export const PatientsPage = () => {
@@ -36,7 +38,7 @@ export const PatientsPage = () => {
   const [mode, setMode] = useState<"create" | "edit">("create");
 
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize] = useState<number>(10);
 
   const { data, isLoading, error } = usePatients(page, pageSize);
   const { pageNumber, totalPages, totalCount, items: patients } = data ?? {};
@@ -44,6 +46,10 @@ export const PatientsPage = () => {
   const createPatient = useCreatePatient();
   const updatePatient = useUpdatePatient();
   const queryClient = useQueryClient();
+
+  const isSubmitting =
+  createPatient.isPending || updatePatient.isPending;
+
 
   const form = useForm<IPatientFormInput>({
     resolver: yupResolver(PatientSchema),
@@ -64,18 +70,14 @@ export const PatientsPage = () => {
   const openRegisterDialog = () => {
     setMode("create");
     setSelectedPatient(null);
-
     resetForm();
-
     setIsRegisterOpen(true);
   };
 
   const openEditDialog = (patient: Patient) => {
     setMode("edit");
     setSelectedPatient(patient);
-
     setPatientDataToForm(patient);
-
     setIsEditOpen(true);
   };
 
@@ -120,17 +122,13 @@ export const PatientsPage = () => {
   const onRegisterSubmit = async (data: IPatientFormInput) => {
     const createPatientRequest = PatientMapper.toCreateRequest(data);
     await createPatient.mutate(createPatientRequest, {
-      onSuccess(patient) {
-        console.log("The patient is: ");
+      onSuccess() {
         toast.success(`${t("toastPatientRegistered")}`);
-        console.log(patient);
+        setIsRegisterOpen(false);
       },
       onError(error) {
-        console.log(`on error: ${error.message}`);
-        console.log(`error.isValidationError: ${error.isValidationError}`);
         if (error.isValidationError && error.fieldErrors) {
           Object.entries(error.fieldErrors).forEach(([field, messages]) => {
-            console.log(`Validation error on field ${field}: ${messages[0]}`);
             setError(field as keyof IPatientFormInput, {
               type: "server",
               message: messages[0],
@@ -146,8 +144,6 @@ export const PatientsPage = () => {
   };
 
   const onEditSubmit = async (data: IPatientFormInput) => {
-    console.log(`patientId : ${selectedPatient?.patientId}`);
-
     const updatePatientRequest = PatientMapper.toUpdateRequest(
       selectedPatient?.patientId || "",
       data,
@@ -155,7 +151,6 @@ export const PatientsPage = () => {
 
     await updatePatient.mutate(updatePatientRequest, {
       onSuccess() {
-        console.log("The patient is: ");
         toast.success(`${t("toastPatientUpdated")}`);
 
         const updatedPatient: Patient = {
@@ -178,28 +173,23 @@ export const PatientsPage = () => {
             };
           },
         );
+
+        setIsEditOpen(false);
       },
       onError(error) {
-        console.log(`on error: ${error.message}`);
-        console.log(`error.isValidationError: ${error.isValidationError}`);
         if (error.isValidationError && error.fieldErrors) {
           Object.entries(error.fieldErrors).forEach(([field, messages]) => {
-            console.log(`Validation error on field ${field}: ${messages[0]}`);
             setError(field as keyof IPatientFormInput, {
               type: "server",
               message: messages[0],
             });
           });
-
           return;
         }
 
         toast.error(error.message);
       },
     });
-
-    //updatePatient.mutate);
-    console.log(data);
   };
 
   const onSubmit: SubmitHandler<IPatientFormInput> = async (data) => {
@@ -219,11 +209,11 @@ export const PatientsPage = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingState message={t("commonLoading")} />;
   }
 
   if (error) {
-    return <div>Error loading patients.</div>;
+    return <ErrorState message={t("commonSomethingWentWrong")} />;
   }
 
   return (
@@ -261,24 +251,24 @@ export const PatientsPage = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="
-w-full
-rounded-md
-border
-border-border
-bg-surface-card
-py-2.5
-pl-10
-pr-4
-text-sm
-text-text
-outline-none
-transition-all
-duration-normal
-placeholder:text-text-light
-focus:border-brand
-focus:ring-2
-focus:ring-brand/15
-"
+              w-full
+              rounded-md
+              border
+              border-border
+              bg-surface-card
+              py-2.5
+              pl-10
+              pr-4
+              text-sm
+              text-text
+              outline-none
+              transition-all
+              duration-normal
+              placeholder:text-text-light
+              focus:border-brand
+              focus:ring-2
+              focus:ring-brand/15
+              "
             />
           </div>
 
@@ -291,22 +281,22 @@ focus:ring-brand/15
                 setStatusFilter(e.target.value as PatientStatusType | "All")
               }
               className="
-w-52
-rounded-md
-border
-border-border
-bg-surface-card
-px-3
-py-2.5
-text-sm
-text-text
-outline-none
-transition-all
-duration-normal
-focus:border-brand
-focus:ring-2
-focus:ring-brand/15
-"
+                            w-52
+              rounded-md
+              border
+              border-border
+              bg-surface-card
+              px-3
+              py-2.5
+              text-sm
+              text-text
+              outline-none
+              transition-all
+              duration-normal
+              focus:border-brand
+              focus:ring-2
+              focus:ring-brand/15
+              "
             >
               <option value="All">{t("commonAllStatuses")}</option>
               <option value="Active">{t("commonActive")}</option>
@@ -326,19 +316,12 @@ focus:ring-brand/15
                 <th className="px-6 py-4">
                   {language === "ar" ? "معرف المريض" : "Patient ID"}
                 </th>
-
                 <th className="px-6 py-4">{t("fullName")}</th>
-
                 <th className="px-6 py-4">{t("colDateOfBirthAge")}</th>
-
                 <th className="px-6 py-4">{t("colGender")}</th>
-
                 <th className="px-6 py-4">{t("colContactNumber")}</th>
-
                 <th className="px-6 py-4">{t("colEmailAddress")}</th>
-
                 <th className="px-6 py-4">{t("commonStatus")}</th>
-
                 <th className="px-6 py-4 text-center">{t("colActions")}</th>
               </tr>
             </thead>
@@ -464,6 +447,7 @@ focus:ring-brand/15
       <PatientDialog
         mode={mode}
         isOpen={mode === "create" ? isRegisterOpen : isEditOpen}
+        isSubmitting={isSubmitting}
         onClose={() => {
           if (mode === "create") {
             setIsRegisterOpen(false);

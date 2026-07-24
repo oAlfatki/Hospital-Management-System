@@ -18,14 +18,10 @@ export const patientApi = {
   },
 
   async create(request: CreatePatientRequest): Promise<PatientResponse> {
-    console.log("START call API"); //https://localhost:7286/api/patients
-
     const response = await axiosInstance.post<PatientResponse>(
       "/api/patients",
       request,
     );
-    console.log(response);
-    console.log("END call API");
     return response.data;
   },
 

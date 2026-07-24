@@ -31,9 +31,10 @@ export const RegisterPatientSchema = yup.object({
 
   email: yup
     .string()
-    .email("validationEmail")
-    .defined(),
+    .required("validationEmailRequired")
+    .email("validationEmailInvalid"),
 
+   
 
   address: yup
     .string()

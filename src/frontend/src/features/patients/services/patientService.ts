@@ -16,9 +16,8 @@ export const patientService = {
   },
 
   async update(updatePatientRequest: UpdatePatientRequest) {
-
     const response = await patientApi.update(updatePatientRequest);
-
+    
     return PatientMapper.toDomain(response);
   },
 };
