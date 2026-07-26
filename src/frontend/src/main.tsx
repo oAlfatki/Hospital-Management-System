@@ -17,7 +17,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <LanguageProvider>
           <App />
         </LanguageProvider>
-        
       </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>
