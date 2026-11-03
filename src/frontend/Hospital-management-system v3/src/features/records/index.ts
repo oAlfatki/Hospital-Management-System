@@ -1,0 +1,10 @@
+export { RecordsPage } from './pages/RecordsPage';
+export { recordService } from './services/recordService';
+export { recordApi } from './api/recordApi';
+export { useMedicalRecords } from './hooks/useMedicalRecords';
+export { useCreateMedicalRecord, useCreateMedicalRecordMutation } from './hooks/useCreateMedicalRecord';
+export { useUpdateMedicalRecord, useUpdateMedicalRecordMutation } from './hooks/useUpdateMedicalRecord';
+export * from './types/records.types';
+export * from './validation';
+export * from './mappers/recordMapper';
+export * from './errors/recordErrors';
