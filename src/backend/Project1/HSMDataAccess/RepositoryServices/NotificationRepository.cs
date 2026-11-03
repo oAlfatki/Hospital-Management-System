@@ -1,0 +1,18 @@
+﻿using HSMDataAccess.Data;
+using HSMDataAccess.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HSMDataAccess.RepositoryServices
+{
+    public class NotificationRepository : GenericRepository<Notification>
+    {
+        public NotificationRepository(AppDBContext context) : base(context)
+        {
+
+        }
+    }
+}

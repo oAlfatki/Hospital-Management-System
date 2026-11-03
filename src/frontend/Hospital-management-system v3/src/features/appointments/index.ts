@@ -1,0 +1,11 @@
+export { AppointmentsPage } from './pages/AppointmentsPage';
+export { appointmentService } from './services/appointmentService';
+export { appointmentApi } from './api/appointmentApi';
+export { useAppointments } from './hooks/useAppointments';
+export { useScheduleAppointment, useScheduleAppointmentMutation } from './hooks/useScheduleAppointment';
+export { useUpdateAppointmentStatus, useUpdateAppointmentStatusMutation } from './hooks/useUpdateAppointmentStatus';
+export { useRescheduleAppointment, useRescheduleAppointmentMutation } from './hooks/useRescheduleAppointment';
+export * from './types/appointments.types';
+export * from './validation';
+export * from './mappers/appointmentMapper';
+export * from './errors/appointmentErrors';

@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Hospital Management System",
+  "description": "A comprehensive Hospital Management System (HMS) dashboard for patient registration, appointment scheduling, medical records, billing, reporting, and user role management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
