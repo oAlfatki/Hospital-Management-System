@@ -118,6 +118,15 @@ namespace HSMBusiness.Services
             }
             return ((response.Status, response.IsSuccess, response.Response, new PersonDTO(ID, person.Name, person.ContactNumber, person.Email, person.Gender, person.Address, person.DateOfBirth)));
         }
+        public async Task<PersonDTO?>Find(string ID)
+        {
+            var person = await _personRepository.GetByIDAsync(ID);
+            if (person == null)
+            {
+                return null;
+            }
+            return new PersonDTO(ID,person.Name,person.ContactNumber,person.Email,person.Gender,person.Address,person.DateOfBirth);
+        }
         public async Task<bool>IsPersonExist(string ID)
         {
             var person = await GetByID(ID);

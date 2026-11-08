@@ -2,7 +2,7 @@ using HSMBusiness;
 using HSMBusiness.Erorrs;
 using HSMBusiness.Pattern;
 using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Doctors;
 using HSMDataAccess.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,10 +23,10 @@ namespace HSMAPI.Controllers
                 return BadRequest(new { message = "ID is required" });
 
             var doctor = await doctorService.GetDoctorByID(Id);
-            if (doctor.doctorDTO1 == null)
+            if (doctor.doctorResponse == null)
                 return NotFound(new { message = "Doctor not found" });
 
-            return Ok(doctor.doctorDTO1);
+            return Ok(doctor.doctorResponse);
         }
 
         [HttpGet("", Name = "GetAllDoctors")]
@@ -104,7 +104,7 @@ namespace HSMAPI.Controllers
                 });
             }
             var CurrDoctor = await doctorService.GetDoctorByID(ID);
-            if (CurrDoctor.doctorDTO1 == null)
+            if (CurrDoctor.doctorResponse == null)
             {
                 return NotFound(new
                 {

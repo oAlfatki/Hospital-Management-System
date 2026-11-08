@@ -3,6 +3,6 @@ export interface CreateDoctorRequest {
   departmentId: string;
   specialty: string;
   contactNumber?: string;
-  email: string;
+  email?: string;
   status: 'Active' | 'Inactive';
 }

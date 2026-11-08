@@ -1,6 +1,7 @@
 ﻿using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Appointments;
+using HSMDataAccess.DTOs.Patients;
 using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
 using System;
@@ -24,7 +25,7 @@ namespace HSMBusiness.Services
             _personService = personService;
             _Mode = Mode;
         }
-        public async Task<(int Status,string?Response,bool IsSuccess,List<PatientDTO>?ListOfPatients)> GetAll()
+        public async Task<(int Status,string?Response,bool IsSuccess,List<PatientResponseDTO>?ListOfPatients)> GetAll()
         {
             var patients = await _patientRepository.GetAllAsync();
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
@@ -33,10 +34,22 @@ namespace HSMBusiness.Services
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess, null);
             }
-            return (response.Status, response.Response, response.IsSuccess, patients.Select(p => new PatientDTO(p.ID, p.MedicalHistory, p.Status, p.PersonID))
-                .ToList());
+            var result = new List<PatientResponseDTO>();
+            
+            foreach (var patient in patients)
+            {
+                var patientResponse = await new PatientResponseMapper().ToResponse(patient, _personService);
+
+                result.Add(patientResponse);
+            }
+            if (result == null)
+            {
+                response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
+                return (response.Status, response.Response, response.IsSuccess, null);
+            }
+            return (response.Status, response.Response,response.IsSuccess, result.ToList());
         }
-        public async Task<(int Status, string?Response, bool IsSuccess, PatientDTO? patientDTO1)> GetByID(string PatientID)
+        public async Task<(int Status, string?Response, bool IsSuccess, PatientResponseDTO? patientDTO1)> GetByID(string PatientID)
         {
             var patient = await _patientRepository.GetByIDAsync(PatientID);
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
@@ -45,7 +58,13 @@ namespace HSMBusiness.Services
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess, null);
             }
-            return (response.Status, response.Response, response.IsSuccess, new PatientDTO(patient.ID, patient.MedicalHistory, patient.Status, patient.PersonID));
+            var person = await _personService.Find(patient.PersonID);
+            if (person == null)
+            {
+                response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
+                return (response.Status, response.Response, response.IsSuccess, null);
+            }
+            return (response.Status, response.Response, response.IsSuccess, new PatientResponseDTO(patient.ID, person.Name, (person.DateOfBirth).ToString(), person.Gender, person.ContactNumber, person.Email, patient.MedicalHistory, person.Address, (patient.Status == true ? "Active" : "InActive"), "", "", ""));
         }
         private async Task<bool> CountNumberOfPersonIsOne(string ID)
         {

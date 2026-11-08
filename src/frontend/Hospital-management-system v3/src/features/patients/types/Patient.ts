@@ -1,4 +1,4 @@
-export interface Patient {
+export interface Patients {
   patientId: string; // format: PID-YYYYMMDD-XXXX
   name: string;
   dateOfBirth: string; // YYYY-MM-DD

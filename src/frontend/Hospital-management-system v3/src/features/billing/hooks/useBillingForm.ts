@@ -56,21 +56,63 @@ export const useBillingForm = ({ onSuccess, defaultPatientId = '' }: UseBillingF
     form.setValue('services', updated, { shouldValidate: true });
   };
 
-  const onSubmit: SubmitHandler<ICreateBillFormInput> = (values) => {
-    createBillMutation.mutate(
-      { ...values, services: servicesList },
-      {
-        onSuccess: (createdBill) => {
-          toast.success(`${t('toastInvoiceGenerated')} ("${createdBill.billId}")`);
-          onSuccess();
-        },
-        onError: (err: Error) => {
-          toast.error(err.message || t('toastFailedCreateBill'));
-        },
-      }
-    );
+  // const onSubmit: SubmitHandler<ICreateBillFormInput> = (values) => {
+  //   console.log('FORM SUBMITTED:', values);
+  //   createBillMutation.mutate(
+  //     { ...values, services: servicesList },
+  //     {
+  //       onSuccess: (createdBill) => {
+  //         console.log('BILL CREATED:', createdBill);
+  //         toast.success(`${t('toastInvoiceGenerated')} ("${createdBill.billId}")`);
+  //         onSuccess();
+  //       },
+  //       onError: (err: Error) => {
+  //         console.error('CREATE BILL ERROR:', err);
+  //         toast.error(err.message || t('toastFailedCreateBill'));
+  //       },
+  //     }
+  //   );
+  // };
+const onSubmit: SubmitHandler<ICreateBillFormInput> = (values) => {
+  const grossAmount = values.services.reduce(
+    (total, service) => total + service.cost,
+    0
+  );
+
+  const discount = values.discountAmount;
+
+  const tax = (grossAmount - discount) * (values.taxPercent / 100);
+
+  const patientResponsibility = grossAmount - discount + tax;
+
+  const request: CreateBillRequest = {
+    id: '',
+    patientID: values.patientId.trim(),
+    status: 'Unpaid',
+    date: new Date().toISOString(),
+    partialPaymentAmount: 0,
+    dueDate: new Date(values.dueDate).toISOString(),
+    invoice: `INV-${Date.now()}`,
+    grossAmount: grossAmount,
+    discount: discount,
+    insuranceCoverage: 0,
+    patientResponsibility: patientResponsibility,
   };
 
+  console.log('REQUEST SENT:', request);
+
+  createBillMutation.mutate(request, {
+    onSuccess: (createdBill) => {
+      console.log('BILL CREATED:', createdBill);
+      toast.success(`${t('toastInvoiceGenerated')} ("${createdBill.billId}")`);
+      onSuccess();
+    },
+    onError: (err: Error) => {
+      console.error('CREATE BILL ERROR:', err);
+      toast.error(err.message || t('toastFailedCreateBill'));
+    },
+  });
+};
   const resetForm = (patientId = '') => {
     setServicesList([{ serviceName: 'General Consultation', cost: 150 }]);
     setNewItemName('');

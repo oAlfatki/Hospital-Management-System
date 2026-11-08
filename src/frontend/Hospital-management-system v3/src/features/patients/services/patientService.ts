@@ -1,12 +1,12 @@
 import { patientApi } from "../api/patientApi";
 import { PatientMapper } from "../mappers/patientMapper";
 import type { CreatePatientRequest } from "../types/CreatePatientRequest";
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 import type { UpdatePatientRequest } from "../types/UpdatePatientRequest";
 
 export const patientService = {
-  async getAll(): Promise<Patient[]> {
-    const responses = await patientApi.getAll();
+  async GetAllPatients(): Promise<Patients[]> {
+    const responses = await patientApi.GetAllPatients();
     // Backend returns PatientDTO array — map to domain Patient
     return responses.map((r: any) => ({
       patientId: r.iD ?? r.patientId ?? r.id ?? "",
@@ -24,12 +24,12 @@ export const patientService = {
     }));
   },
 
-  async create(patientRequest: CreatePatientRequest): Promise<Patient> {
+  async create(patientRequest: CreatePatientRequest): Promise<Patients> {
     const response = await patientApi.create(patientRequest);
     return PatientMapper.toDomain(response);
   },
 
-  async update(updatePatientRequest: UpdatePatientRequest): Promise<Patient> {
+  async update(updatePatientRequest: UpdatePatientRequest): Promise<Patients> {
     const response = await patientApi.update(updatePatientRequest);
     return PatientMapper.toDomain(response);
   },

@@ -23,7 +23,7 @@ export const AppointmentsPage: React.FC = () => {
 
   const { data: rawAppointments = [], isLoading: isApptsLoading, error: apptsError } = useAppointments();
   const { data: patientsData, isLoading: isPatientsLoading } = usePatients(1, 100);
-  const patients = patientsData?.items || [];
+  const patients = patientsData || [];
   const { data: doctors = [], isLoading: isDoctorsLoading } = useDoctors();
 
   const updateStatusMutation = useUpdateAppointmentStatusMutation();
@@ -32,8 +32,9 @@ export const AppointmentsPage: React.FC = () => {
 
   const enrichedAppointments = useMemo<EnrichedAppointment[]>(() => {
     return rawAppointments.map((a) => {
-      const pat = patients.find((p) => p.patientId === a.patientId);
-      const doc = doctors.find((d) => d.doctorId === a.doctorId);
+      const pat = patients.find((p) => p.patientId.trim() === a.patientId.trim());
+      const doc = doctors.find((d) => d.doctorId.trim() === a.doctorId.trim());
+      console.log("Matched Patient:", pat);
       return {
         ...a,
         patientName: pat ? pat.name : t('unknownPatient'),
@@ -48,7 +49,8 @@ export const AppointmentsPage: React.FC = () => {
     defaultPatientId: patients[0]?.patientId || '',
     defaultDoctorId: doctors[0]?.doctorId || '',
   });
-
+console.log("Patients API Data:", patientsData);
+console.log("Patients Items:", patientsData?.items);
   const rescheduleForm = useRescheduleForm({
     selectedAppt: dialog.selectedAppt,
     onSuccess: () => dialog.closeRescheduleDialog(),

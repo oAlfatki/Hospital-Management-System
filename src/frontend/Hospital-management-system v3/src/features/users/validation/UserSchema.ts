@@ -10,7 +10,7 @@ export const UserSchema = yup.object({
   email: yup
     .string()
     .trim()
-    .required('validationEmailRequired')
+    
     .email('validationEmailInvalid'),
 
   role: yup

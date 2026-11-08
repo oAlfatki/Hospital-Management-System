@@ -1,28 +1,28 @@
 import type { CreatePatientRequest } from "../types/CreatePatientRequest";
 import type { IPatientFormInput  } from "../types/IRegisterPatientFormInput";
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 import type { PatientResponse } from "../types/PatientResponse";
 import type { UpdatePatientRequest } from "../types/UpdatePatientRequest";
 
 export const PatientMapper = {
-  toDomain(response: PatientResponse): Patient {
+  toDomain(response: PatientResponse): Patients {
     return {
-      patientId: response.patientId,
-      name: response.name,
-      dateOfBirth: response.dateOfBirth,
-      gender: response.gender,
-      contactNumber: response.contactNumber,
-      email: response.email,
-      address: response.address,
-      medicalHistory: response.medicalHistory,
-      status: response.status,
+      patientId: response.ID,
+      name: response.Name,
+      dateOfBirth: response.DateOfBirth,
+      gender: response.Gender,
+      contactNumber: response.ContactNumber,
+      email: response.Email,
+      address: response.Address,
+      medicalHistory: response.MedicalHistory,
+      status: response.Status,
       createdBy: response.createdBy,
       createdOn: response.createdOn,
       updatedOn: response.updatedOn,
     };
   },
 
-  toDomainList(responses: PatientResponse[]): Patient[] {
+  toDomainList(responses: PatientResponse[]): Patients[] {
     return responses.map(this.toDomain);
   },
 
@@ -56,7 +56,7 @@ export const PatientMapper = {
     };
   },
 
-  toFormValues(patient: Patient): IPatientFormInput {
+  toFormValues(patient: Patients): IPatientFormInput {
     return {
       name: patient.name,
       dateOfBirth: patient.dateOfBirth,

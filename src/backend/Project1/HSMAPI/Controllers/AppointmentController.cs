@@ -2,7 +2,7 @@ using HSMBusiness;
 using HSMBusiness.Erorrs;
 using HSMBusiness.Pattern;
 using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Appointments;
 using HSMDataAccess.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

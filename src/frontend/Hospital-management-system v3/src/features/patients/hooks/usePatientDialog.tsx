@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 
 export function usePatientDialog() {
   const [mode, setMode] =
     useState<"create" | "edit">("create");
 
   const [selectedPatient, setSelectedPatient] =
-    useState<Patient | null>(null);
+    useState<Patients | null>(null);
 
   const [isRegisterOpen, setIsRegisterOpen] =
     useState(false);
@@ -20,7 +20,7 @@ export function usePatientDialog() {
     setIsRegisterOpen(true);
   };
 
-  const openEditDialog = (patient: Patient) => {
+  const openEditDialog = (patient: Patients) => {
     setMode("edit");
     setSelectedPatient(patient);
     setIsEditOpen(true);

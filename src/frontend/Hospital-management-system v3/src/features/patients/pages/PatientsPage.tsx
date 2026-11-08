@@ -6,7 +6,7 @@ import type { IPatientFormInput } from "../types/IRegisterPatientFormInput";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { Button } from "../../../core/components/ui/Button";
 import { useLanguage } from "../../../core/providers/LanguageProvider";
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 import { usePatients } from "../hooks/usePatients";
 import { useCreatePatient } from "../hooks/useCreatePatient";
 import toast from "react-hot-toast";
@@ -28,6 +28,7 @@ import { usePatientFilters } from "../hooks/usePatientFilters";
 import { usePatientPagination } from "../hooks/usePatientPagination";
 import { usePatientDialog } from "../hooks/usePatientDialog";
 import { usePatientForm } from "../hooks/usePatientForm";
+import { Console } from "console";
 
 export const PatientsPage = () => {
   const { t } = useLanguage();
@@ -39,18 +40,27 @@ export const PatientsPage = () => {
 
   const pagination = usePatientPagination();
 
-  const { data, isLoading, error } = usePatients(
-    pagination.page,
-    pagination.pageSize,
-  );
-  const {
-    pageNumber,
-    totalPages,
-    totalCount,
-    items: patients = [],
-  } = data ?? {};
+  const { data, isLoading, error } = usePatients();
+  // const {
+  //   pageNumber,
+  //   totalPages,
+  //   totalCount,
+  //   items: patients = [],
+  // } = (data as Paginated<Patients> | undefined)?? {};
+const patients = data ?? [];
 
   const filters = usePatientFilters(patients);
+  const pageSize = 10;
+
+const totalCount = filters.filteredPatients.length;
+
+const totalPages = Math.ceil(totalCount / pageSize);
+
+const paginatedPatients = filters.filteredPatients.slice(
+  (pagination.page - 1) * pageSize,
+  pagination.page * pageSize
+);
+console.log("Search:", filters.searchTerm);;
 
   const patientForm = usePatientForm({
     mode: dialog.mode,
@@ -68,6 +78,7 @@ export const PatientsPage = () => {
     return <ErrorState message={t("commonSomethingWentWrong")} />;
   }
 
+console.log("All Patients:", patients);
   return (
     <div className="space-y-6">
       {/* Top Header Section */}
@@ -105,12 +116,12 @@ export const PatientsPage = () => {
           onEdit={dialog.openEditDialog}
           pagination={
             <Paginator
-              page={pageNumber ?? 1}
-              pageCount={totalPages ?? 1}
-              total={totalCount ?? 1}
-              isLoading={isLoading}
-              onClickPrev={pagination.onClickPrev}
-              onClickNext={pagination.onClickNext}
+              page={pagination.page}
+  pageCount={Math.max(totalPages, 1)}
+  total={totalCount}
+  isLoading={isLoading}
+  onClickPrev={pagination.onClickPrev}
+  onClickNext={pagination.onClickNext}
             />
           }
         />

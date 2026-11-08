@@ -1,12 +1,12 @@
 import { DataTable } from "../../../core/components/ui/DataTable";
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 import { PatientTableHeader } from "./PatientTableHeader";
 import { PatientTableRow } from "./PatientTableRow";
 
 interface PatientTableProps {
-  patients: Patient[];
+  patients: Patients[];
   pagination?: React.ReactNode;
-  onEdit: (patient: Patient) => void;
+  onEdit: (patient: Patients) => void;
 }
 
 export function PatientTable({

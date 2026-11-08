@@ -1,5 +1,5 @@
 ﻿using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Doctors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
