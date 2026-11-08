@@ -4,6 +4,7 @@ using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.Data;
 using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Doctors;
 using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -125,6 +126,15 @@ namespace HSMBusiness.Services
             await _repository.UpdateAsync(user);
            
             return  (response.Status, response.Response, response.IsSuccess, response.Errors);
+        }
+        public async Task<UserDTO?>Find(string ID)
+        {
+            var user1 = await _repository.GetByIDAsync(ID);
+            if (user1 == null)
+            {
+                return null;
+            }
+            return new UserDTO(ID,user1.Name,user1.Role,user1.Status,user1.PasswordHash,user1.PersonID);
         }
 
         public async Task<(int Status, string? Response, bool IsSucess, UserDTO? userDTO ,Dictionary<string, string>?errors)> GetByID(string ID)

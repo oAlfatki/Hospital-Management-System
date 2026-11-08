@@ -3,12 +3,12 @@ import { useLanguage } from '@/src/core/providers';
 import { Button, Select, Dialog } from '@/src/core';
 import { UseFormReturn } from 'react-hook-form';
 import { IRecordFormInput } from '../types/IRecordFormInput';
-import { Patient } from '@/src/features/patients/types/Patient';
+import { Patients } from '@/src/features/patients/types/Patient';
 
 interface CreateRecordDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  patients: Patient[];
+  patients: Patients[];
   form: UseFormReturn<IRecordFormInput>;
   onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
   isSubmitting: boolean;

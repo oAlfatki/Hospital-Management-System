@@ -1,7 +1,7 @@
 ﻿using HSMBusiness.Erorrs;
 using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Appointments;
 using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
 using System;
@@ -175,7 +175,7 @@ namespace HSMBusiness.Services
             response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
             return (response.Status, response.Response, response.IsSuccess, response.Errors);
         }
-        public async Task<(int Status,string? Response, bool IsSuccess, List<AppointmentDTO>?appointmentList, Dictionary<string, string>? errors)> GetAll()
+        public async Task<(int Status,string? Response, bool IsSuccess, List<AppointmentResponseDTO>?appointmentList, Dictionary<string, string>? errors)> GetAll()
         {
             var appointments = await _appointment.GetAllAsync();
             var response =await resultPattern.GiveResponse(200, new Dictionary<string, string>());
@@ -184,7 +184,18 @@ namespace HSMBusiness.Services
                 response =await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status,response.Response, response.IsSuccess, null,response.Errors);
             }
-            return (response.Status, response.Response, response.IsSuccess, appointments.Select(a=> new AppointmentDTO(a.ID,a.PatientID,a.DoctorID,a.Date,a.Time,a.Duration,a.Status,a.NotificationSent)).ToList(),response.Errors);
+            var result = new List<AppointmentResponseDTO>();
+            foreach(var appointment in appointments)
+            {
+                var appointmentResult = await new AppointmentResponseMapper().ToResponseDTO(appointment);
+                result.Add(appointmentResult);
+            }
+            if (result == null)
+            {
+                response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
+                return (response.Status, response.Response, response.IsSuccess, null, response.Errors);
+            }
+            return (response.Status, response.Response, response.IsSuccess, result.ToList(),response.Errors);
         }
         public async Task<(int Status,string?Response, bool IsSuccess, AppointmentDTO? appointmentDTO, Dictionary<string, string>? errors)>GetByID(string ID)
         {

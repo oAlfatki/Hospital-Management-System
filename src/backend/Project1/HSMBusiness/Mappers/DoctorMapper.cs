@@ -1,6 +1,8 @@
 ﻿using HSMBusiness.Mappers;
-using HSMDataAccess.DTOs;
+using HSMBusiness.Services;
+using HSMDataAccess.DTOs.Doctors;
 using HSMDataAccess.Entities;
+using HSMDataAccess.RepositoryServices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +19,7 @@ namespace HSMBusiness.dto
 
         public DoctorDTO ToDTO(Doctor doctor)
         {
-            return new DoctorDTO(doctor.ID,
-                 doctor.DepartmentID,
-                    doctor.Specialization,
-                    doctor.Status,
-                    doctor.UserID
-                );
+            return new DoctorDTO(doctor.ID,doctor.DepartmentID,doctor.Specialization,doctor.Status, doctor.UserID);
         }
         public Doctor ToEntity(DoctorDTO doctorDTO,enMode mode=enMode.Add,Doctor doctor=null)
         {
@@ -47,6 +44,5 @@ namespace HSMBusiness.dto
             }
 
         }
-        
     }
 }

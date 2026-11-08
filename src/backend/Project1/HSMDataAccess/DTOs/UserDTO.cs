@@ -8,7 +8,7 @@ namespace HSMDataAccess.DTOs
 {
     public class UserDTO
     {
-        public string UserID { get; set; } = null!;
+        public string ID { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string Role { get; set; } = null!;
         public bool Status { get; set; }
@@ -22,7 +22,7 @@ namespace HSMDataAccess.DTOs
         public UserDTO(string UserID, string Name, string Role,bool Status,
             string PasswordHash,string PersonID)
         {
-            this.UserID = UserID;
+            this.ID = UserID;
             this.Name = Name;
             this.Role = Role;
             this.Status = Status;

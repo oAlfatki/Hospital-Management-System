@@ -28,16 +28,12 @@ namespace HSMAPI
             // Allow Frontend (React dev server) to call the API
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowFrontend", policy =>
-                {
-                    policy.WithOrigins(
-                        "http://localhost:5173",
-                        "http://localhost:3000",
-                        "http://localhost:4173"
-                    )
+                options.AddPolicy("AllowAll", policy =>
+                policy
+                    .AllowAnyOrigin()
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
-                });
+                    .AllowAnyMethod()
+                );
             });
 
             var connectionString =
@@ -91,7 +87,7 @@ namespace HSMAPI
             }
             
             app.UseHttpsRedirection();
-            app.UseCors("AllowFrontend");
+            app.UseCors("AllowAll");
             app.UseAuthorization();
             
             app.UseMiddleware<ProfilingMiddleware>();

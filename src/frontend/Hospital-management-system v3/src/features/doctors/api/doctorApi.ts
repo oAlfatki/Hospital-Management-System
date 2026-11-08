@@ -18,7 +18,11 @@ export const doctorApi = {
 
   async createDoctor(request: CreateDoctorRequest): Promise<DoctorResponse> {
     // Backend returns { status, response, isSuccess } — not { doctor }
-    const response = await axiosInstance.post<any>('/api/doctors', request);
+    // const response = await axiosInstance.post<any>('/api/doctors', request);
+     const response = await axiosInstance.post<any>(
+    '/api/doctors',
+    { doctor: request }
+  );
     return response.data;
   },
 

@@ -3,8 +3,8 @@ import { ApiError } from "../Errors/ApiError";
 import type { ApiErrorResponse } from "../Errors/ApiErrorResponse";
 
 const axiosInstance = axios.create({
-  baseURL: "https://localhost:7286",
-  timeout: 1000,
+  baseURL: "https://localhost:7256",
+  timeout: 100000,
 });
 
 axiosInstance.interceptors.response.use(
@@ -35,6 +35,7 @@ axiosInstance.interceptors.response.use(
       console.error("-----------------------------");
       console.error("data:---------------");
       console.error(data);
+      console.log("VALIDATION ERRORS:", JSON.stringify(data.errors, null, 2));
       console.error("-----------------------------");
 
       switch (status) {
@@ -48,11 +49,11 @@ axiosInstance.interceptors.response.use(
 
     case 401:
       throw new ApiError(
-        data.message ?? "Unexpected server error.",
-        status,
-        "Unauthorized",
-        data.errors
-      );
+    (data as any).title ?? (data as any).message ?? "Bad Request",
+    status,
+    "BadRequest",
+    (data as any).errors ?? null
+  );
 
     case 404:
       throw new ApiError(

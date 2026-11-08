@@ -25,7 +25,7 @@ export const BillingPage: React.FC = () => {
 
   const { data: rawBills = [], isLoading: isBillsLoading, error: billsError } = useBills();
   const { data: patientsData, isLoading: isPatientsLoading } = usePatients(1, 100);
-  const patients = patientsData?.items || [];
+  const patients = patientsData || [];
 
   const sendReminderMutation = useSendBillReminderMutation();
 

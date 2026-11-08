@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+﻿using HSMDataAccess.DTOs.Bills;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;

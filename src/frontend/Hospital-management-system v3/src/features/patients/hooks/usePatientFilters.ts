@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 
 export type PatientStatusType =
   | "All"
@@ -7,7 +7,7 @@ export type PatientStatusType =
   | "Inactive"
   | "Deceased";
 
-export function usePatientFilters(patients: Patient[]) {
+export function usePatientFilters(patients: Patients[]) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] =
     useState<PatientStatusType>("All");

@@ -1,6 +1,6 @@
 ﻿using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Bills;
 using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
 using System;
@@ -43,7 +43,7 @@ namespace HSMBusiness.Services
             _billServiceService = billServiceService;
             Mode = mode;
         }
-        public async Task<(int Status,string? Response, bool IsSuccess, List<BillDTO>? billsList)> GetAll()
+        public async Task<(int Status,string? Response, bool IsSuccess, List<BillResponseDTO>? billsList)> GetAll()
         {
             var bills = await _repository.GetAllAsync();
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
@@ -52,24 +52,31 @@ namespace HSMBusiness.Services
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status,response.Response, response.IsSuccess, null);
             }
-            return (response.Status, response.Response, response.IsSuccess, bills.Select(b=>new BillMapper().ToDTO(b)).ToList());
+            var result = new List<BillResponseDTO>();
+            foreach (var bill in bills)
+            {
+                var billResult =await new BillResponseMapper().ToResponseDTO(bill);
+                result.Add(billResult);
+            }
+            return (response.Status, response.Response, response.IsSuccess, result.ToList());
         }
-        public async Task<(int Status,string Response,bool IsSuccess,BillDTO billDTO1)>GetByID(string ID)
+        public async Task<(int Status,string Response,bool IsSuccess, BillResponseDTO billDTO1)>GetByID(string ID)
         {
             var bill = await _repository.GetByIDAsync(ID);
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
             if (bill == null)
             {
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
-                return (response.Status,response.Response, response.IsSuccess, new BillDTO());
+                return (response.Status,response.Response, response.IsSuccess, new BillResponseDTO());
             }
-            return (response.Status, response.Response, response.IsSuccess, new BillMapper().ToDTO(bill));
+            var billDTO = await new BillResponseMapper().ToResponseDTO(bill);
+            return (response.Status, response.Response, response.IsSuccess, billDTO);
         }
         private async Task<(int Status,bool IsSuccess)>_Add(BillDTO billDTO)
         {
             var bill = new BillMapper().ToEntity(billDTO);
             int Status = 200;
-            if(!await _patientService.IsPatientExist(bill.ID))
+            if(!await _patientService.IsPatientExist(bill.PatientID))
             {
                 Status = 500;
                 return (Status,false);

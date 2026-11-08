@@ -26,6 +26,7 @@ export const authService = {
   },
 
   async login(emailStr: string, passwordStr: string): Promise<Result<User>> {
+    console.log("start authApi");
     try {
       const res = await authApi.login(emailStr, passwordStr);
       if (res.success && res.user) {

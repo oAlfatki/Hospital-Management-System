@@ -3,11 +3,12 @@ import { BillingMapper } from '../mappers/billingMapper';
 import type { Bill } from '../types/billing.types';
 import type { CreateBillRequest } from '../types/CreateBillRequest';
 import type { RecordPaymentRequest } from '../types/RecordPaymentRequest';
-import type { Patient } from '@/src/features/patients/types/Patient';
+import type { Patients } from '@/src/features/patients/types/Patient';
 
 export const billingService = {
   async getAll(): Promise<Bill[]> {
     const responses = await billingApi.getAll();
+   
     return BillingMapper.toDomainList(responses);
   },
 
@@ -25,7 +26,7 @@ export const billingService = {
     await billingApi.sendReminder(billId);
   },
 
-  exportToCSV(bills: Bill[], patientsList: Patient[]): string {
+  exportToCSV(bills: Bill[], patientsList: Patients[]): string {
     const headers = ['Invoice ID', 'Patient Name', 'Services', 'Subtotal ($)', 'Tax (%)', 'Discount ($)', 'Total ($)', 'Paid ($)', 'Balance ($)', 'Status', 'Due Date'];
     const rows = bills.map((b) => {
       const patient = patientsList.find((p) => p.patientId === b.patientId);

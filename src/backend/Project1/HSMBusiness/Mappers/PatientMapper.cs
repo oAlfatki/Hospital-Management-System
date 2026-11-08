@@ -1,5 +1,5 @@
 ﻿using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Patients;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;

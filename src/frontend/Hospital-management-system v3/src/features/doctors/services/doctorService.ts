@@ -9,6 +9,7 @@ export const doctorService = {
   async getDoctors(): Promise<Doctor[]> {
     const responses = await doctorApi.getAllDoctors();
     // Backend returns DoctorDTO array — map to domain shape
+     console.log("Doctors from Backend:", responses);
     return (responses as any[]).map((r) => ({
       doctorId: r.iD ?? r.doctorId ?? r.id ?? "",
       name: r.name ?? r.userID ?? "",
