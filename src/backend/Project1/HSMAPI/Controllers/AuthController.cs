@@ -21,7 +21,7 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return BadRequest(new { success = false, error = "Email and password are required" });
             }
@@ -34,7 +34,7 @@ namespace HSMAPI.Controllers
             }
 
             var matchedUser = usersResult.userList.FirstOrDefault(u =>
-                u.Name != null && u.Name.Equals(request.Email, StringComparison.OrdinalIgnoreCase) &&
+                u.Name != null && u.Name.Trim().Equals(request.Name, StringComparison.OrdinalIgnoreCase) &&
                 u.PasswordHash != null && u.PasswordHash == request.Password
             );
 
@@ -48,10 +48,10 @@ namespace HSMAPI.Controllers
                 success = true,
                 user = new
                 {
-                    userId = matchedUser.UserID,
+                    userId = matchedUser.ID,
                     name = matchedUser.Name,
                     role = matchedUser.Role ?? "Doctor",
-                    email = request.Email,
+                    email = request.Name,
                     status = matchedUser.Status ? "Active" : "Inactive"
                 }
             });
@@ -176,7 +176,7 @@ namespace HSMAPI.Controllers
     /// <summary>Request body for POST /api/auth/login</summary>
     public class LoginRequest
     {
-        public string Email { get; set; } = null!;
+        public string Name { get; set; } = null!;
         public string Password { get; set; } = null!;
     }
 }

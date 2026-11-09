@@ -1,6 +1,6 @@
 using HSMBusiness.Pattern;
 using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Bills;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

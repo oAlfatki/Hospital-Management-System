@@ -18,7 +18,7 @@ namespace HSMBusiness.Erorrs
         }
         public async Task<Dictionary<string, string>> ValidateUser(UserDTO dto) { 
             var errors = new Dictionary<string, string>(); 
-            if (string.IsNullOrWhiteSpace(dto.UserID)) { 
+            if (string.IsNullOrWhiteSpace(dto.ID)) { 
                 errors["ID"] = "ID is required."; 
             } 
             if (string.IsNullOrWhiteSpace(dto.Name)) { 

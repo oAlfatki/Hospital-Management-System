@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth, useLanguage } from '@/src/core/providers';
 import { Button, Input, useToast } from '@/src/core';
 import { Lock, Mail, HelpCircle, AlertTriangle, Key } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const PRESETS = [
   { label: 'Admin', email: 'admin@hms.com', pass: 'Admin123!', color: 'bg-red-50 border-red-200 text-red-700' },
@@ -20,8 +21,12 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleFormSubmit = async (e: React.FormEvent) => {
+
+    
+
     e.preventDefault();
     if (!email || !password) {
       toast.error(t('toastEmailPasswordRequired'));
@@ -35,6 +40,7 @@ export const LoginPage: React.FC = () => {
 
     if (res.success) {
       toast.success(t('toastSuccessfullyAuthenticated'));
+      navigate('/dashboard', { replace: true });
     } else {
       setErrorMessage(res.error || t('toastAuthenticationFailed'));
       toast.error(res.error || t('toastInvalidCredentials'));
@@ -49,7 +55,7 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleFormSubmit} className="space-y-4">
+      <form onSubmit={handleFormSubmit} className="space-y-4" noValidate>
         
         {/* Email Login Input */}
         <div>

@@ -2,7 +2,8 @@
 using HSMBusiness.dto;
 using HSMBusiness.Pattern;
 using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Appointments;
+using HSMDataAccess.DTOs.Doctors;
 using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
 using System;
@@ -21,28 +22,34 @@ namespace HSMBusiness
         private readonly DoctorRepository _doctor;
         private readonly UserService _userService;
         private readonly DepartmentService _departmentService;
+        private readonly PersonService _personService;
         public DoctorRepository doctorRepository { get { return _doctor; } }
         private readonly UserRepository _userRepository;
-        public DoctorService(DepartmentService departmentService, DoctorRepository doctor,UserService userService,UserRepository userRepository, enMode mode = enMode.Add)
+
+        public DoctorService(DepartmentService departmentService, DoctorRepository doctor,UserService userService,PersonService personService,UserRepository userRepository, enMode mode = enMode.Add)
         {
             _doctor = doctor;
             _departmentService = departmentService;
             _userService = userService;
             _userRepository = userRepository;
+            _personService = personService;
             this.mode = mode;
         }
         
-        public async Task<(int Status,string? Response,bool IsSuccess,DoctorDTO? doctorDTO1, Dictionary<string, string>? errors)> GetDoctorByID(string DoctorID)
+        public async Task<(int Status,string? Response,bool IsSuccess, DoctorResponse? doctorResponse, Dictionary<string, string>? errors)> GetDoctorByID(string DoctorID)
         {
             Doctor doctor = await _doctor.GetByIDAsync(DoctorID);
             var response =await resultPattern.GiveResponse(200, new Dictionary<string, string>());
-            if (doctor == null)
+            if (doctor == null )
             {
                 response =await resultPattern.GiveResponse(404, new Dictionary<string, string>(),"Doctor");
                 return (response.Status,response.Response,response.IsSuccess,null,response.Errors);
             }
-            return (response.Status,response.Response, response.IsSuccess, new DoctorDTO(DoctorID, doctor.DepartmentID, doctor.Specialization, doctor.Status,
-                 doctor.UserID), response.Errors);
+            var user = await _userService.Find(doctor.UserID);
+            var person = await _personService.Find(user.PersonID);
+            return (response.Status, response.Response, response.IsSuccess, new DoctorResponse(DoctorID,person.Name,doctor.DepartmentID,doctor.Specialization,person.ContactNumber,person.Email,user.Status==false?"InActive":"Active","",""), response.Errors);
+           // return (response.Status,response.Response, response.IsSuccess, new DoctorDTO(DoctorID, doctor.DepartmentID, doctor.Specialization, doctor.Status,
+                 //doctor.UserID), response.Errors);
         }
         public async Task<(int Status,string?Response,bool IsSuccess, Dictionary<string, string>? errors)> Delete(string DoctorID)
         {
@@ -108,7 +115,7 @@ namespace HSMBusiness
         {
 
             var doctor = await GetDoctorByID(appointmentEntity.DoctorID);
-            if (doctor.doctorDTO1 == null)
+            if (doctor.doctorResponse == null)
             {
                 return false;
             }

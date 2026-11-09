@@ -1,8 +1,14 @@
+// export interface CreateDoctorRequest {
+//   name: string;
+//   departmentId: string;
+//   specialty: string;
+//   status: 'Active' | 'Inactive';
+//   userID:string;
+// }
 export interface CreateDoctorRequest {
-  name: string;
-  departmentId: string;
-  specialty: string;
-  contactNumber?: string;
-  email: string;
+  id?: string;
+  departmentID: string;
+  specialization: string;
   status: 'Active' | 'Inactive';
+  userID: string;
 }

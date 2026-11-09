@@ -5,8 +5,10 @@ import type { UpdatePatientRequest } from "../types/UpdatePatientRequest";
 
 export const patientApi = {
   // Backend returns a plain array: PatientDTO[]
-  async getAll(): Promise<PatientResponse[]> {
+  async GetAllPatients(): Promise<PatientResponse[]> {
     const response = await axiosInstance.get<PatientResponse[]>("/api/patients");
+    
+
     return response.data;
   },
 

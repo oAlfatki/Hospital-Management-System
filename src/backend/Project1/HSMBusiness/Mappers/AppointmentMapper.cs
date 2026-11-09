@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+﻿using HSMDataAccess.DTOs.Appointments;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;

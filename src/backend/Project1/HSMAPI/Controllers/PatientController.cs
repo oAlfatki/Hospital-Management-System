@@ -1,6 +1,6 @@
 using HSMBusiness.Pattern;
 using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Patients;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -104,7 +104,7 @@ namespace HSMAPI.Controllers
                 });
             }
 
-            CurrPatient.patientDTO1 = patientDTO;
+            //CurrPatient.patientDTO1 = patientDTO;
             patientService._Mode = PatientService.enMode.Update;
             var result = await patientService.Save(patientDTO, ID);
             if (!result.IsSuccess)

@@ -9,13 +9,13 @@ import { PatientMapper } from "../mappers/patientMapper";
 import { useCreatePatient } from "./useCreatePatient";
 import { useUpdatePatient } from "./useUpdatePatient";
 
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 import type { IPatientFormInput } from "../types/IRegisterPatientFormInput";
 import { useLanguage } from "../../../core/providers/LanguageProvider";
 
 interface UsePatientFormProps {
   mode: "create" | "edit";
-  selectedPatient: Patient | null;
+  selectedPatient: Patients | null;
   page?: number;
   pageSize?: number;
   onSuccess: () => void;
@@ -62,7 +62,7 @@ export function usePatientForm({
     });
   };
 
-  const loadPatient = (patient: Patient) => {
+  const loadPatient = (patient: Patients) => {
     reset({
       name: patient.name,
       dateOfBirth: patient.dateOfBirth,
@@ -110,7 +110,7 @@ export function usePatientForm({
           // FIX: Use unified "patients" query key (not the old paginated key)
           queryClient.setQueryData(
             ["patients"],
-            (oldData: Patient[] | undefined) => {
+            (oldData: Patients[] | undefined) => {
               if (!oldData) return oldData;
               return oldData.map((patient) =>
                 patient.patientId === updatedPatient.patientId

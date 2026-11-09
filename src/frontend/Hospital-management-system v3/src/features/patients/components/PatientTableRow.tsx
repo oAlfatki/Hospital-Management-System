@@ -1,13 +1,13 @@
 
 import { useLanguage } from "../../../core/providers/LanguageProvider";
 import { formatDate } from "../../../core/utils/cn";
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 import { PatientRowActions } from "./PatientRowActions";
 import { PatientStatusBadge } from "./PatientStatusBadge";
 
 interface PatientTableRowProps {
-  patient: Patient;
-  onEdit: (patient: Patient) => void;
+  patient: Patients;
+  onEdit: (patient: Patients) => void;
 }
 
 export function PatientTableRow({ patient, onEdit }: PatientTableRowProps) {

@@ -21,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const login = async (email: string, pass: string) => {
+    console.log("start authService");
     const res = await authService.login(email, pass);
     if (res.success && res.data) {
       setUser(res.data);

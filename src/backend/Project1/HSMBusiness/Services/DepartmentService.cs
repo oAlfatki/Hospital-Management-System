@@ -1,6 +1,7 @@
 ﻿using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs.Doctors;
 using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
 using System;

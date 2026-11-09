@@ -16,12 +16,23 @@ export const doctorApi = {
     return response.data;
   },
 
-  async createDoctor(request: CreateDoctorRequest): Promise<DoctorResponse> {
-    // Backend returns { status, response, isSuccess } — not { doctor }
-    const response = await axiosInstance.post<any>('/api/doctors', request);
-    return response.data;
-  },
+  // async createDoctor(request: CreateDoctorRequest): Promise<DoctorResponse> {
+  //   // Backend returns { status, response, isSuccess } — not { doctor }
+  //   // const response = await axiosInstance.post<any>('/api/doctors', request);
+  //    const response = await axiosInstance.post<any>(
+  //   '/api/doctors',
+  //   { doctor: request }
+  // );
+  //   return response.data;
+  // },
+async createDoctor(request: CreateDoctorRequest): Promise<DoctorResponse> {
+  const response = await axiosInstance.post<any>(
+    '/api/doctors',
+    request
+  );
 
+  return response.data;
+},
   async updateDoctor(request: UpdateDoctorRequest): Promise<DoctorResponse> {
     const response = await axiosInstance.put<any>(`/api/doctors/${request.doctorId}`, request);
     return response.data;

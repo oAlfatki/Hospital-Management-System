@@ -1,10 +1,10 @@
 import { Pencil } from "lucide-react";
-import type { Patient } from "../types/Patient";
+import type { Patients } from "../types/Patient";
 
 
 interface PatientRowActionsProps {
-  patient: Patient;
-  onEdit: (patient: Patient) => void;
+  patient: Patients;
+  onEdit: (patient: Patients) => void;
 }
 
 export function PatientRowActions({

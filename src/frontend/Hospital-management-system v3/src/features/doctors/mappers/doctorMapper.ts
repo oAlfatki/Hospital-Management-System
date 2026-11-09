@@ -10,15 +10,20 @@ import type { IDepartmentFormInput } from '../types/IDepartmentFormInput';
 export const DoctorMapper = {
   toDomain(doc: DoctorResponse | Doctor): Doctor {
     return {
-      doctorId: doc.doctorId,
-      name: doc.name,
-      departmentId: doc.departmentId,
-      specialty: doc.specialty,
-      contactNumber: doc.contactNumber,
-      email: doc.email,
-      status: doc.status,
-      createdOn: doc.createdOn || new Date().toISOString(),
-      updatedOn: doc.updatedOn || new Date().toISOString(),
+      // doctorId: doc.doctorId,
+      // name: doc.name,
+      //departmentId: doc.departmentId,
+      //specialty: doc.specialty,
+      // contactNumber: doc.contactNumber,
+      // email: doc.email,
+      //status: doc.status,
+      //createdOn: doc.createdOn || new Date().toISOString(),
+      //updatedOn: doc.updatedOn || new Date().toISOString(),
+      id: '',
+    departmentID: doc.departmentId.trim(),
+    specialization: doc.specialty.trim(),
+    status: doc.status === 'Active',
+    userID: doc.userID.trim(),
     };
   },
 
@@ -43,34 +48,39 @@ export const DoctorMapper = {
 
   toCreateRequest(form: IDoctorFormInput): CreateDoctorRequest {
     return {
-      name: form.name.trim(),
-      departmentId: form.departmentId,
-      specialty: form.specialty.trim(),
-      contactNumber: form.contactNumber.trim(),
-      email: form.email.trim(),
-      status: form.status,
+      // name: form.name.trim(),
+      // departmentId: form.departmentId,
+      // specialty: form.specialty.trim(),
+      // contactNumber: form.contactNumber.trim(),
+      // email: form.email.trim(),
+      //status: form.status,
+       id: '',
+    departmentID: form.departmentId.trim(),
+    specialization: form.specialty.trim(),
+    status:form.status === 'Active',
+    userID: form.userID.trim(),
     };
   },
 
   toUpdateRequest(doctorId: string, form: Partial<IDoctorFormInput>): UpdateDoctorRequest {
     return {
       doctorId,
-      ...(form.name && { name: form.name.trim() }),
+      // ...(form.name && { name: form.name.trim() }),
       ...(form.departmentId && { departmentId: form.departmentId }),
       ...(form.specialty && { specialty: form.specialty.trim() }),
-      ...(form.contactNumber && { contactNumber: form.contactNumber.trim() }),
-      ...(form.email && { email: form.email.trim() }),
+      // ...(form.contactNumber && { contactNumber: form.contactNumber.trim() }),
+      // ...(form.email && { email: form.email.trim() }),
       ...(form.status && { status: form.status }),
     };
   },
 
   toDoctorFormValues(doctor: Doctor): IDoctorFormInput {
     return {
-      name: doctor.name,
+      // name: doctor.name,
       departmentId: doctor.departmentId,
       specialty: doctor.specialty,
-      contactNumber: doctor.contactNumber || '',
-      email: doctor.email,
+      // contactNumber: doctor.contactNumber || '',
+      // email: doctor.email,
       status: doctor.status,
     };
   },

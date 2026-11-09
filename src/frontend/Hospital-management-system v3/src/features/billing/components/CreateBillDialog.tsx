@@ -4,13 +4,13 @@ import { Button, Input, Select, Dialog, formatCurrency } from '@/src/core';
 import { UseFormReturn } from 'react-hook-form';
 import { ICreateBillFormInput } from '../types/IBillFormInput';
 import { ServiceItem } from '../types/billing.types';
-import { Patient } from '@/src/features/patients/types/Patient';
+import { Patients } from '@/src/features/patients/types/Patient';
 import { Trash2 } from 'lucide-react';
 
 interface CreateBillDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  patients: Patient[];
+  patients: Patients[];
   form: UseFormReturn<ICreateBillFormInput>;
   servicesList: ServiceItem[];
   newItemName: string;
@@ -52,7 +52,7 @@ export const CreateBillDialog: React.FC<CreateBillDialogProps> = ({
           <Button variant="outline" onClick={onClose} className="h-9">
             {t('commonCancel')}
           </Button>
-          <Button onClick={onSubmit} disabled={isSubmitting} className="h-9">
+          <Button type="button" onClick={onSubmit} disabled={isSubmitting} className="h-9">
             {t('generateAndDispatchInvoice')}
           </Button>
         </>

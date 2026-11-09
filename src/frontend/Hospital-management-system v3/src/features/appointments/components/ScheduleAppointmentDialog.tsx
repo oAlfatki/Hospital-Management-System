@@ -3,14 +3,14 @@ import { useLanguage } from '@/src/core/providers';
 import { Button, Input, Select, Dialog, formatTime } from '@/src/core';
 import { UseFormReturn } from 'react-hook-form';
 import { IScheduleAppointmentFormInput } from '../types/IAppointmentFormInput';
-import { Patient } from '@/src/features/patients/types/Patient';
+import { Patients } from '@/src/features/patients/types/Patient';
 import { Doctor } from '@/src/features/doctors/types/Doctor';
 import { AlertTriangle } from 'lucide-react';
 
 interface ScheduleAppointmentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  patients: Patient[];
+  patients: Patients[];
   doctors: Doctor[];
   form: UseFormReturn<IScheduleAppointmentFormInput>;
   conflictError: string | null;
