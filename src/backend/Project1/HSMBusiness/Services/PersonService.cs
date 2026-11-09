@@ -1,4 +1,4 @@
-﻿using HSMBusiness.dto;
+using HSMBusiness.dto;
 using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
@@ -27,7 +27,7 @@ namespace HSMBusiness.Services
             _personRepository = personRepository;
             this.Mode = Mode;
         }
-       
+
         public async  Task<(int Status,string? Response,bool,List<PersonDTO>? peopleList)> GetAll()
         {
             var people = await _personRepository.GetAllAsync();
@@ -40,7 +40,7 @@ namespace HSMBusiness.Services
             return (response.Status, response.Response,response.IsSuccess,people.Select(p =>new PersonMapper().ToDTO(p))
         .ToList());
         }
-        
+
         public async Task<bool> CountNumberOfContactNumberIsOne(string ContactNumber)
         {
             int result = await _personRepository.CountNumberOfContactNumberIsOne(ContactNumber);
@@ -73,7 +73,7 @@ namespace HSMBusiness.Services
         {
             Person personEntity = await _personRepository.GetByIDAsync(ID);
             var response =await resultPattern.GiveResponse(200, new Dictionary<string, string>());
-            
+
                 if (personEntity == null)
             {
                 response =await resultPattern.GiveResponse(404, new Dictionary<string, string>());
@@ -87,7 +87,7 @@ namespace HSMBusiness.Services
                 return (response.Status, response.Response, response.IsSuccess);
             }
             personEntity = new PersonMapper().ToEntity(personDTO,PersonMapper.enMode.Update,personEntity);
-            
+
             return (response.Status,response.Response, response.IsSuccess);
         }
         public async Task<(int Status,string? Response, bool IsSuccess)> Delete(string ID)
@@ -150,5 +150,14 @@ namespace HSMBusiness.Services
             response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
             return (response.Status, response.Response, response.IsSuccess);
         }
+
+        public Task<Person?> FindProfileByEmailAsync(string email) => _personRepository.FindByEmailAsync(email.Trim().ToLowerInvariant());
+        public async Task CheckContactAvailabilityAsync(string email, string? phone, string? exceptId = null)
+        {
+            BusinessRules.Require(!await _personRepository.EmailExistsAsync(email.Trim().ToLowerInvariant(), exceptId), "Email is already registered.", 409);
+            if (!string.IsNullOrWhiteSpace(phone))
+                BusinessRules.Require(!await _personRepository.PhoneExistsAsync(phone, exceptId), "Contact number is already registered.", 409);
+        }
+
     }
 }

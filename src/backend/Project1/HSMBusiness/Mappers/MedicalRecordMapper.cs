@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ namespace HSMBusiness.Mappers
             else
             {
                 return new MedicalRecord
-                {  
+                {
                     PatientID = medicalRecordDTO.PatientID,
                     Diagnosis = medicalRecordDTO.Diagnosis,
                     Treatment = medicalRecordDTO.Treatment,
@@ -55,5 +55,18 @@ namespace HSMBusiness.Mappers
                 medicalRecord.AccessLevel
             );
         }
+
+        private static readonly System.Text.Json.JsonSerializerOptions VersionJson = new(System.Text.Json.JsonSerializerDefaults.Web);
+        public static List<RecordVersionResponse> ReadHistory(MedicalRecord r)
+        {
+            try { return System.Text.Json.JsonSerializer.Deserialize<List<RecordVersionResponse>>(r.AuditTrail, VersionJson) ?? []; }
+            catch (System.Text.Json.JsonException) { return []; }
+        }
+        public static MedicalRecordResponse ToResponse(MedicalRecord r) => new(r.ID.Trim(), r.PatientID.Trim(), r.Diagnosis ?? "",
+            r.Treatment ?? "", r.Prescriptions ?? "", r.Status?.Trim() ?? "Active", r.CreatedBy, r.CreatedOn, r.UpdatedBy,
+            r.UpdatedOn, r.Version, ReadHistory(r));
+        public static void StoreHistory(MedicalRecord r, IReadOnlyList<RecordVersionResponse> history) =>
+            r.AuditTrail = System.Text.Json.JsonSerializer.Serialize(history, VersionJson);
+
     }
 }

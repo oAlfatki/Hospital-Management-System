@@ -1,4 +1,8 @@
-﻿using Azure;
+using HSMDataAccess.Entities;
+using HSMBusiness.dto;
+using static HSMBusiness.Pattern.ResultPatern;
+using static HSMBusiness.Pattern.BusinessRules;
+using Azure;
 using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
@@ -41,7 +45,7 @@ namespace HSMBusiness.Services
                 return (500,false);
             }
             var AddNew =await _medicalRecord.AddAsync(medicalRecordEntity);
-            
+
             if (AddNew.ID == "")
             {
                 return (500, false);
@@ -52,7 +56,7 @@ namespace HSMBusiness.Services
         private async Task<(int, string?, bool)> Update( string ID, MedicalRecordDTO medicalRecordDTO)
         {
             var CurrentMedicalRecord =await _medicalRecord.GetByIDAsync(ID);
-           
+
             var response =await resultPattern.GiveResponse(200, new Dictionary<string, string>());
             if (CurrentMedicalRecord == null)
             {
@@ -133,5 +137,35 @@ namespace HSMBusiness.Services
             }
             return (response.Status,response.Response, response.IsSuccess);
         }
+
+        public Task<ResultResponse<IReadOnlyList<MedicalRecordResponse>>> GetClinicalProfilesAsync() => ExecuteAsync<IReadOnlyList<MedicalRecordResponse>>(async () =>
+            (await _medicalRecord.GetAllAsync()).Select(MedicalRecordMapper.ToResponse).ToList());
+        public Task<ResultResponse<MedicalRecordResponse>> CreateClinicalRecordAsync(RecordRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            Require(await _patientService.IsActivePatientAsync(request.PatientId), "Active patient not found.", 404);
+            var record = new MedicalRecord { ID = Id(), PatientID = request.PatientId, Diagnosis = request.Diagnosis.Trim(),
+                Treatment = request.Treatment.Trim(), Prescriptions = request.Prescriptions, Status = request.Status, AccessLevel = "Clinical",
+                AuditTrail = "[]", CreatedBy = actor, UpdatedBy = actor };
+            AppendVersion(record); _medicalRecord.StageAdd(record);
+            await _medicalRecord.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "MedicalRecord", "Create", record.ID));
+            return MedicalRecordMapper.ToResponse(record);
+        }, 201);
+        public Task<ResultResponse<MedicalRecordResponse>> UpdateClinicalRecordAsync(string id, RecordUpdateRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            var record = Found(await _medicalRecord.GetByIDAsync(id), "Medical record not found.");
+            Require(record.Version == request.Version, "Record was changed by another user. Refresh before saving.", 409);
+            record.Diagnosis = request.Diagnosis.Trim(); record.Treatment = request.Treatment.Trim(); record.Prescriptions = request.Prescriptions;
+            record.Status = request.Status; record.UpdatedBy = actor; record.UpdatedOn = DateTime.UtcNow; record.Version++;
+            AppendVersion(record);
+            await _medicalRecord.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "MedicalRecord", "Update", id));
+            return MedicalRecordMapper.ToResponse(record);
+        });
+        private static void AppendVersion(MedicalRecord record)
+        {
+            var history = MedicalRecordMapper.ReadHistory(record);
+            history.Add(new(record.Version, record.Diagnosis ?? "", record.Treatment ?? "", record.Prescriptions ?? "", record.UpdatedBy, record.UpdatedOn));
+            MedicalRecordMapper.StoreHistory(record, history);
+        }
+
     }
 }

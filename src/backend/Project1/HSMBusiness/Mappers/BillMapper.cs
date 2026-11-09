@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ namespace HSMBusiness.Mappers
             if(mode==enMode.Add)
                 return new Bill
                 {
-                   
+
                     PatientID=billDTO.PatientID,
                     Status =billDTO.Status,
                     Date=billDTO.Date,
@@ -27,7 +27,7 @@ namespace HSMBusiness.Mappers
                     Discount = billDTO.Discount,
                     InsuranceCoverage = billDTO.InsuranceCoverage,
                     PatientResponsibility = billDTO.PatientResponsibility,
-              
+
                 };
             else
             {
@@ -65,5 +65,14 @@ namespace HSMBusiness.Mappers
 
             );
         }
+
+        public static BillResponse ToResponse(Bill b, decimal due, string status)
+        {
+            return new(b.ID.Trim(), b.PatientID.Trim(), b.Lines.Select(l => new ServiceItemResponse(l.ServiceName, l.Cost)).ToList(),
+                b.GrossAmount, b.TaxPercent, b.Discount ?? 0, b.PatientResponsibility, b.PartialPaymentAmount ?? 0, due, status,
+                b.DueDate?.ToString("yyyy-MM-dd"), true, b.Payments.OrderByDescending(p => p.PaidOn).FirstOrDefault()?.PaidOn,
+                b.CreatedBy, b.CreatedOn, b.UpdatedOn);
+        }
+
     }
 }

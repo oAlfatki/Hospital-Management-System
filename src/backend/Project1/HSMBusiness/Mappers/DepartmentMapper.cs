@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace HSMBusiness.Mappers
 {
     public class DepartmentMapper
     {
-       
+
             public enum enMode { Add, Update }
 
             public Department ToEntity(
@@ -21,7 +21,7 @@ namespace HSMBusiness.Mappers
                 {
                     return new Department
                     {
-                       
+
                         Name = departmentDTO.Name,
                         HeadOf = departmentDTO.HeadOf
                     };
@@ -30,7 +30,7 @@ namespace HSMBusiness.Mappers
                 {
                     return new Department
                     {
-                        
+
                         Name = departmentDTO.Name,
                         HeadOf = departmentDTO.HeadOf
                     };
@@ -46,5 +46,8 @@ namespace HSMBusiness.Mappers
                     department.HeadOf
                 );
             }
-        }
+
+        public static DepartmentResponse ToResponse(Department d) => new(d.ID.Trim(), d.Name, d.HeadOf?.Trim(), d.Description, d.CreatedOn, d.UpdatedOn);
+
+    }
 }

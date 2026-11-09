@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.Data;
+using HSMDataAccess.Data;
 using HSMDataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -10,7 +10,7 @@ namespace HSMDataAccess.RepositoryServices
 {
     public class BillServiceRepository 
     {
-        public AppDBContext _context;
+        private readonly AppDBContext _context;
 
         public BillServiceRepository(AppDBContext context)
         {

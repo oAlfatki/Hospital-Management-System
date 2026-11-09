@@ -1,8 +1,7 @@
-﻿using HSMBusiness.Erorrs;
+using HSMBusiness.Erorrs;
 using HSMBusiness.Pattern;
 using HSMBusiness.Services;
 using HSMDataAccess.DTOs;
-using HSMDataAccess.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

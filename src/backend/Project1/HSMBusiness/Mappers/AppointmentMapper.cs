@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -24,7 +24,7 @@ namespace HSMBusiness.Mappers
             {
                 return new Appointment
                 {
-                    
+
                     PatientID=appointmentDTO.PatientID,
                     DoctorID=appointmentDTO.DoctorID,
                     Date=appointmentDTO.Date,
@@ -46,5 +46,9 @@ namespace HSMBusiness.Mappers
                 return appointment;
             }
         }
+
+        public static AppointmentResponse ToResponse(Appointment a) => new(a.ID.Trim(), a.PatientID.Trim(), a.DoctorID.Trim(),
+            a.Date, a.Time?.ToString("HH:mm"), a.Duration, a.Status.Trim(), a.NotificationSent ?? false, a.CreatedBy, a.CreatedOn, a.UpdatedOn);
+
     }
 }

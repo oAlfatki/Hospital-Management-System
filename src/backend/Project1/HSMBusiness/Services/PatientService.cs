@@ -1,4 +1,7 @@
-﻿using HSMBusiness.Mappers;
+using HSMBusiness.dto;
+using static HSMBusiness.Pattern.ResultPatern;
+using static HSMBusiness.Pattern.BusinessRules;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
@@ -82,7 +85,7 @@ namespace HSMBusiness.Services
             }
             if (patientEntity.PersonID.Trim() == patientDTO.PersonID)
             {
-                
+
             }
             else if (patientEntity.PersonID != patientDTO.PersonID)
             {
@@ -153,5 +156,41 @@ namespace HSMBusiness.Services
             }
             return true;
         }
+
+        public Task<ResultResponse<IReadOnlyList<PatientResponse>>> GetPatientProfilesAsync() => ExecuteAsync<IReadOnlyList<PatientResponse>>(async () =>
+            (await _patientRepository.GetProfilesAsync()).Select(PatientMapper.ToResponse).ToList());
+        public Task<ResultResponse<PatientResponse>> GetPatientProfileAsync(string id) => ExecuteAsync(async () =>
+            PatientMapper.ToResponse(Found(await _patientRepository.GetProfileAsync(id), "Patient not found.")));
+        public Task<bool> IsActivePatientAsync(string id) => _patientRepository.IsActiveAsync(id);
+        public Task<ResultResponse<PatientResponse>> RegisterPatientAsync(PatientRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            ValidateBirth(request);
+            await _personService.CheckContactAvailabilityAsync(request.Email, request.ContactNumber);
+            var patient = new Patient { ID = Id(), Person = PersonMapper.CreateProfile(request.Name, request.Email, request.ContactNumber), CreatedBy = actor };
+            PatientMapper.ApplyProfile(patient, request);
+            _patientRepository.StageAdd(patient);
+            await _patientRepository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Patient", "Create", patient.ID));
+            return PatientMapper.ToResponse(patient);
+        }, 201);
+        public Task<ResultResponse<PatientResponse>> UpdatePatientProfileAsync(string id, PatientRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            var patient = Found(await _patientRepository.GetProfileAsync(id), "Patient not found.");
+            ValidateBirth(request);
+            await _personService.CheckContactAvailabilityAsync(request.Email, request.ContactNumber, patient.PersonID);
+            PatientMapper.ApplyProfile(patient, request);
+            await _patientRepository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Patient", "Update", id));
+            return PatientMapper.ToResponse(patient);
+        });
+        public Task<ResultResponse<bool>> DeletePatientProfileAsync(string id, string actor) => ExecuteAsync(async () =>
+        {
+            var patient = Found(await _patientRepository.GetProfileAsync(id), "Patient not found.");
+            Require(!await _patientRepository.HasLinkedRecordsAsync(id), "Patient has linked records. Deactivate the patient instead.", 409);
+            _patientRepository.StageRemove(patient);
+            await _patientRepository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Patient", "Delete", id));
+            return true;
+        }, 204);
+        private static void ValidateBirth(PatientRequest request) => Require(request.DateOfBirth != default
+            && request.DateOfBirth <= DateOnly.FromDateTime(DateTime.UtcNow), "Invalid date of birth.");
+
     }
 }

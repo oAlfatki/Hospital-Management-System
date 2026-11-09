@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace HSMAPI.Contracts;
+namespace HSMDataAccess.DTOs;
 
 public class PatientRequest
 {

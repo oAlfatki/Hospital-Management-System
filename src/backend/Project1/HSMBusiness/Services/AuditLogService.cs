@@ -1,4 +1,7 @@
-﻿using HSMBusiness.Mappers;
+using HSMBusiness.dto;
+using static HSMBusiness.Pattern.ResultPatern;
+using static HSMBusiness.Pattern.BusinessRules;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.RepositoryServices;
@@ -47,14 +50,14 @@ namespace HSMBusiness.Services
             var AddNew = await _auditLog.AddAsync(auditLogEntity);
 
             auditLogEntity.ID = AddNew.ID;
-            
+
             return (Status,auditLogEntity.ID != "");
         }
 
         private async Task<(int, string?, bool)> Update(string ID,AuditLogDTO auditLogDTO)
         {
             var CurrentAuditLog = await _auditLog.GetByIDAsync(ID);
-            
+
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
             if (!await _userService.IsUserExist(CurrentAuditLog.UserID))
             {
@@ -163,5 +166,9 @@ namespace HSMBusiness.Services
 
             return (response.Status,response.Response,response.IsSuccess);
         }
+
+        public Task<ResultResponse<IReadOnlyList<AuditLogResponse>>> GetAuditProfilesAsync() => ExecuteAsync<IReadOnlyList<AuditLogResponse>>(async () =>
+            (await _auditLog.GetWithUsersAsync()).Select(AuditLogMapper.ToResponse).ToList());
+
     }
 }

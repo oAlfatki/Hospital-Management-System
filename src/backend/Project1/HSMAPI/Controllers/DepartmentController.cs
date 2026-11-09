@@ -1,40 +1,32 @@
-using HSMAPI.Contracts;
-using HSMAPI.Services;
-using HSMDataAccess.Data;
-using HSMDataAccess.Entities;
+using HSMBusiness;
+using HSMBusiness.Services;
+using HSMDataAccess.DTOs;
+using HSMAPI.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using static HSMAPI.Services.WorkflowService;
+using System.Security.Claims;
 
 namespace HSMAPI.Controllers;
 
 [ApiController, Authorize, Route("api/departments")]
-public class DepartmentController(AppDBContext db, WorkflowService workflow) : ControllerBase
+public class DepartmentController(DepartmentService service) : ControllerBase
 {
+    private string Actor => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+
     [HttpGet]
-    public async Task<IActionResult> All() => Ok((await db.Departments.AsNoTracking().ToListAsync()).Select(DepartmentView));
+    public async Task<IActionResult> All() =>
+        (await service.GetDepartmentProfilesAsync()).ToActionResult(this);
+
     [HttpPost, Authorize(Roles = "Admin,Management")]
-    public async Task<IActionResult> Create(DepartmentRequest r)
-    {
-        Require(string.IsNullOrWhiteSpace(r.HeadOfDepartment), "Create the department before assigning its head.");
-        var d = new Department { ID = Id(), Name = r.Name.Trim(), Description = r.Description, CreatedBy = workflow.Actor };
-        db.Departments.Add(d); await workflow.Save("Department", "Create", d.ID); return StatusCode(201, DepartmentView(d));
-    }
+    public async Task<IActionResult> Create(DepartmentRequest request) =>
+        (await service.CreateDepartmentAsync(request, Actor)).ToActionResult(this);
+
     [HttpPut("{id}"), Authorize(Roles = "Admin,Management")]
-    public async Task<IActionResult> Update(string id, DepartmentRequest r)
-    {
-        var d = await db.Departments.FindAsync(id); if (d is null) return NotFound();
-        if (!string.IsNullOrWhiteSpace(r.HeadOfDepartment))
-            Require(await db.Doctors.AnyAsync(x => x.ID == r.HeadOfDepartment && x.DepartmentID == id && x.Status), "Head must be an active doctor in this department.");
-        d.Name = r.Name.Trim(); d.Description = r.Description; d.HeadOf = string.IsNullOrWhiteSpace(r.HeadOfDepartment) ? null : r.HeadOfDepartment;
-        d.UpdatedOn = DateTime.UtcNow; await workflow.Save("Department", "Update", id); return Ok(DepartmentView(d));
-    }
+    public async Task<IActionResult> Update(string id, DepartmentRequest request) =>
+        (await service.UpdateDepartmentAsync(id, request, Actor)).ToActionResult(this);
+
     [HttpDelete("{id}"), Authorize(Roles = "Admin,Management")]
-    public async Task<IActionResult> Delete(string id)
-    {
-        var d = await db.Departments.FindAsync(id); if (d is null) return NotFound();
-        Require(!await db.Doctors.AnyAsync(x => x.DepartmentID == id), "Department contains doctors.", 409);
-        db.Departments.Remove(d); await workflow.Save("Department", "Delete", id); return NoContent();
-    }
+    public async Task<IActionResult> Delete(string id) =>
+        (await service.DeleteDepartmentAsync(id, Actor)).ToActionResult(this);
+
 }

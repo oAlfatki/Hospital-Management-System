@@ -1,4 +1,5 @@
-﻿using HSMBusiness.Mappers;
+using static HSMBusiness.Pattern.ResultPatern;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.RepositoryServices;
@@ -16,14 +17,19 @@ namespace HSMBusiness.Services
         public enum enMode { Add = 0, Update }
         public enMode _mode = enMode.Add;
         private readonly ReportRepository _report;
+        private readonly AppointmentRepository _appointments;
+        private readonly DoctorRepository _doctors;
+        private readonly PatientRepository _patients;
+        private readonly BillRepository _bills;
         private readonly UserService _userService;
         public ReportRepository reportRepository
         {
             get { return _report; }
         }
-        public ReportService(ReportRepository report, UserService userService, enMode mode = enMode.Add)
+        public ReportService(ReportRepository report, UserService userService, AppointmentRepository appointments, DoctorRepository doctors, PatientRepository patients, BillRepository bills, enMode mode = enMode.Add)
         {
             _report = report;
+            _appointments = appointments; _doctors = doctors; _patients = patients; _bills = bills;
             _userService = userService;
             _mode = mode;
         }
@@ -129,5 +135,27 @@ namespace HSMBusiness.Services
             }
             return (response.Status,response.Response,response.IsSuccess);
         }
+
+        public Task<ResultResponse<DashboardResponse>> GetDashboardAsync(string role) => ExecuteAsync(async () =>
+        {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var month = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+            var finance = role is "Admin" or "Accounts" or "Management";
+            var appointments = await _appointments.GetActiveWithProfilesAsync();
+            var doctors = await _doctors.GetProfilesAsync();
+            var payments = finance ? await _bills.GetPaymentsSinceAsync(month) : [];
+            var bills = finance ? await _bills.GetNonCancelledAsync() : [];
+            var revenue = payments.GroupBy(x => x.PaidOn.ToString("yyyy-MM-dd")).ToDictionary(x => x.Key, x => x.Sum(p => p.Amount));
+            var stats = new DashboardStats(await _patients.CountActiveAsync(), appointments.Count(x => x.Date == today),
+                finance ? payments.Sum(x => x.Amount) : null,
+                finance ? bills.Sum(x => x.PatientResponsibility - (x.PartialPaymentAmount ?? 0)) : null);
+            var upcoming = appointments.Where(x => x.Date.ToDateTime(x.Time ?? TimeOnly.MinValue) > DateTime.Now)
+                .OrderBy(x => x.Date).ThenBy(x => x.Time).Take(5).Select(ReportMapper.ToUpcomingResponse).ToList();
+            var daily = finance ? Enumerable.Range(0, DateTime.UtcNow.Day).Select(offset => month.AddDays(offset))
+                .Select(day => new DailyRevenueResponse(day.ToString("yyyy-MM-dd"), revenue.GetValueOrDefault(day.ToString("yyyy-MM-dd")))).ToList() : [];
+            var workloads = doctors.Select(d => new DoctorWorkloadResponse((d.Person ?? d.User?.Person)?.Name ?? "", appointments.Count(x => x.DoctorID == d.ID))).ToList();
+            return new DashboardResponse(finance, stats, upcoming, daily, workloads);
+        });
+
     }
 }

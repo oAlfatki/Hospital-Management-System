@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace HSMBusiness.Mappers
             {
                 return new Notification
                 {
-                    
+
                     PatientID = notifictionDTO.PatientID,
                     UserID = notifictionDTO.UserID,
                     Type = notifictionDTO.Type,
@@ -40,7 +40,7 @@ namespace HSMBusiness.Mappers
             notification.Status = notifictionDTO.Status;
             notification.SentOn = notifictionDTO.SentOn;
             notification.DeliveryConfirmation = notifictionDTO.DeliveryConfirmation;
-                
+
             return notification;
         }
 
@@ -58,5 +58,9 @@ namespace HSMBusiness.Mappers
                 notifiction.DeliveryConfirmation
             );
         }
+
+        public static NotificationResponse ToResponse(Notification n) => new(n.ID.Trim(), n.PatientID.Trim(), n.UserID.Trim(),
+            n.Type, n.Message, n.Status.Trim(), n.SentOn, n.DeliveryConfirmation ?? false, 0);
+
     }
 }

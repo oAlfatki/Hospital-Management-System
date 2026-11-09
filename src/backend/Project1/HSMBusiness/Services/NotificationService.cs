@@ -1,4 +1,8 @@
-﻿using HSMBusiness.Mappers;
+using HSMDataAccess.Entities;
+using HSMBusiness.dto;
+using static HSMBusiness.Pattern.ResultPatern;
+using static HSMBusiness.Pattern.BusinessRules;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.RepositoryServices;
@@ -41,14 +45,14 @@ namespace HSMBusiness.Services
             {
                 return (500, false);
             }
-           
+
             var notifictionEntity = new NotificationMapper().ToEntity(notifictionDTO);
             if (notifictionEntity.Status != "Pending" && notifictionEntity.Status != "Failed" && notifictionEntity.Status != "Sent")
             {
                 return (500, false);
             }
             var AddNew =await _notifiction.AddAsync(notifictionEntity);
-           
+
             notifictionEntity.ID = AddNew.ID;
             return (200,notifictionEntity.ID != "");
         }
@@ -67,7 +71,7 @@ namespace HSMBusiness.Services
                 response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess);
             }
-            
+
             if (notifictionDTO.Status!="Pending" && notifictionDTO.Status != "Failed" && notifictionDTO.Status != "Sent")
             {
                 response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
@@ -78,7 +82,7 @@ namespace HSMBusiness.Services
                 response =await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status,response.Response,response.IsSuccess);
             }
-            
+
             CurrentNotifiction =new NotificationMapper().ToEntity(notifictionDTO,NotificationMapper.enMode.Update,CurrentNotifiction);
             bool isUpdated = await _notifiction.UpdateAsync(CurrentNotifiction);
             return (response.Status,response.Response, isUpdated);
@@ -119,7 +123,7 @@ namespace HSMBusiness.Services
                 response =await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status,response.Response,response.IsSuccess,null);
             }
-            
+
             return (response.Status,response.Response,response.IsSuccess, listOfNotifications);
         }
 
@@ -153,5 +157,17 @@ namespace HSMBusiness.Services
             }
             return (response.Status,response.Response,response.IsSuccess);
         }
+
+        public Task<ResultResponse<IReadOnlyList<NotificationResponse>>> GetNotificationProfilesAsync() => ExecuteAsync<IReadOnlyList<NotificationResponse>>(async () =>
+            (await _notifiction.GetAllAsync()).Select(NotificationMapper.ToResponse).ToList());
+        internal async Task<NotificationResponse> QueuePaymentReminderAsync(string patientId, string invoice, string actor)
+        {
+            var notification = new Notification { ID = Id(), PatientID = patientId, UserID = actor, Type = "Email",
+                Message = $"Payment reminder for invoice {invoice}", Status = "Pending", DeliveryConfirmation = false };
+            _notifiction.StageAdd(notification);
+            await _notifiction.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Notification", "Create", notification.ID));
+            return NotificationMapper.ToResponse(notification);
+        }
+
     }
 }

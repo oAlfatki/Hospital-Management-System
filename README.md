@@ -1,6 +1,6 @@
 # Hospital Management System
 
-React 19 / TypeScript / Vite frontend and ASP.NET Core 8 / EF Core backend. Arabic and English, RTL, role-based navigation, patient registration, scheduling, medical records, billing, notification queue and audit history.
+React 19 / TypeScript / Vite frontend and ASP.NET Core 8 / EF Core backend. The existing three-tier backend is retained: HSMAPI → HSMBusiness → HSMDataAccess. Controllers call the existing business services; only repositories execute EF queries and persistence. Arabic and English, RTL, role-based navigation, patient registration, scheduling, medical records, billing, notification queue and audit history.
 
 ## Run locally
 
@@ -40,7 +40,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Browser tests start their own API, Vite server and temporary SQLite database. The suite covers patient registration/editing, departments, physicians, scheduling, invoices, partial payments, reminders, staff accounts, clinical updates and Arabic mobile rendering. API tests additionally exercise permissions, disabled sessions, duplicates, conflicts, record versions and SQL Server model generation. CI runs these checks for pushes and pull requests.
+Browser tests start their own API, Vite server and temporary SQLite database. The suite covers patient registration/editing, departments, physicians, scheduling, invoices, partial payments, reminders, staff accounts, clinical updates and Arabic mobile rendering. API tests additionally exercise permissions, disabled sessions, duplicates, conflicts, record versions and SQL Server model generation. Architecture tests enforce the three-tier boundaries. CI runs these checks for pushes and pull requests.
 
 ## SQL Server and existing installations
 

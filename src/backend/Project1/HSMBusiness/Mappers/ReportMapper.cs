@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace HSMBusiness.Mappers
             {
                 return new Report
                 {
-                    
+
                     Type = reportDTO.Type,
                     GeneratedOn = reportDTO.GeneratedOn,
                     GeneratedBy = reportDTO.GeneratedBy,
@@ -37,7 +37,7 @@ namespace HSMBusiness.Mappers
             else
             {
 
-                
+
                 report.Type = reportDTO.Type;
                 report.GeneratedOn = reportDTO.GeneratedOn;
                 report.GeneratedBy = reportDTO.GeneratedBy;
@@ -71,5 +71,10 @@ namespace HSMBusiness.Mappers
                 report.Notes
             );
         }
+
+        public static UpcomingAppointmentResponse ToUpcomingResponse(Appointment appointment) => new(appointment.ID.Trim(),
+            appointment.Date, appointment.Time?.ToString("HH:mm"), appointment.Status.Trim(), appointment.patient.Person.Name,
+            (appointment.doctor.Person ?? appointment.doctor.User?.Person)?.Name ?? "", appointment.doctor.Specialization);
+
     }
 }

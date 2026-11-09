@@ -1,4 +1,7 @@
-﻿using HSMBusiness.Mappers;
+using HSMBusiness.dto;
+using static HSMBusiness.Pattern.ResultPatern;
+using static HSMBusiness.Pattern.BusinessRules;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
@@ -71,7 +74,7 @@ namespace HSMBusiness.Services
                     departmentDTO,
                     DepartmentMapper.enMode.Update
                 );
-           
+
             return (
                 response.Status,
                 response.Response,
@@ -254,5 +257,44 @@ namespace HSMBusiness.Services
                 response.IsSuccess
             );
         }
+
+        public Task<bool> DepartmentExistsAsync(string id) => _department.ExistsAsync(id);
+        public async Task ValidateDoctorTransferAsync(string doctorId, string departmentId, string status) =>
+            Require(!(await _department.GetHeadedByDoctorAsync(doctorId)).Any(x => x.ID != departmentId || status != "Active"),
+                "Assign another department head before moving or deactivating this doctor.", 409);
+        public async Task<bool> IsDepartmentHeadAsync(string doctorId) => (await _department.GetHeadedByDoctorAsync(doctorId)).Count > 0;
+        public Task<ResultResponse<IReadOnlyList<DepartmentResponse>>> GetDepartmentProfilesAsync() => ExecuteAsync<IReadOnlyList<DepartmentResponse>>(async () =>
+            (await _department.GetAllAsync()).Select(DepartmentMapper.ToResponse).ToList());
+        public Task<ResultResponse<DepartmentResponse>> CreateDepartmentAsync(DepartmentRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            Require(string.IsNullOrWhiteSpace(request.HeadOfDepartment), "Create the department before assigning its head.");
+            var department = new Department { ID = Id(), Name = request.Name.Trim(), Description = request.Description, CreatedBy = actor };
+            _department.StageAdd(department);
+            await _department.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Department", "Create", department.ID));
+            return DepartmentMapper.ToResponse(department);
+        }, 201);
+        public Task<ResultResponse<DepartmentResponse>> UpdateDepartmentAsync(string id, DepartmentRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            var department = Found(await _department.GetByIDAsync(id), "Department not found.");
+            if (!string.IsNullOrWhiteSpace(request.HeadOfDepartment))
+            {
+                var doctor = await _department.FindDoctorAsync(request.HeadOfDepartment);
+                Require(doctor is not null && doctor.Status && doctor.DepartmentID.Trim() == id, "Head must be an active doctor in this department.");
+            }
+            department.Name = request.Name.Trim(); department.Description = request.Description;
+            department.HeadOf = string.IsNullOrWhiteSpace(request.HeadOfDepartment) ? null : request.HeadOfDepartment;
+            department.UpdatedOn = DateTime.UtcNow;
+            await _department.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Department", "Update", id));
+            return DepartmentMapper.ToResponse(department);
+        });
+        public Task<ResultResponse<bool>> DeleteDepartmentAsync(string id, string actor) => ExecuteAsync(async () =>
+        {
+            var department = Found(await _department.GetByIDAsync(id), "Department not found.");
+            Require(!await _department.HasDoctorsAsync(id), "Department contains doctors.", 409);
+            _department.StageRemove(department);
+            await _department.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Department", "Delete", id));
+            return true;
+        }, 204);
+
     }
 }

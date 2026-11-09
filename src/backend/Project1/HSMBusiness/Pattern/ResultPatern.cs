@@ -1,4 +1,5 @@
-﻿using Azure;
+using HSMBusiness.Erorrs;
+using Azure;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -28,5 +29,15 @@ namespace HSMBusiness.Pattern
                 _ => new(500, "An unexpected error occurred on the server", false,errors)
             };
         }
+
+        public record ResultResponse<T>(int Status, string Response, bool IsSuccess, T? Data = default,
+            Dictionary<string, string>? Errors = null);
+
+        public static async Task<ResultResponse<T>> ExecuteAsync<T>(Func<Task<T>> operation, int successStatus = 200)
+        {
+            try { return new(successStatus, "The request was successful", true, await operation()); }
+            catch (BusinessRuleException error) { return new(error.Status, error.Message, false); }
+        }
+
     }
 }

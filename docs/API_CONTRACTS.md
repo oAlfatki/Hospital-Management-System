@@ -1,5 +1,7 @@
 # SPA API contracts
 
+Controllers delegate these operations to the existing HSMBusiness services, which use the existing HSMDataAccess repositories and Mappers. Typed DTOs live in HSMDataAccess/DTOs, and the existing ResultPatern carries service results.
+
 All paths are relative to the same frontend origin. ASP.NET serializes properties as camelCase. Successful collections are JSON arrays; creates return the persisted view with HTTP 201, updates return that same view with HTTP 200, and deletes return 204. Validation failures use problem details and a field `errors` dictionary; missing records return 404; duplicates, overlaps, stale versions and invalid payment balances return 409. Protected requests require the `hms_session` HttpOnly cookie.
 
 | Feature | Operations | Important contract fields |

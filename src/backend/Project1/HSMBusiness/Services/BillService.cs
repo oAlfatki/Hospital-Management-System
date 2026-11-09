@@ -1,4 +1,7 @@
-﻿using HSMBusiness.Mappers;
+using HSMBusiness.dto;
+using static HSMBusiness.Pattern.ResultPatern;
+using static HSMBusiness.Pattern.BusinessRules;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
@@ -14,6 +17,7 @@ namespace HSMBusiness.Services
     public class BillService
     {
         private readonly BillRepository _repository;
+        private readonly NotificationService _notificationService;
         private readonly PersonService _personService;
         private readonly BillServiceService _billServiceService;
         private readonly PatientService _patientService;
@@ -31,13 +35,14 @@ namespace HSMBusiness.Services
         {
             if(await _billServiceService.IsBillExist(BillID))
             {
-                return true; 
+                return true;
             }
             return false;
         }
-        public BillService(BillRepository repository,PersonService personService,PatientService patientService,BillServiceService billServiceService,enMode mode = enMode.Add)
+        public BillService(BillRepository repository,PersonService personService,PatientService patientService,BillServiceService billServiceService,NotificationService notificationService,enMode mode = enMode.Add)
         {
             _repository = repository;
+            _notificationService = notificationService;
             _personService = personService;
             _patientService = patientService;
             _billServiceService = billServiceService;
@@ -148,6 +153,59 @@ namespace HSMBusiness.Services
                     return await _Update( billDTO, ID);
             }
             return (response.Status, response.Response, response.IsSuccess);
+        }
+
+        public Task<ResultResponse<IReadOnlyList<BillResponse>>> GetInvoiceProfilesAsync() => ExecuteAsync<IReadOnlyList<BillResponse>>(async () =>
+            (await _repository.GetDetailedAsync()).Select(ToInvoiceResponse).ToList());
+        public Task<ResultResponse<BillResponse>> GetInvoiceProfileAsync(string id) => ExecuteAsync(async () =>
+            ToInvoiceResponse(Found(await _repository.GetDetailedByIdAsync(id), "Invoice not found.")));
+        public Task<ResultResponse<BillResponse>> CreateInvoiceAsync(BillRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            Require(await _patientService.IsActivePatientAsync(request.PatientId), "Active patient not found.", 404);
+            Require(request.DueDate >= DateOnly.FromDateTime(DateTime.UtcNow), "Due date cannot be in the past.");
+            var subtotal = request.Services.Sum(s => Money(s.Cost));
+            var discount = Money(request.DiscountAmount); var taxPercent = Money(request.TaxPercent);
+            var total = Money(subtotal + Money(subtotal * taxPercent / 100) - discount);
+            Require(subtotal <= 99999999 && total <= 99999999 && total > 0 && discount <= subtotal, "Discount must not exceed subtotal and total must be positive.");
+            var bill = new Bill { ID = Id(), PatientID = request.PatientId, Status = "Unpaid", Date = DateTime.UtcNow,
+                DueDate = request.DueDate.ToDateTime(TimeOnly.MinValue), Invoice = $"INV-{Guid.NewGuid():N}", GrossAmount = subtotal,
+                Discount = discount, TaxPercent = taxPercent, PatientResponsibility = total, PartialPaymentAmount = 0, CreatedBy = actor,
+                Lines = request.Services.Select(s => new BillLine { ServiceName = s.ServiceName.Trim(), Cost = Money(s.Cost) }).ToList() };
+            _repository.StageAdd(bill);
+            await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Billing", "Create", bill.ID));
+            return ToInvoiceResponse(bill);
+        }, 201);
+        public Task<ResultResponse<BillResponse>> RecordInvoicePaymentAsync(string id, PaymentRequest request, string actor) => ExecuteAsync(() => _repository.InTransactionAsync(async () =>
+        {
+            var bill = Found(await _repository.GetDetailedByIdAsync(id), "Invoice not found.");
+            var amount = Money(request.AmountToPay); var paid = bill.PartialPaymentAmount ?? 0;
+            Require(bill.Status != "Cancelled" && amount > 0 && amount <= Money(bill.PatientResponsibility - paid), "Payment exceeds outstanding balance or invoice is cancelled.", 409);
+            bill.PartialPaymentAmount = paid + amount; bill.Status = bill.PartialPaymentAmount == bill.PatientResponsibility ? "Paid" : "Partially Paid";
+            bill.Revision++; bill.UpdatedOn = DateTime.UtcNow; bill.Payments.Add(new Payment { Amount = amount });
+            await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Billing", "Update", id));
+            return ToInvoiceResponse(bill);
+        }));
+        public Task<ResultResponse<NotificationResponse>> QueueInvoiceReminderAsync(string id, string actor) => ExecuteAsync(async () =>
+        {
+            var bill = Found(await _repository.GetByIDAsync(id), "Invoice not found.");
+            Require(bill.Status != "Cancelled" && bill.PatientResponsibility > (bill.PartialPaymentAmount ?? 0), "Invoice is already paid.", 409);
+            return await _notificationService.QueuePaymentReminderAsync(bill.PatientID, bill.Invoice, actor);
+        }, 202);
+        public Task<ResultResponse<bool>> DeleteInvoiceAsync(string id, string actor) => ExecuteAsync(async () =>
+        {
+            var bill = Found(await _repository.GetDetailedByIdAsync(id), "Invoice not found.");
+            Require((bill.PartialPaymentAmount ?? 0) == 0, "Invoices with payments cannot be deleted.", 409);
+            _repository.StageRemove(bill);
+            await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Billing", "Delete", id));
+            return true;
+        }, 204);
+
+            private static BillResponse ToInvoiceResponse(Bill bill)
+        {
+            var due = Money(bill.PatientResponsibility - (bill.PartialPaymentAmount ?? 0));
+            var status = bill.Status == "Cancelled" ? "Cancelled" : bill.Status == "Pending Insurance" ? "Pending Insurance" : due <= 0 ? "Paid"
+                : bill.DueDate?.Date < DateTime.UtcNow.Date ? "Overdue" : "Pending";
+            return BillMapper.ToResponse(bill, due, status);
         }
     }
 }

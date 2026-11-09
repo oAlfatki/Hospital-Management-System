@@ -1,4 +1,7 @@
-﻿using HSMBusiness.Erorrs;
+using HSMBusiness.dto;
+using static HSMBusiness.Pattern.ResultPatern;
+using static HSMBusiness.Pattern.BusinessRules;
+using HSMBusiness.Erorrs;
 using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
@@ -116,7 +119,7 @@ namespace HSMBusiness.Services
                 return (response.Status, response.Response, response.IsSuccess, response.Errors);
             }
             var errors = await appointmentError.ValidateAppointment(appointmentDTO);
-            
+
             if (errors.Count > 0)
             {
                 response =
@@ -136,7 +139,7 @@ namespace HSMBusiness.Services
             CurrentAppointment = await new AppointmentMapper().ToEntity(appointmentDTO,AppointmentMapper.enMode.Update,CurrentAppointment);
 
             await _appointment.UpdateAsync(CurrentAppointment);
-            
+
             return (response.Status, response.Response, response.IsSuccess, response.Errors);
         }
         public async Task<(int Status, string? Response, bool IsSuccess, Dictionary<string, string>? errors)>Save(AppointmentDTO appointmentDTO,string ID)
@@ -162,7 +165,7 @@ namespace HSMBusiness.Services
                     if (AddNew.IsSuccess)
                     {
                         _mode = enMode.Update;
-                        
+
                     }
                     else
                     {
@@ -191,7 +194,7 @@ namespace HSMBusiness.Services
             AppointmentDTO? currentAppointment = null;
             var appointment = await _appointment.GetByIDAsync(ID);
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
-            
+
             if (appointment == null)
             {
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
@@ -216,5 +219,59 @@ namespace HSMBusiness.Services
             }
             return (response.Status, response.Response, response.IsSuccess, response.Errors);
         }
+
+        public Task<ResultResponse<IReadOnlyList<AppointmentResponse>>> GetAppointmentProfilesAsync() => ExecuteAsync<IReadOnlyList<AppointmentResponse>>(async () =>
+            (await _appointment.GetAllAsync()).Select(AppointmentMapper.ToResponse).ToList());
+        public Task<ResultResponse<AppointmentResponse>> GetAppointmentProfileAsync(string id) => ExecuteAsync(async () =>
+            AppointmentMapper.ToResponse(Found(await _appointment.GetByIDAsync(id), "Appointment not found.")));
+        public Task<ResultResponse<AppointmentResponse>> ScheduleAppointmentAsync(AppointmentRequest request, string actor) => ExecuteAsync(() => _appointment.InTransactionAsync(async () =>
+        {
+            Require(await patientService.IsActivePatientAsync(request.PatientId), "Active patient not found.", 404);
+            Require(await doctorService.IsActiveDoctorAsync(request.DoctorId), "Active doctor not found.", 404);
+            var appointment = new Appointment { ID = Id(), PatientID = request.PatientId, DoctorID = request.DoctorId,
+                Date = request.AppointmentDate, Time = request.AppointmentTime, Duration = request.DurationMinutes,
+                Status = "Scheduled", NotificationSent = false, CreatedBy = actor };
+            await ValidateSlotAsync(appointment);
+            _appointment.StageAdd(appointment);
+            await _appointment.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Appointment", "Create", appointment.ID));
+            return AppointmentMapper.ToResponse(appointment);
+        }), 201);
+        public Task<ResultResponse<AppointmentResponse>> ChangeAppointmentStatusAsync(string id, AppointmentStatusRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            var appointment = Found(await _appointment.GetByIDAsync(id), "Appointment not found.");
+            Require(request.Status == "Cancelled", "Use the reschedule operation to change appointment time.");
+            appointment.Status = "Cancelled"; appointment.UpdatedOn = DateTime.UtcNow;
+            await _appointment.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Appointment", "Update", id));
+            return AppointmentMapper.ToResponse(appointment);
+        });
+        public Task<ResultResponse<AppointmentResponse>> RescheduleAppointmentAsync(string id, RescheduleRequest request, string actor) => ExecuteAsync(() => _appointment.InTransactionAsync(async () =>
+        {
+            var appointment = Found(await _appointment.GetByIDAsync(id), "Appointment not found.");
+            Require(appointment.Status != "Cancelled", "Cancelled appointments cannot be rescheduled.", 409);
+            appointment.Date = request.NewDate; appointment.Time = request.NewTime; appointment.Status = "Rescheduled";
+            appointment.NotificationSent = false; appointment.UpdatedOn = DateTime.UtcNow;
+            await ValidateSlotAsync(appointment);
+            await _appointment.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Appointment", "Update", id));
+            return AppointmentMapper.ToResponse(appointment);
+        }));
+        private async Task ValidateSlotAsync(Appointment appointment)
+        {
+            Require(appointment.Time.HasValue && appointment.Date != default, "Appointment date and time are required.");
+            var start = appointment.Date.ToDateTime(appointment.Time!.Value);
+            Require(start > DateTime.Now, "Appointment must be in the future.");
+            var end = start.AddMinutes(appointment.Duration);
+            Require(end.Date == start.Date, "Appointment must end on the same day.");
+            var conflicts = await _appointment.GetPotentialConflictsAsync(appointment.ID, appointment.Date, appointment.DoctorID, appointment.PatientID);
+            Require(!conflicts.Any(x => x.Time.HasValue && start < x.Date.ToDateTime(x.Time.Value).AddMinutes(x.Duration)
+                && end > x.Date.ToDateTime(x.Time.Value)), "Doctor or patient already has an overlapping appointment.", 409);
+        }
+        public Task<ResultResponse<bool>> DeleteAppointmentAsync(string id, string actor) => ExecuteAsync(async () =>
+        {
+            var appointment = Found(await _appointment.GetByIDAsync(id), "Appointment not found.");
+            _appointment.StageRemove(appointment);
+            await _appointment.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Appointment", "Delete", id));
+            return true;
+        }, 204);
+
     }
 }

@@ -1,19 +1,21 @@
-﻿using Azure;
+using HSMBusiness.dto;
+using static HSMBusiness.Pattern.ResultPatern;
+using static HSMBusiness.Pattern.BusinessRules;
+using Azure;
 using HSMBusiness.Erorrs;
 using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
-using HSMDataAccess.Data;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HSMBusiness.Services
 {
-    public class UserService 
+    public class UserService
     {
         private readonly UserRepository _repository;
+        private readonly DoctorRepository _doctorRepository;
         private readonly UserError _userError;
         private readonly PersonService _personService;
         ResultPatern resultPattern = new ResultPatern();
@@ -21,10 +23,11 @@ namespace HSMBusiness.Services
         public enMode Mode = enMode.Add;
 
         public UserService(UserRepository repository,
-    UserError userError,PersonService personService, enMode Mode = enMode.Add) 
+    UserError userError,PersonService personService, DoctorRepository doctorRepository, enMode Mode = enMode.Add)
         {
-          
+
             _repository = repository;
+            _doctorRepository = doctorRepository;
             _userError = userError;
             _personService = personService;
             this.Mode = Mode;
@@ -78,10 +81,10 @@ namespace HSMBusiness.Services
         {
 
             User user = await _repository.GetByIDAsync(ID);
-            
+
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
             var errors = await _userError.ValidateUser(userDTO);
-            
+
             if (!await _personService.IsPersonExist(userDTO.PersonID))
             {
                 response =
@@ -109,7 +112,7 @@ namespace HSMBusiness.Services
                  response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess,response.Errors);
             }
-            
+
             if (await _repository.CountNumberOfPerson(user.PersonID) > 1)
             {
                 response =
@@ -123,7 +126,7 @@ namespace HSMBusiness.Services
             }
             user = new UserMapper().ToEntity(userDTO, UserMapper.enMode.Update, user);
             await _repository.UpdateAsync(user);
-           
+
             return  (response.Status, response.Response, response.IsSuccess, response.Errors);
         }
 
@@ -220,9 +223,9 @@ namespace HSMBusiness.Services
         {
             var response =
                 await resultPattern.GiveResponse(200, new Dictionary<string, string>());
-           
+
             var errors =await _userError.ValidateUser(userDTO);
-           
+
             if (errors.Count > 0)
             {
                 response =
@@ -267,5 +270,87 @@ namespace HSMBusiness.Services
                         response.Errors
             );
         }
+
+        private readonly Microsoft.AspNetCore.Identity.PasswordHasher<User> _passwordHasher = new();
+        public Task CheckContactAvailabilityAsync(string email, string? phone, string? exceptId = null) =>
+            _personService.CheckContactAvailabilityAsync(email, phone, exceptId);
+        public Task<ResultResponse<UserResponse>> AuthenticateAsync(LoginRequest request) => ExecuteAsync(async () =>
+        {
+            var user = await _repository.FindByEmailAsync(request.Email.Trim().ToLowerInvariant());
+            var valid = false;
+            if (user is not null && user.Status)
+            {
+                try { valid = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) != Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed; }
+                catch (FormatException) { /* Legacy plaintext passwords require an explicit reset. */ }
+            }
+            Require(valid && user is not null, "Invalid email or password.", 401);
+            return UserMapper.ToResponse(user!);
+        });
+        public async Task<UserResponse?> GetActiveSessionAsync(string id)
+        {
+            var user = await _repository.GetProfileAsync(id);
+            return user is not null && user.Status ? UserMapper.ToResponse(user) : null;
+        }
+        public Task<ResultResponse<IReadOnlyList<UserResponse>>> GetStaffProfilesAsync() => ExecuteAsync<IReadOnlyList<UserResponse>>(async () =>
+            (await _repository.GetProfilesAsync()).Select(UserMapper.ToResponse).ToList());
+        public Task<ResultResponse<UserResponse>> RegisterStaffAsync(StaffRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            Require(!string.IsNullOrWhiteSpace(request.Password) && request.Password.Length >= 12, "An initial password of at least 12 characters is required.");
+            var person = await _personService.FindProfileByEmailAsync(request.Email);
+            Doctor? doctor = null;
+            if (person is not null)
+            {
+                doctor = await _doctorRepository.FindUnlinkedByPersonAsync(person.ID);
+                Require(request.Role == "Doctor" && doctor is not null, "Email is already registered.", 409);
+            }
+            await _personService.CheckContactAvailabilityAsync(request.Email, request.ContactNumber, person?.ID);
+            var user = new User { ID = Id(), Person = person ?? PersonMapper.CreateProfile(request.Name, request.Email, request.ContactNumber),
+                Name = request.Name.Trim(), Role = request.Role, Status = request.Status == "Active", DepartmentName = request.Department, CreatedBy = actor };
+            user.Person.Name = user.Name;
+            if (!string.IsNullOrWhiteSpace(request.ContactNumber)) user.Person.ContactNumber = request.ContactNumber;
+            user.PasswordHash = _passwordHasher.HashPassword(user, request.Password!); _repository.StageAdd(user);
+            if (doctor is not null) doctor.User = user;
+            await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "User", "Create", user.ID));
+            return UserMapper.ToResponse(user);
+        }, 201);
+        public Task<ResultResponse<UserResponse>> UpdateStaffProfileAsync(string id, StaffRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            var user = Found(await _repository.GetProfileAsync(id), "User not found.");
+            Require(id != actor || (request.Role == "Admin" && request.Status == "Active"), "You cannot remove your own administrator access.", 409);
+            await _personService.CheckContactAvailabilityAsync(request.Email, request.ContactNumber, user.PersonID);
+            PersonMapper.ApplyProfile(user.Person, request.Name, request.Email, request.ContactNumber);
+            user.Name = request.Name.Trim(); user.Role = request.Role; user.Status = request.Status == "Active";
+            user.DepartmentName = request.Department; user.UpdatedOn = DateTime.UtcNow;
+            if (!string.IsNullOrEmpty(request.Password)) user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
+            await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "User", "Update", id));
+            return UserMapper.ToResponse(user);
+        });
+        public async Task EnsureDevelopmentAdministratorAsync(string? email, string? password)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || await _repository.HasAnyAsync()) return;
+            Require(password.Length >= 12, "Bootstrap password must have at least 12 characters.");
+            var admin = new User { ID = Id(), Name = "Administrator", Role = "Admin", Status = true,
+                Person = PersonMapper.CreateProfile("Administrator", email, "0000000000") };
+            admin.PasswordHash = _passwordHasher.HashPassword(admin, password);
+            _repository.StageAdd(admin); await _repository.SaveChangesWithAuditAsync();
+        }
+        public Task<ResultResponse<bool>> ProvisionAdministratorAsync(string email, string password) => ExecuteAsync(async () =>
+        {
+            Require(System.Net.Mail.MailAddress.TryCreate(email, out _) && !string.IsNullOrWhiteSpace(password) && password.Length >= 12,
+                "A valid administrator email and a password of at least 12 characters are required.");
+            var user = await _repository.FindByEmailAsync(email.Trim().ToLowerInvariant());
+            if (user is null)
+            {
+                await _personService.CheckContactAvailabilityAsync(email, null);
+                user = new User { ID = Id(), Name = "Administrator", Role = "Admin", Status = true, Person = PersonMapper.CreateProfile("Administrator", email, null) };
+                _repository.StageAdd(user);
+            }
+            Require(user.Role.Trim() == "Admin", "The selected user is not an administrator.", 409);
+            user.PasswordHash = _passwordHasher.HashPassword(user, password); user.Status = true; user.UpdatedOn = DateTime.UtcNow;
+            await _repository.SaveChangesWithAuditAsync(new AuditLog { ID = Id(), UserID = user.ID, Action = "Update", Entity = "User",
+                Timestamp = DateTime.UtcNow, Details = "Administrator password provisioned by explicit maintenance command." });
+            return true;
+        });
+
     }
 }

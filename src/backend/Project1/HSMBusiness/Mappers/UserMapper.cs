@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace HSMBusiness.Mappers
 {
-    public class UserMapper 
+    public class UserMapper
     {
         public enum enMode { Add,Update}
-       
+
         public UserDTO ToDTO(User user)
         {
             return new UserDTO(user.ID,user.Name,user.Role,user.Status,user.PasswordHash,user.PersonID);
@@ -19,7 +19,7 @@ namespace HSMBusiness.Mappers
 
         public User ToEntity(UserDTO userDTO, enMode mode = enMode.Add, User user = null)
         {
-            
+
             if (mode == enMode.Add)
             {
                 return new User
@@ -43,6 +43,10 @@ namespace HSMBusiness.Mappers
             }
 
         }
-        
+
+
+        public static UserResponse ToResponse(User u) => new(u.ID.Trim(), u.Person.Name.Trim(), u.Person.Email,
+            u.Person.ContactNumber?.Trim() ?? "", u.Role.Trim(), u.Status ? "Active" : "Inactive", u.DepartmentName, u.CreatedOn, u.UpdatedOn);
+
     }
 }

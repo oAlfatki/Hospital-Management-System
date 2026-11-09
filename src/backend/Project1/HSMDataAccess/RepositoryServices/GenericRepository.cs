@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.Data;
+using HSMDataAccess.Data;
 using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +11,7 @@ namespace HSMDataAccess.RepositoryServices
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        public AppDBContext _context;
+        protected readonly AppDBContext _context;
 
         public GenericRepository(AppDBContext context)
         {
@@ -27,7 +27,7 @@ namespace HSMDataAccess.RepositoryServices
         public async Task<bool> DeleteAsync(T entity)
         {
             _context.Set<T>().Remove(entity);
-            
+
             int AffectedRows= await _context.SaveChangesAsync();
             return AffectedRows > 0;
         }
@@ -36,7 +36,7 @@ namespace HSMDataAccess.RepositoryServices
             var entities = await _context.Set<T>().AsNoTracking().ToListAsync();
             return entities;
         }
-        
+
         public async Task<T> GetByIDAsync(string ID)
         {
             var entity = await _context.Set<T>().FirstOrDefaultAsync(e => EF.Property<string>(e, "ID") == ID);
@@ -45,7 +45,7 @@ namespace HSMDataAccess.RepositoryServices
         public async Task<bool> UpdateAsync(T entity)
         {
             _context.Set<T>().Update(entity);
-            
+
             int AffectedRows = await _context.SaveChangesAsync();
             Console.WriteLine($"AffectedRows: {AffectedRows}");
             return AffectedRows > 0;
@@ -55,5 +55,22 @@ namespace HSMDataAccess.RepositoryServices
             return await _context.Set<T>()
                 .AnyAsync(e => EF.Property<string>(e, "ID") == ID);
         }
+
+        public void StageAdd(T entity) => _context.Set<T>().Add(entity);
+        public void StageRemove(T entity) => _context.Set<T>().Remove(entity);
+        public async Task SaveChangesWithAuditAsync(AuditLog? entry = null)
+        {
+            if (entry is not null) _context.AuditLogs.Add(entry);
+            await _context.SaveChangesAsync();
+        }
+        public async Task<TResult> InTransactionAsync<TResult>(Func<Task<TResult>> operation)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+            var result = await operation();
+            await transaction.CommitAsync();
+            return result;
+        }
+        public Task InitializeDatabaseAsync() => _context.Database.EnsureCreatedAsync();
+
     }
 }

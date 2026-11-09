@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ namespace HSMBusiness.Mappers
             {
                 return new AuditLog
                 {
-                    
+
                     UserID = auditLogDTO.UserID,
                     Entity = auditLogDTO.Entity,
                     Action = auditLogDTO.Action,
@@ -52,5 +52,14 @@ namespace HSMBusiness.Mappers
                 auditLog.Details
             );
         }
+
+        public static AuditLogResponse ToResponse(AuditLog log) => new(log.ID.Trim(), log.UserID.Trim(), log.user.Person.Name,
+            log.Entity, log.Action.Trim(), log.Timestamp, log.Details);
+        public static AuditLog? CreateEntry(string actor, string entity, string action, string id) => string.IsNullOrEmpty(actor) ? null : new()
+        {
+            ID = HSMBusiness.Pattern.BusinessRules.Id(), UserID = actor, Entity = entity, Action = action,
+            Timestamp = DateTime.UtcNow, Details = $"{action} {entity} {id}"
+        };
+
     }
 }

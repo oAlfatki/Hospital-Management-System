@@ -2,12 +2,9 @@ using HSMBusiness;
 using HSMBusiness.Erorrs;
 using HSMBusiness.Services;
 using HSMDataAccess.Data;
-using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
-using HSMAPI.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -23,9 +20,6 @@ public partial class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddProblemDetails();
-        builder.Services.AddHttpContextAccessor();
-        builder.Services.AddScoped<WorkflowService>();
-        builder.Services.AddScoped<PasswordHasher<User>>();
         var origins = builder.Configuration.GetSection("FrontendOrigins").Get<string[]>() ?? ["http://localhost:3000"];
         builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
@@ -40,11 +34,11 @@ public partial class Program
             o.Events.OnRedirectToAccessDenied = c => { c.Response.StatusCode = 403; return Task.CompletedTask; };
             o.Events.OnValidatePrincipal = async c =>
             {
-                var db = c.HttpContext.RequestServices.GetRequiredService<AppDBContext>();
+                var users = c.HttpContext.RequestServices.GetRequiredService<UserService>();
                 var id = c.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-                var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.ID == id);
-                if (user is null || !user.Status) { c.RejectPrincipal(); return; }
-                var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.ID.Trim()), new Claim(ClaimTypes.Role, user.Role.Trim()) }, CookieAuthenticationDefaults.AuthenticationScheme);
+                var user = string.IsNullOrEmpty(id) ? null : await users.GetActiveSessionAsync(id);
+                if (user is null) { c.RejectPrincipal(); return; }
+                var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.UserId), new Claim(ClaimTypes.Role, user.Role) }, CookieAuthenticationDefaults.AuthenticationScheme);
                 c.ReplacePrincipal(new ClaimsPrincipal(identity));
             };
         });
@@ -64,45 +58,42 @@ public partial class Program
             if (config["Database:Provider"] == "Sqlite") options.UseSqlite(connection);
             else options.UseSqlServer(connection);
         });
-            builder.Services.AddScoped<AppointmentRepository>();
-            builder.Services.AddScoped<AppointmentError>();
-            builder.Services.AddScoped<AppointmentService>();
-            builder.Services.AddScoped<AuditLogRepository>();
-            builder.Services.AddScoped<AuditLogService>();
-            builder.Services.AddScoped<BillRepository>();
-            builder.Services.AddScoped<HSMBusiness.Services.BillService>();
-            builder.Services.AddScoped<BillServiceRepository>();
-            builder.Services.AddScoped<BillServiceService>();
-            builder.Services.AddScoped<DepartmentRepository>();
-            builder.Services.AddScoped<DepartmentService>();
-            builder.Services.AddScoped<DoctorRepository>();
-            builder.Services.AddScoped<DoctorError>();
-            builder.Services.AddScoped<DoctorService>();
-            builder.Services.AddScoped<EmployeeRepository>();
-            builder.Services.AddScoped<EmployeeService>();
-            builder.Services.AddScoped<MedicalRecordRepository>();
-            builder.Services.AddScoped<MedicalRecordService>();
-            builder.Services.AddScoped<NotificationRepository>();
-            builder.Services.AddScoped<NotificationService>();
-            builder.Services.AddScoped<PatientRepository>();
-            builder.Services.AddScoped<PatientService>();
-            builder.Services.AddScoped<PersonRepository>();
-            builder.Services.AddScoped<PersonService>();
-            builder.Services.AddScoped<ReportRepository>();
-            builder.Services.AddScoped<ReportService>();
-            builder.Services.AddScoped<ServicesCategoryRepository>();
-            builder.Services.AddScoped<ServicesCategoryService>();
-            builder.Services.AddScoped<UserRepository>();
-            builder.Services.AddScoped<UserError>();
-            builder.Services.AddScoped<UserService>();
-            builder.Services.AddScoped<BillServiceRepository>();
-            builder.Services.AddScoped<BillServiceService>();
+        builder.Services.AddScoped<AppointmentRepository>();
+        builder.Services.AddScoped<AppointmentError>();
+        builder.Services.AddScoped<AppointmentService>();
+        builder.Services.AddScoped<AuditLogRepository>();
+        builder.Services.AddScoped<AuditLogService>();
+        builder.Services.AddScoped<BillRepository>();
+        builder.Services.AddScoped<HSMBusiness.Services.BillService>();
+        builder.Services.AddScoped<BillServiceRepository>();
+        builder.Services.AddScoped<BillServiceService>();
+        builder.Services.AddScoped<DepartmentRepository>();
+        builder.Services.AddScoped<DepartmentService>();
+        builder.Services.AddScoped<DoctorRepository>();
+        builder.Services.AddScoped<DoctorError>();
+        builder.Services.AddScoped<DoctorService>();
+        builder.Services.AddScoped<EmployeeRepository>();
+        builder.Services.AddScoped<EmployeeService>();
+        builder.Services.AddScoped<MedicalRecordRepository>();
+        builder.Services.AddScoped<MedicalRecordService>();
+        builder.Services.AddScoped<NotificationRepository>();
+        builder.Services.AddScoped<NotificationService>();
+        builder.Services.AddScoped<PatientRepository>();
+        builder.Services.AddScoped<PatientService>();
+        builder.Services.AddScoped<PersonRepository>();
+        builder.Services.AddScoped<PersonService>();
+        builder.Services.AddScoped<ReportRepository>();
+        builder.Services.AddScoped<ReportService>();
+        builder.Services.AddScoped<ServicesCategoryRepository>();
+        builder.Services.AddScoped<ServicesCategoryService>();
+        builder.Services.AddScoped<UserRepository>();
+        builder.Services.AddScoped<UserError>();
+        builder.Services.AddScoped<UserService>();
 
         var app = builder.Build();
         app.Use(async (context, next) =>
         {
             try { await next(); }
-            catch (WorkflowException e) { await Results.Problem(statusCode: e.Status, title: e.Message).ExecuteAsync(context); }
             catch (DbUpdateConcurrencyException) { await Results.Problem(statusCode: 409, title: "Data changed. Refresh before retrying.").ExecuteAsync(context); }
             catch (DbUpdateException e)
             {
@@ -133,19 +124,12 @@ public partial class Program
         if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         {
             using var scope = app.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
-            if (builder.Configuration.GetValue<bool>("Database:Initialize")) await db.Database.EnsureCreatedAsync();
-            var email = builder.Configuration["Bootstrap:Email"];
-            var password = builder.Configuration["Bootstrap:Password"];
-            if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(password) && !await db.Users.AnyAsync())
-            {
-                if (password.Length < 12) throw new InvalidOperationException("Bootstrap password must have at least 12 characters.");
-                var admin = new User { ID = WorkflowService.Id(), Name = "Administrator", Role = "Admin", Status = true,
-                    Person = WorkflowService.NewPerson("Administrator", email, "0000000000") };
-                admin.PasswordHash = scope.ServiceProvider.GetRequiredService<PasswordHasher<User>>().HashPassword(admin, password);
-                db.Users.Add(admin); await db.SaveChangesAsync();
-            }
+            var repositories = scope.ServiceProvider.GetRequiredService<UserRepository>();
+            if (builder.Configuration.GetValue<bool>("Database:Initialize")) await repositories.InitializeDatabaseAsync();
+            await scope.ServiceProvider.GetRequiredService<UserService>().EnsureDevelopmentAdministratorAsync(
+                builder.Configuration["Bootstrap:Email"], builder.Configuration["Bootstrap:Password"]);
         }
+
         await app.RunAsync();
     }
 }

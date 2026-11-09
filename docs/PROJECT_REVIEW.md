@@ -6,7 +6,15 @@ The frontend organizes each feature into API clients, request/response types, do
 
 The backend originally exposed entity-shaped DTOs from controllers through mutable service modes, mappers and repositories. Person records hold identity/contact information; patients and users reference people, doctors reference users and departments, and appointments link patients to doctors. Bills, medical records, notifications and audit logs each reference their owner records.
 
-The application API now exposes composed workflow contracts matching the UI. `WorkflowService` centralizes response projections, actor identity, money rounding, uniqueness checks and audit persistence. Controllers validate requests, load related data and commit workflow changes with their audit entries. SQL Server remains supported; SQLite provides a portable development and relational test environment. Legacy services remain for administrator-only endpoints outside the SPA.
+The existing three-tier architecture is preserved:
+
+- `HSMAPI`: HTTP binding, authentication cookies, authorization attributes and conversion of service results into HTTP responses.
+- `HSMBusiness`: the existing per-feature services own validation, scheduling conflicts, invoice calculations, payment rules, clinical version history and orchestration. Existing Mappers convert entities to typed DTOs. The existing `ResultPatern` provides typed success/failure results.
+- `HSMDataAccess`: existing repositories own EF queries, related-data loading, change tracking, atomic persistence and transaction implementation. Request/response DTOs remain in the existing DTO project.
+
+Controllers call business services; business services call repositories. The API contains no workflow/business service facade and controllers do not use AppDBContext, EF, repositories or IQueryable. Actor identity is passed explicitly from the HTTP layer, so business services do not depend on HttpContext. SQL Server remains supported; SQLite provides a portable development and relational test environment.
+
+Architecture regression tests enforce controller dependencies, keep EF/HTTP dependencies out of HSMBusiness source, and prevent the data tier from referencing upper tiers or exposing its DbContext. `Program.cs` remains the composition root for DI, EF provider configuration and development schema initialization; it delegates account rules and session validation to UserService.
 
 ## Findings and changes
 
@@ -30,7 +38,7 @@ The application API now exposes composed workflow contracts matching the UI. `Wo
 | Feedback | Toast calls had no mounted renderer | Shared Toaster provides visible success/error feedback |
 | Forms and usability | Patient edit fields were not populated; staff editing was inaccessible; labels were not linked to inputs | Populated patient forms, staff editing, explicit passwords, linked labels and modal semantics/focus handling |
 | Configuration | Hosted credentials were committed and action arguments could log passwords | Credentials removed from configuration; arguments removed from action logging; local development uses isolated data |
-| Delivery | No repeatable verification pipeline | Relational API tests, browser workflows, CI, schema export and administrator provisioning tools |
+| Delivery | No repeatable verification pipeline | Relational API tests, three-tier architecture regression tests, browser workflows, CI, schema export and administrator provisioning tools |
 
 ## Verification boundaries
 

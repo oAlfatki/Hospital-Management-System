@@ -1,14 +1,18 @@
-using HSMAPI.Services;
-using HSMDataAccess.Data;
+using HSMBusiness;
+using HSMBusiness.Services;
+using HSMDataAccess.DTOs;
+using HSMAPI.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace HSMAPI.Controllers;
 
 [ApiController, Authorize(Roles = "Admin,Management"), Route("api/notifications")]
-public class NotificationController(AppDBContext db) : ControllerBase
+public class NotificationController(NotificationService service) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> All() => Ok((await db.Notifications.AsNoTracking().ToListAsync()).Select(WorkflowService.NotificationView));
+    public async Task<IActionResult> All() =>
+        (await service.GetNotificationProfilesAsync()).ToActionResult(this);
+
 }

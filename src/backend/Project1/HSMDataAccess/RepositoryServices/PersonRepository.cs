@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.Data;
+using HSMDataAccess.Data;
 using HSMDataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -14,7 +14,7 @@ namespace HSMDataAccess.RepositoryServices
         public PersonRepository(AppDBContext context) : base(context)
         {
         }
-        
+
         public async Task<int> CountNumberOfContactNumberIsOne(string ContactNumber)
         {
             var count = _context.People.CountAsync(p => p.ContactNumber == ContactNumber);
@@ -25,6 +25,11 @@ namespace HSMDataAccess.RepositoryServices
             var count = _context.People.CountAsync(p => p.Email == Email);
             return await count;
         }
-        
+
+
+        public Task<Person?> FindByEmailAsync(string email) => _context.People.SingleOrDefaultAsync(x => x.Email == email);
+        public Task<bool> EmailExistsAsync(string email, string? exceptId) => _context.People.AnyAsync(x => x.ID != exceptId && x.Email == email);
+        public Task<bool> PhoneExistsAsync(string phone, string? exceptId) => _context.People.AnyAsync(x => x.ID != exceptId && x.ContactNumber == phone);
+
     }
 }
