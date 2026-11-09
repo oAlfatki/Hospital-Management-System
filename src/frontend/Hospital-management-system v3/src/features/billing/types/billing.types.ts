@@ -3,7 +3,7 @@ export interface ServiceItem {
   cost: number;
 }
 
-export type PaymentStatusType = 'Paid' | 'Pending' | 'Overdue';
+export type PaymentStatusType = 'Paid' | 'Pending' | 'Overdue' | 'Cancelled' | 'Pending Insurance';
 
 export interface Bill {
   billId: string; // INV-YYYYMMDD-XXXX

@@ -14,6 +14,7 @@ export function PatientRowActions({
   return (
     <button
       type="button"
+      aria-label="Edit patient"
       onClick={() => onEdit(patient)}
       className="
         inline-flex

@@ -5,7 +5,7 @@ export interface NotificationLog {
   type: 'Email' | 'SMS';
   message: string;
   status: 'Sent' | 'Failed' | 'Pending';
-  sentOn: string;
+  sentOn: string | null;
   deliveryConfirmation: boolean;
   retries: number;
 }

@@ -1,20 +1,16 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Hospital frontend
 
-# Run and deploy your AI Studio app
+React 19, TypeScript, Vite, React Query and React Hook Form. Arabic/English with RTL support.
 
-This contains everything you need to run your app locally.
+See the [root README](../../../README.md) for API startup, administrator provisioning and SQL Server deployment.
 
-View your app in AI Studio: https://ai.studio/apps/017fd34c-eb8c-43bd-811e-fee71548e4cb
+```bash
+npm ci
+npm run dev
+npm run lint
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Development proxies `/api` to `http://localhost:5069`. `.env.example` documents proxy/base URL overrides. The backend creates and validates the HttpOnly session cookie. Browser tests start separate local servers and a disposable database; they never use the hosted hospital database.

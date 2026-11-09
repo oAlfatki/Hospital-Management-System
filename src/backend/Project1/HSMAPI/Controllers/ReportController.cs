@@ -9,6 +9,7 @@ namespace HSMAPI.Controllers
 {
     [Route("api/ReportController")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class ReportController(ReportService reportService) : ControllerBase
     {
         [HttpGet]

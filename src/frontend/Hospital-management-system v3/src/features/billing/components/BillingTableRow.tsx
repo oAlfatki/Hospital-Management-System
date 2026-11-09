@@ -61,7 +61,7 @@ export const BillingTableRow: React.FC<BillingTableRowProps> = ({
             {t('invoiceBtn')}
           </Button>
 
-          {b.status !== 'Paid' && (
+          {b.pendingDue > 0 && b.status !== 'Cancelled' && (
             <>
               <Button
                 variant="ghost"

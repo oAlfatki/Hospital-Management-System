@@ -1,5 +1,6 @@
 import React from 'react';
-import { UserPlus, ShieldAlert } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { UserPlus, ShieldAlert, Edit2 } from 'lucide-react';
 import { useAuth, useLanguage } from '@/src/core/providers';
 import { Button } from '@/src/core/components/ui/Button';
 import { Badge } from '@/src/core/components/ui/Badge';
@@ -11,6 +12,7 @@ import { useUserDialog } from '../hooks/useUserDialog';
 import { useUserForm } from '../hooks/useUserForm';
 import { useUpdateUser } from '../hooks/useUpdateUser';
 import { UserDialog } from '../components/UserDialog';
+import { UserMapper } from '../mappers/userMapper';
 import type { User } from '../types/User';
 
 export const UsersPage: React.FC = () => {
@@ -32,10 +34,7 @@ export const UsersPage: React.FC = () => {
     if (user.userId === currentUser.userId) return;
 
     const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
-    updateUserMutation.mutate({
-      userId: user.userId,
-      status: newStatus,
-    });
+    updateUserMutation.mutate(UserMapper.toUpdateRequest(user.userId, { ...UserMapper.toFormValues(user), status: newStatus }), { onError: (error: Error) => toast.error(error.message) });
   };
 
   // RBAC Shield Screen
@@ -119,6 +118,7 @@ export const UsersPage: React.FC = () => {
                     </Badge>
                   </td>
                   <td className="py-4 px-6 text-center">
+                    <Button variant="ghost" aria-label={language === 'ar' ? 'تعديل الحساب' : 'Edit account'} onClick={() => dialog.openEditDialog(u)}><Edit2 className="h-4 w-4" /></Button>
                     <Button
                       variant="ghost"
                       onClick={() => toggleUserStatus(u)}

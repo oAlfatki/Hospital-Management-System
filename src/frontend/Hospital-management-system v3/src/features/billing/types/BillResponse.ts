@@ -2,6 +2,7 @@ import type { ServiceItem, PaymentStatusType } from './billing.types';
 
 export interface BillResponse {
   billId: string;
+  paymentDate?: string | null;
   patientId: string;
   services: ServiceItem[];
   subtotal: number;
@@ -14,6 +15,6 @@ export interface BillResponse {
   dueDate: string;
   invoiceGenerated: boolean;
   createdBy: string;
-  createdOn: string;
-  updatedOn: string;
+  createdOn: string | null;
+  updatedOn: string | null;
 }

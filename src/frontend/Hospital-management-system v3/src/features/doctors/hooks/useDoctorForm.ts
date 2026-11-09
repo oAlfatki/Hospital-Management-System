@@ -51,7 +51,7 @@ export function useDoctorForm({ mode, selectedDoctor, onSuccess }: UseDoctorForm
 
   const handleFormSubmit: SubmitHandler<IDoctorFormInput> = async (data) => {
     if (mode === 'create') {
-      await createDoctor.mutateAsync(DoctorMapper.toCreateRequest(data), {
+      createDoctor.mutate(DoctorMapper.toCreateRequest(data), {
         onSuccess() {
           toast.success(t('toastPhysicianRegistered'));
           onSuccess();
@@ -65,7 +65,7 @@ export function useDoctorForm({ mode, selectedDoctor, onSuccess }: UseDoctorForm
     }
 
     if (selectedDoctor) {
-      await updateDoctor.mutateAsync(
+      updateDoctor.mutate(
         DoctorMapper.toUpdateRequest(selectedDoctor.doctorId, data),
         {
           onSuccess() {

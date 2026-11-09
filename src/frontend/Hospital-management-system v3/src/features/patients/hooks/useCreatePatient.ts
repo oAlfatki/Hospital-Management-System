@@ -11,6 +11,7 @@ export function useCreatePatient() {
     mutationFn: patientService.create,
 
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({
         queryKey: ["patients"],
       });

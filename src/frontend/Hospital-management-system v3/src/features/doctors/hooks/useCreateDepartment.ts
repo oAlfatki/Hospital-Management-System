@@ -9,6 +9,7 @@ export function useCreateDepartment() {
     mutationFn: (request: Omit<Department, 'departmentId' | 'createdOn' | 'updatedOn'>) =>
       doctorService.createDepartment(request),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['departments-list'] });
     },
   });

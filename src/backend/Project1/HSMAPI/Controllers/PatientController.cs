@@ -1,152 +1,56 @@
-using HSMBusiness.Pattern;
-using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
-using Microsoft.AspNetCore.Http;
+using HSMAPI.Contracts;
+using HSMAPI.Services;
+using HSMDataAccess.Data;
+using HSMDataAccess.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using static HSMAPI.Services.WorkflowService;
 
-namespace HSMAPI.Controllers
+namespace HSMAPI.Controllers;
+
+[ApiController, Authorize, Route("api/patients")]
+public class PatientController(AppDBContext db, WorkflowService workflow) : ControllerBase
 {
-    [Route("api/patients")]
-    [ApiController]
-    public class PatientController(PatientService patientService) : ControllerBase
+    [HttpGet]
+    public async Task<IActionResult> All() => Ok((await db.Patients.Include(p => p.Person).AsNoTracking().ToListAsync()).Select(PatientView));
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(string id)
     {
-        [HttpGet("{Id}", Name = "GetPatientByIdAsync")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetPatientByIdAsync(string Id)
-        {
-            if (string.IsNullOrEmpty(Id))
-                return BadRequest(new { message = "ID is required" });
-
-            var patient = await patientService.GetByID(Id);
-            if (patient.patientDTO1 == null)
-                return NotFound(new { message = "Patient not found" });
-
-            return Ok(patient.patientDTO1);
-        }
-
-        [HttpGet("", Name = "GetAllPatients")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAllPatients()
-        {
-            var PatientRecordsList = await patientService.GetAll();
-            if (PatientRecordsList.ListOfPatients == null)
-                return NotFound(new { message = "No patients found" });
-
-            return Ok(PatientRecordsList.ListOfPatients);
-        }
-
-        [HttpPost("", Name = "CreatePatient")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreatePatient(PatientDTO patientDTO)
-        {
-            if (string.IsNullOrWhiteSpace(patientDTO.MedicalHistory) || string.IsNullOrEmpty(patientDTO.PersonID))
-            {
-                var response = await new ResultPatern().GiveResponse(400, null);
-                return BadRequest(new
-                {
-                    status = response.Status,
-                    response = response.Response,
-                    isSuccess = response.IsSuccess,
-                    errors = response.Errors
-                });
-            }
-            patientService._Mode = PatientService.enMode.Add;
-            var result = await patientService.Save(patientDTO, patientDTO.ID);
-
-            if (!result.IsSuccess)
-            {
-                return StatusCode(result.Status, new
-                {
-                    status = result.Status,
-                    response = result.Response,
-                    isSuccess = result.IsSuccess
-                });
-            }
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess
-            });
-        }
-
-        [HttpPut("{ID}", Name = "UpdatePatient")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdatePatient(string ID, PatientDTO patientDTO)
-        {
-            if (string.IsNullOrWhiteSpace(patientDTO.MedicalHistory) || string.IsNullOrEmpty(patientDTO.PersonID) || string.IsNullOrWhiteSpace(ID))
-            {
-                var response = await new ResultPatern().GiveResponse(400, null);
-                return BadRequest(new
-                {
-                    status = response.Status,
-                    response = response.Response,
-                    isSuccess = response.IsSuccess,
-                    errors = response.Errors
-                });
-            }
-            var CurrPatient = await patientService.GetByID(ID);
-            if (CurrPatient.patientDTO1 == null)
-            {
-                return NotFound(new
-                {
-                    status = CurrPatient.Status,
-                    response = CurrPatient.Response,
-                    isSuccess = CurrPatient.IsSuccess
-                });
-            }
-
-            CurrPatient.patientDTO1 = patientDTO;
-            patientService._Mode = PatientService.enMode.Update;
-            var result = await patientService.Save(patientDTO, ID);
-            if (!result.IsSuccess)
-                return StatusCode(result.Status, new
-                {
-                    status = result.Status,
-                    response = result.Response,
-                    isSuccess = result.IsSuccess
-                });
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess
-            });
-        }
-
-        [HttpDelete("{id}", Name = "DeletePatient")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeletePatient(string id)
-        {
-            if (string.IsNullOrEmpty(id))
-                return BadRequest(new { message = "ID is required" });
-
-            var result = await patientService.Delete(id);
-
-            if (!result.IsSuccess)
-                return StatusCode(result.Status, new
-                {
-                    status = result.Status,
-                    response = result.Response,
-                    isSuccess = result.IsSuccess
-                });
-
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess
-            });
-        }
+        var p = await db.Patients.Include(p => p.Person).SingleOrDefaultAsync(p => p.ID == id);
+        return p is null ? NotFound(new { message = "Patient not found." }) : Ok(PatientView(p));
+    }
+    [HttpPost, Authorize(Roles = "Admin,Nurse,Doctor,Management")]
+    public async Task<IActionResult> Create(PatientRequest request)
+    {
+        ValidateBirth(request);
+        await workflow.CheckPerson(request.Email, request.ContactNumber);
+        var p = new Patient { ID = Id(), Person = NewPerson(request.Name, request.Email, request.ContactNumber), CreatedBy = workflow.Actor };
+        Apply(p, request); db.Patients.Add(p); await workflow.Save("Patient", "Create", p.ID);
+        return CreatedAtAction(nameof(Get), new { id = p.ID }, PatientView(p));
+    }
+    [HttpPut("{id}"), Authorize(Roles = "Admin,Nurse,Doctor,Management")]
+    public async Task<IActionResult> Update(string id, PatientRequest request)
+    {
+        var p = await db.Patients.Include(p => p.Person).SingleOrDefaultAsync(p => p.ID == id);
+        if (p is null) return NotFound(new { message = "Patient not found." });
+        ValidateBirth(request); await workflow.CheckPerson(request.Email, request.ContactNumber, p.PersonID);
+        Apply(p, request); await workflow.Save("Patient", "Update", id); return Ok(PatientView(p));
+    }
+    private static void ValidateBirth(PatientRequest r) => Require(r.DateOfBirth != default && r.DateOfBirth <= DateOnly.FromDateTime(DateTime.UtcNow), "Invalid date of birth.");
+    private static void Apply(Patient p, PatientRequest r)
+    {
+        p.Person.Name = r.Name.Trim(); p.Person.Email = r.Email.Trim().ToLowerInvariant(); p.Person.ContactNumber = r.ContactNumber;
+        p.Person.DateOfBirth = r.DateOfBirth; p.Person.Gender = r.Gender; p.Person.Address = r.Address; p.MedicalHistory = r.MedicalHistory;
+        p.Status = r.Status == "Active"; p.ClinicalStatus = r.Status; p.UpdatedOn = DateTime.UtcNow;
+    }
+    [HttpDelete("{id}"), Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var p = await db.Patients.FindAsync(id); if (p is null) return NotFound();
+        Require(!await db.Appointments.AnyAsync(x => x.PatientID == id) && !await db.Bills.AnyAsync(x => x.PatientID == id)
+            && !await db.MedicalRecords.AnyAsync(x => x.PatientID == id) && !await db.Notifications.AnyAsync(x => x.PatientID == id),
+            "Patient has linked records. Deactivate the patient instead.", 409);
+        db.Patients.Remove(p); await workflow.Save("Patient", "Delete", id); return NoContent();
     }
 }

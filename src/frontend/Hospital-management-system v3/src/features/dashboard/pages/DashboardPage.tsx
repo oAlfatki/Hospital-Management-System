@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth, useLanguage } from '@/src/core/providers';
-import { Badge, Button, formatCurrency, formatDate } from '@/src/core';
+import { Badge, Button, LoadingState, ErrorState, formatCurrency, formatDate } from '@/src/core';
 import {
   Users,
   CalendarDays,
@@ -20,96 +20,28 @@ import {
   BarChart,
   Bar
 } from 'recharts';
-import { usePatients } from '@/src/features/patients';
-import { useAppointments } from '@/src/features/appointments';
-import { useBills } from '@/src/features/billing';
-import { useDoctors } from '@/src/features/doctors';
+import { useQuery } from '@tanstack/react-query';
+import axios from '@/src/core/config/axios';
+interface DashboardData {
+  financeVisible: boolean;
+  stats: { totalPatients: number; appointmentsToday: number; monthlyRevenue: number | null; pendingDues: number | null };
+  upcomingAppts: { appointmentId: string; appointmentDate: string; appointmentTime: string; status: string; patientName: string; doctorName: string; specialty: string }[];
+  revenueData: { date: string; revenue: number }[];
+  doctorApptData: { name: string; appointments: number }[];
+}
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { language, t } = useLanguage();
 
-  const { data: patientsData, isLoading: isPatientsLoading, refetch: refetchPatients } = usePatients(1, 100);
-  const patients = patientsData?.items || [];
-  const { data: appointments = [], isLoading: isApptsLoading, refetch: refetchAppointments } = useAppointments();
-  const { data: bills = [], isLoading: isBillsLoading, refetch: refetchBills } = useBills();
-  const { data: doctors = [], isLoading: isDoctorsLoading, refetch: refetchDoctors } = useDoctors();
-
-  const isGlobalLoading = isPatientsLoading || isApptsLoading || isBillsLoading || isDoctorsLoading;
-
-  const handleRefresh = async () => {
-    await Promise.all([
-      refetchPatients(),
-      refetchAppointments(),
-      refetchBills(),
-      refetchDoctors()
-    ]);
-  };
-
-  const computedDashboardData = useMemo(() => {
-    // Today YYYY-MM-DD
-    const todayStr = '2026-06-29'; // Lock date for mock scenario consistency
-
-    // KPIs
-    const totalPatients = patients.filter(p => p.status === 'Active').length;
-    const appointmentsToday = appointments.filter(a => a.appointmentDate === todayStr && a.status !== 'Cancelled').length;
-    
-    const paidRevenue = bills.filter(b => b.status === 'Paid').reduce((sum, b) => sum + b.totalAmount, 0) + 
-                        bills.filter(b => b.status === 'Pending').reduce((sum, b) => sum + b.paidAmount, 0);
-    const pendingDues = bills.reduce((sum, b) => sum + b.pendingDue, 0);
-
-    // Upcoming Appointments
-    const upcoming = appointments
-      .filter(a => a.appointmentDate >= todayStr && a.status !== 'Cancelled')
-      .sort((a, b) => `${a.appointmentDate}T${a.appointmentTime}`.localeCompare(`${b.appointmentDate}T${b.appointmentTime}`))
-      .slice(0, 5)
-      .map(appt => {
-        const pat = patients.find(p => p.patientId === appt.patientId);
-        const doc = doctors.find(d => d.doctorId === appt.doctorId);
-        return {
-          ...appt,
-          patientName: pat ? pat.name : t('unknown'),
-          doctorName: doc ? doc.name : t('unknown'),
-          specialty: doc ? doc.specialty : t('general'),
-        };
-      });
-
-    // Revenue Chart Data
-    const revMap: Record<string, number> = {
-      '06-15': 237.5,
-      '06-20': 200,
-      '06-25': 0,
-      '06-29': 0
-    };
-    
-    const chartRev = Object.keys(revMap).map(day => ({
-      date: day,
-      revenue: revMap[day],
-    }));
-
-    // Appointments per doctor
-    const docApptCounts = doctors.map(doc => {
-      const count = appointments.filter(a => a.doctorId === doc.doctorId && a.status !== 'Cancelled').length;
-      return {
-        name: doc.name.replace('Dr. ', ''),
-        appointments: count,
-      };
-    });
-
-    return {
-      stats: {
-        totalPatients,
-        appointmentsToday,
-        monthlyRevenue: paidRevenue,
-        pendingDues
-      },
-      upcomingAppts: upcoming,
-      revenueData: chartRev,
-      doctorApptData: docApptCounts
-    };
-  }, [patients, appointments, bills, doctors, t]);
-
-  const { stats, upcomingAppts, revenueData, doctorApptData } = computedDashboardData;
+  const { data, isLoading: isGlobalLoading, error, refetch } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: async () => (await axios.get<DashboardData>('/api/dashboard')).data,
+  });
+  const handleRefresh = () => refetch();
+  if (isGlobalLoading) return <LoadingState message={t('commonLoading')} />;
+  if (error || !data) return <ErrorState message={t('commonSomethingWentWrong')} />;
+  const { stats, upcomingAppts, revenueData, doctorApptData, financeVisible } = data;
 
   const translateStatus = (status: string) => {
     if (language === 'ar') {
@@ -182,7 +114,7 @@ export const DashboardPage: React.FC = () => {
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('appointmentsToday')}</p>
             <h3 className="text-2xl font-bold mt-1 text-slate-900">{stats.appointmentsToday}</h3>
             <p className="text-[10px] text-emerald-600 mt-1 font-semibold">
-              {language === 'ar' ? 'التاريخ: ٢٩ يونيو، ٢٠٢٦' : 'Date: June 29, 2026'}
+              {new Date().toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
             </p>
           </div>
         </div>
@@ -194,9 +126,9 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('revenueInflux')}</p>
-            <h3 className="text-2xl font-bold mt-1 text-slate-900">{formatCurrency(stats.monthlyRevenue)}</h3>
+            <h3 className="text-2xl font-bold mt-1 text-slate-900">{financeVisible ? formatCurrency(stats.monthlyRevenue ?? 0) : '—'}</h3>
             <p className="text-[10px] text-teal-600 font-semibold flex items-center mt-1">
-              <TrendingUp className="h-3 w-3 mr-0.5 ml-0.5" /> {language === 'ar' ? '+٢٤٪ هذا الشهر' : '+24% this month'}
+              <TrendingUp className="h-3 w-3 mr-0.5 ml-0.5" /> {language === 'ar' ? 'الدفعات المستلمة هذا الشهر' : 'Payments received this month'}
             </p>
           </div>
         </div>
@@ -208,7 +140,7 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('outstandingDues')}</p>
-            <h3 className="text-2xl font-bold mt-1 text-slate-900">{formatCurrency(stats.pendingDues)}</h3>
+            <h3 className="text-2xl font-bold mt-1 text-slate-900">{financeVisible ? formatCurrency(stats.pendingDues ?? 0) : '—'}</h3>
             <p className="text-[10px] text-rose-500 mt-1 font-semibold">{t('requiresBillingFollowup')}</p>
           </div>
         </div>
@@ -222,7 +154,7 @@ export const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-slate-850">{t('revenueInflux')}</h3>
-              <p className="text-xs text-slate-400">{t('weeklyTrackedPayment')}</p>
+              <p className="text-xs text-slate-400">{language === 'ar' ? 'الدفعات اليومية لهذا الشهر' : 'Daily payments this month'}</p>
             </div>
             <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">USD ($)</span>
           </div>

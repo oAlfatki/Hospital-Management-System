@@ -10,6 +10,6 @@ export interface AppointmentResponse {
   status: AppointmentStatusType;
   notificationSent: boolean;
   createdBy: string;
-  createdOn: string;
-  updatedOn: string;
+  createdOn: string | null;
+  updatedOn: string | null;
 }

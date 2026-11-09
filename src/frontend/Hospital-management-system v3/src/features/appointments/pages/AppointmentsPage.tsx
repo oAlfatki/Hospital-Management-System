@@ -22,8 +22,8 @@ export const AppointmentsPage: React.FC = () => {
   const { t } = useLanguage();
 
   const { data: rawAppointments = [], isLoading: isApptsLoading, error: apptsError } = useAppointments();
-  const { data: patientsData, isLoading: isPatientsLoading } = usePatients(1, 100);
-  const patients = patientsData?.items || [];
+  const { data: patientsData, isLoading: isPatientsLoading } = usePatients();
+  const patients = patientsData || [];
   const { data: doctors = [], isLoading: isDoctorsLoading } = useDoctors();
 
   const updateStatusMutation = useUpdateAppointmentStatusMutation();

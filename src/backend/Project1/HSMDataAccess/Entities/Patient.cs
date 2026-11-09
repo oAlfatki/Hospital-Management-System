@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -10,6 +10,11 @@ namespace HSMDataAccess.Entities
 {
     public class Patient
     {
+        public DateTime? CreatedOn { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedOn { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = "";
+        public string ClinicalStatus { get; set; } = "Active";
+
         public string ID { get; set; } = null!;
         public string MedicalHistory { get; set; } = null!;
         public bool Status { get; set; } = false;

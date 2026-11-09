@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -11,6 +11,11 @@ namespace HSMDataAccess.Entities
 {
     public class Appointment
     {
+        public DateTime? CreatedOn { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedOn { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = "";
+
+
         public string ID { get; set; } = null!;
         public string PatientID { get; set; } = null!;
         public string DoctorID { get; set; } = null!;

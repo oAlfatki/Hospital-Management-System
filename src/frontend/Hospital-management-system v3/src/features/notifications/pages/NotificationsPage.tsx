@@ -11,8 +11,8 @@ export const NotificationsPage: React.FC = () => {
   const { t, language } = useLanguage();
 
   const { data: rawNotifications = [], isLoading, error } = useNotifications();
-  const { data: patientsData } = usePatients(1, 100);
-  const patients = patientsData?.items || [];
+  const { data: patientsData } = usePatients();
+  const patients = patientsData || [];
 
   const enrichedNotifications = useMemo<EnrichedNotification[]>(() => {
     return rawNotifications.map((nf) => {

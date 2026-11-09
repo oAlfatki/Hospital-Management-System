@@ -8,6 +8,7 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: (request: CreateUserRequest) => userService.create(request),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['users-list'] });
     },
   });

@@ -23,7 +23,7 @@ export const DashboardSidebar: React.FC = () => {
             {t('hmsTitle')}
           </span>
           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium tracking-wide">
-            v2.0 Architecture
+            Care Operations
           </span>
         </div>
       </div>

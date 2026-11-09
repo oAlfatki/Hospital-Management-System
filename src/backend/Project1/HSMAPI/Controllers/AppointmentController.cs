@@ -1,177 +1,68 @@
-using HSMBusiness;
-using HSMBusiness.Erorrs;
-using HSMBusiness.Pattern;
-using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMAPI.Contracts;
+using HSMAPI.Services;
+using HSMDataAccess.Data;
 using HSMDataAccess.Entities;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using static HSMAPI.Services.WorkflowService;
 
-namespace HSMAPI.Controllers
+namespace HSMAPI.Controllers;
+
+[ApiController, Authorize, Route("api/appointments")]
+public class AppointmentController(AppDBContext db, WorkflowService workflow) : ControllerBase
 {
-    [Route("api/appointments")]
-    [ApiController]
-    public class AppointmentController(
-        AppointmentService appointmentService,
-        DoctorService doctorService,
-        PatientService patientService,
-        AppointmentError appointmentError) : ControllerBase
+    [HttpGet]
+    public async Task<IActionResult> All() => Ok((await db.Appointments.AsNoTracking().ToListAsync()).Select(AppointmentView));
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(string id)
     {
-        [HttpGet("{Id}", Name = "GetAppointmentByIdAsync")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAppointmentByIdAsync(string Id)
-        {
-            if (string.IsNullOrEmpty(Id))
-                return BadRequest(new { message = "ID is required" });
-
-            var appointment = await appointmentService.GetByID(Id);
-            if (appointment.appointmentDTO == null)
-                return NotFound(new { message = "Appointment not found" });
-
-            return Ok(appointment.appointmentDTO);
-        }
-
-        [HttpGet("", Name = "GetAllAppointments")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAllAppointments()
-        {
-            var appointmentsList = await appointmentService.GetAll();
-            if (appointmentsList.Item4 == null)
-                return NotFound(new { message = "No appointments found" });
-
-            return Ok(appointmentsList.appointmentList);
-        }
-
-        [HttpPost("", Name = "CreateAppointment")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> CreateAppointment(AppointmentDTO appointment)
-        {
-            if (string.IsNullOrWhiteSpace(appointment.DoctorID) || string.IsNullOrWhiteSpace(appointment.PatientID) || string.IsNullOrWhiteSpace(appointment.Status) || appointment.Duration <= 0)
-            {
-                var errors = await appointmentError.ValidateAppointment(appointment);
-                if (errors.Count > 0)
-                {
-                    var response = await new ResultPatern().GiveResponse(400, errors);
-                    return BadRequest(new { status = response.Status, response = response.Response, isSuccess = response.IsSuccess, errors = response.Errors });
-                }
-            }
-
-            appointmentService._mode = AppointmentService.enMode.Add;
-            var result = await appointmentService.Save(appointment, appointment.ID);
-
-            if (!result.IsSuccess)
-            {
-                return StatusCode(result.Status, new
-                {
-                    status = result.Status,
-                    response = result.Response,
-                    isSuccess = result.IsSuccess
-                });
-            }
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess
-            });
-        }
-
-        [HttpPut("{ID}", Name = "UpdateAppointment")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateAppointment(string ID, AppointmentDTO appointment)
-        {
-            if (string.IsNullOrEmpty(ID))
-            {
-                var errors = await appointmentError.ValidateAppointment(appointment);
-                var response = await new ResultPatern().GiveResponse(400, errors);
-                return BadRequest(new
-                {
-                    status = response.Status,
-                    response = response.Response,
-                    isSuccess = response.IsSuccess,
-                    errors = response.Errors
-                });
-            }
-            var CurrAppointment = await appointmentService.GetByID(ID);
-            if (CurrAppointment.appointmentDTO == null)
-            {
-                return NotFound(new
-                {
-                    status = CurrAppointment.Status,
-                    response = CurrAppointment.Response,
-                    isSuccess = CurrAppointment.IsSuccess,
-                    errors = CurrAppointment.errors
-                });
-            }
-            if (string.IsNullOrWhiteSpace(appointment.DoctorID) || string.IsNullOrWhiteSpace(appointment.PatientID) || string.IsNullOrWhiteSpace(appointment.Status) || appointment.Duration <= 0)
-            {
-                var errors = await appointmentError.ValidateAppointment(appointment);
-                if (errors.Count > 0)
-                {
-                    var response = await new ResultPatern().GiveResponse(400, errors);
-                    return BadRequest(new
-                    {
-                        status = response.Status,
-                        response = response.Response,
-                        isSuccess = response.IsSuccess,
-                        errors = response.Errors
-                    });
-                }
-            }
-
-            appointmentService._mode = AppointmentService.enMode.Update;
-            var result = await appointmentService.Save(appointment, ID);
-
-            if (!result.IsSuccess)
-                return StatusCode(result.Status, new
-                {
-                    status = result.Status,
-                    response = result.Response,
-                    isSuccess = result.IsSuccess
-                });
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess,
-                errors = result.errors
-            });
-        }
-
-        [HttpDelete("{id}", Name = "DeleteAppointment")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> DeleteAppointment(string id)
-        {
-            if (string.IsNullOrEmpty(id))
-                return BadRequest(new { message = "ID is required" });
-
-            var result = await appointmentService.Delete(id);
-
-            if (!result.IsSuccess)
-                return StatusCode(result.Status, new
-                {
-                    status = result.Status,
-                    response = result.Response,
-                    isSuccess = result.IsSuccess
-                });
-
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess
-            });
-        }
+        var a = await db.Appointments.FindAsync(id); return a is null ? NotFound() : Ok(AppointmentView(a));
+    }
+    [HttpPost, Authorize(Roles = "Admin,Doctor,Nurse,Management")]
+    public async Task<IActionResult> Create(AppointmentRequest r)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        Require(await db.Patients.AnyAsync(p => p.ID == r.PatientId && p.Status), "Active patient not found.", 404);
+        Require(await db.Doctors.AnyAsync(d => d.ID == r.DoctorId && d.Status), "Active doctor not found.", 404);
+        var a = new Appointment { ID = Id(), PatientID = r.PatientId, DoctorID = r.DoctorId, Date = r.AppointmentDate,
+            Time = r.AppointmentTime, Duration = r.DurationMinutes, Status = "Scheduled", NotificationSent = false, CreatedBy = workflow.Actor };
+        await ValidateSlot(a); db.Appointments.Add(a); await workflow.Save("Appointment", "Create", a.ID);
+        await transaction.CommitAsync(); return CreatedAtAction(nameof(Get), new { id = a.ID }, AppointmentView(a));
+    }
+    [HttpPatch("{id}/status"), Authorize(Roles = "Admin,Doctor,Nurse,Management")]
+    public async Task<IActionResult> Status(string id, AppointmentStatusRequest r)
+    {
+        var a = await db.Appointments.FindAsync(id); if (a is null) return NotFound();
+        Require(r.Status == "Cancelled", "Use the reschedule operation to change appointment time.");
+        a.Status = "Cancelled"; a.UpdatedOn = DateTime.UtcNow;
+        await workflow.Save("Appointment", "Update", id); return Ok(AppointmentView(a));
+    }
+    [HttpPatch("{id}/reschedule"), Authorize(Roles = "Admin,Doctor,Nurse,Management")]
+    public async Task<IActionResult> Reschedule(string id, RescheduleRequest r)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var a = await db.Appointments.FindAsync(id); if (a is null) return NotFound();
+        Require(a.Status != "Cancelled", "Cancelled appointments cannot be rescheduled.", 409);
+        a.Date = r.NewDate; a.Time = r.NewTime; a.Status = "Rescheduled"; a.NotificationSent = false; a.UpdatedOn = DateTime.UtcNow;
+        await ValidateSlot(a); await workflow.Save("Appointment", "Update", id);
+        await transaction.CommitAsync(); return Ok(AppointmentView(a));
+    }
+    private async Task ValidateSlot(Appointment a)
+    {
+        Require(a.Time.HasValue && a.Date != default, "Appointment date and time are required.");
+        var start = a.Date.ToDateTime(a.Time!.Value); Require(start > DateTime.Now, "Appointment must be in the future.");
+        var end = start.AddMinutes(a.Duration); Require(end.Date == start.Date, "Appointment must end on the same day.");
+        var others = await db.Appointments.Where(x => x.ID != a.ID && x.Date == a.Date && x.Status != "Cancelled"
+            && (x.DoctorID == a.DoctorID || x.PatientID == a.PatientID)).ToListAsync();
+        Require(!others.Any(x => x.Time.HasValue && start < x.Date.ToDateTime(x.Time.Value).AddMinutes(x.Duration)
+            && end > x.Date.ToDateTime(x.Time.Value)), "Doctor or patient already has an overlapping appointment.", 409);
+    }
+    [HttpDelete("{id}"), Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var a = await db.Appointments.FindAsync(id); if (a is null) return NotFound();
+        db.Appointments.Remove(a); await workflow.Save("Appointment", "Delete", id); return NoContent();
     }
 }

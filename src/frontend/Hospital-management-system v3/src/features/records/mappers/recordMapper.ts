@@ -14,9 +14,9 @@ export const RecordMapper = {
       prescriptions: res.prescriptions,
       status: res.status,
       createdBy: res.createdBy,
-      createdOn: res.createdOn,
+      createdOn: res.createdOn || '',
       updatedBy: res.updatedBy,
-      updatedOn: res.updatedOn,
+      updatedOn: res.updatedOn || '',
       version: res.version,
       history: res.history || [],
     };
@@ -36,9 +36,10 @@ export const RecordMapper = {
     };
   },
 
-  toUpdateRequest(recordId: string, form: IUpdateRecordFormInput): UpdateRecordRequest {
+  toUpdateRequest(recordId: string, version: number, form: IUpdateRecordFormInput): UpdateRecordRequest {
     return {
       recordId,
+      version,
       diagnosis: form.diagnosis.trim(),
       treatment: form.treatment.trim(),
       prescriptions: form.prescriptions.trim(),

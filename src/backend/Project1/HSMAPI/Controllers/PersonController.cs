@@ -11,6 +11,7 @@ namespace HSMAPI.Controllers
 {
     [Route("api/PersonController")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class PersonController(PersonService personService) : ControllerBase
     {
         [HttpGet]

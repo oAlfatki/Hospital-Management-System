@@ -11,24 +11,20 @@ export const recordApi = {
   },
 
   async create(request: CreateRecordRequest): Promise<RecordResponse> {
-    // Backend accepts the DTO directly and returns { status, response, isSuccess }
-    const response = await axiosInstance.post<any>(
+    const response = await axiosInstance.post<RecordResponse>(
       ENDPOINTS.MEDICAL_RECORDS,
       request
     );
     return response.data;
   },
 
-  // FIX: Update now uses the correct RESTful URL with recordId in the path
   async update(request: UpdateRecordRequest): Promise<RecordResponse> {
-    const response = await axiosInstance.put<any>(
-      `${ENDPOINTS.MEDICAL_RECORDS}/${request.recordId}`,
-      request
+    const { recordId, ...body } = request;
+    const response = await axiosInstance.put<RecordResponse>(
+      `${ENDPOINTS.MEDICAL_RECORDS}/${recordId}`,
+      body
     );
     return response.data;
   },
 
-  async delete(id: string): Promise<void> {
-    await axiosInstance.delete(`${ENDPOINTS.MEDICAL_RECORDS}/${id}`);
-  },
 };

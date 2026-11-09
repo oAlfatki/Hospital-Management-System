@@ -15,13 +15,14 @@ export const BillingMapper = {
       discountAmount: res.discountAmount,
       totalAmount: res.totalAmount,
       paidAmount: res.paidAmount,
+      paymentDate: res.paymentDate || undefined,
       pendingDue: res.pendingDue,
       status: res.status,
       dueDate: res.dueDate,
       invoiceGenerated: res.invoiceGenerated,
       createdBy: res.createdBy,
-      createdOn: res.createdOn,
-      updatedOn: res.updatedOn,
+      createdOn: res.createdOn || '',
+      updatedOn: res.updatedOn || '',
     };
   },
 

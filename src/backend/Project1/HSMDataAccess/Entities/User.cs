@@ -1,7 +1,12 @@
-﻿namespace HSMDataAccess.Entities
+namespace HSMDataAccess.Entities
 {
     public class User
     {
+        public DateTime? CreatedOn { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedOn { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = "";
+        public string? DepartmentName { get; set; }
+
         public string ID { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string Role { get; set; } = null!;

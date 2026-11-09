@@ -40,7 +40,7 @@ export const NotificationTableRow: React.FC<NotificationTableRowProps> = ({
         {nf.message}
       </td>
       <td className="py-4 px-6 text-xs text-slate-400">
-        {new Date(nf.sentOn).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
+        {nf.sentOn ? new Date(nf.sentOn).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US') : '—'}
       </td>
       <td className="py-4 px-6">
         <Badge

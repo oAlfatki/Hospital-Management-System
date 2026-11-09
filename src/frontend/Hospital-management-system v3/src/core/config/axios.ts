@@ -1,113 +1,40 @@
-import axios, { AxiosError } from "axios";
-import { ApiError } from "../Errors/ApiError";
-import type { ApiErrorResponse } from "../Errors/ApiErrorResponse";
+import axios, { AxiosError } from 'axios';
+import { ApiError } from '../Errors/ApiError';
 
 const axiosInstance = axios.create({
-  baseURL: "https://localhost:7286",
-  timeout: 1000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  timeout: 15000,
+  withCredentials: true,
 });
 
+interface ErrorBody {
+  message?: string;
+  title?: string;
+  detail?: string;
+  response?: string;
+  error?: string;
+  errors?: Record<string, string[] | string>;
+  success?: boolean;
+  isSuccess?: boolean;
+}
+function apiError(data: ErrorBody | string | undefined, status: number): ApiError {
+  if (typeof data === 'string') return new ApiError(data, status);
+  const fields = data?.errors && Object.fromEntries(Object.entries(data.errors).map(([key, value]) => [key, Array.isArray(value) ? value : [value]]));
+  const validation = fields && Object.values(fields).flat().join(' ');
+  return new ApiError(validation || data?.detail || data?.message || data?.error || data?.title || data?.response || 'The request failed.', status, undefined, fields);
+}
 axiosInstance.interceptors.response.use(
-  // Success
-  (response) => {
-    // بعض الـ backends ترجع HTTP 200 حتى لو العملية فشلت منطقياً
-    if (response.data?.success === false) {
-      throw new ApiError(
-        response.data.message ?? "فشلت العملية، حاول مرة أخرى",
-        response.status,
-        response.data.code,
-      );
-    }
+  response => {
+    if (response.data?.success === false || response.data?.isSuccess === false) throw apiError(response.data, response.status);
     return response;
   },
-
-  // Error
-  (error: AxiosError<ApiErrorResponse>) => {
-    // Backend responded (400,401,404,409,500...)
-
+  (error: AxiosError<ErrorBody | string>) => {
     if (error.response) {
-      const { status, data } = error.response;
-      console.error("error.response:---------------");
-      console.error(error.response);
-      console.error("-----------------------------");
-      console.error("status:---------------");
-      console.error(status);
-      console.error("-----------------------------");
-      console.error("data:---------------");
-      console.error(data);
-      console.error("-----------------------------");
-
-      switch (status) {
-    case 400:
-      throw new ApiError(
-        data.message ?? "Unexpected server error.",
-        status,
-        "BadRequest",
-        data.errors
-      );
-
-    case 401:
-      throw new ApiError(
-        data.message ?? "Unexpected server error.",
-        status,
-        "Unauthorized",
-        data.errors
-      );
-
-    case 404:
-      throw new ApiError(
-        data.message ?? "Unexpected server error.",
-        status,
-        "NotFound",
-        data.errors
-      );
-
-    case 409:
-      throw new ApiError(
-        data.message ?? "Unexpected server error."  ,
-        status,
-        "Conflict",
-        data.errors
-      );
-
-    case 422:
-      throw new ApiError(
-        data.message ?? "Unexpected server error."  ,
-        status,
-        "Validation",
-        data.errors
-      );
-
-    default:
-      throw new ApiError(
-        data.message ?? "Unexpected server error",
-        status,
-        "ServerError",
-        data.errors
-      );
-  }
+      if (error.response.status === 401 && !error.config?.url?.endsWith('/login')) window.dispatchEvent(new Event('hms:session-expired'));
+      return Promise.reject(apiError(error.response.data, error.response.status));
     }
-   
-
-    // Request sent but no response
-    if (error.request) {
-      throw new ApiError(
-        "Unable to connect to the server.",
-        0,
-        "NETWORK_ERROR",
-      );
-    }
-
-    // Axios configuration error
-    throw new ApiError(error.message, 500, "UNKNOWN_ERROR");
+    return Promise.reject(new ApiError(error.code === 'ECONNABORTED' ? 'The server took too long to respond.' : 'Unable to connect to the server.', 0, 'NETWORK_ERROR'));
   },
 );
-
-// Mock route handler registry stub for backward compatibility
-export function registerMockRoute(_method: string, _endpoint: string, _handler: any) {
-  // No-op: Mock routes are disabled in production architecture
-}
-
 export { axiosInstance as axios };
 export default axiosInstance;
-

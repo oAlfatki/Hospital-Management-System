@@ -9,6 +9,7 @@ namespace HSMAPI.Controllers
 {
     [Route("api/BillServiceController")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class BillServicesController(BillServiceService billServiceService) : ControllerBase
     {
         [HttpGet]

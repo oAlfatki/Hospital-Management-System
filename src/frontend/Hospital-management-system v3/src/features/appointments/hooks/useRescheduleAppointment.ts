@@ -10,6 +10,7 @@ export function useRescheduleAppointment() {
   return useMutation<Appointment, ApiError, RescheduleAppointmentRequest>({
     mutationFn: (request) => appointmentService.reschedule(request),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });

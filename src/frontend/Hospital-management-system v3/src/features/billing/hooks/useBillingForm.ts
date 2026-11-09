@@ -36,13 +36,13 @@ export const useBillingForm = ({ onSuccess, defaultPatientId = '' }: UseBillingF
   });
 
   const addServiceItem = () => {
-    if (!newItemName.trim() || !newItemCost || isNaN(Number(newItemCost))) {
+    if (!newItemName.trim() || !newItemCost || !Number.isFinite(Number(newItemCost)) || Number(newItemCost) <= 0) {
       toast.error(t('toastInvalidServiceItem'));
       return;
     }
     const updated = [
       ...servicesList,
-      { serviceName: newItemName.trim(), cost: Math.abs(Number(newItemCost)) },
+      { serviceName: newItemName.trim(), cost: Number(newItemCost) },
     ];
     setServicesList(updated);
     form.setValue('services', updated, { shouldValidate: true });

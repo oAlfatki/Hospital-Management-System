@@ -10,7 +10,7 @@ interface CreateRecordDialogProps {
   onClose: () => void;
   patients: Patient[];
   form: UseFormReturn<IRecordFormInput>;
-  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<unknown>;
   isSubmitting: boolean;
 }
 

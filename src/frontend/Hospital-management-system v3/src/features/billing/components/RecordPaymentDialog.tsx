@@ -10,7 +10,7 @@ interface RecordPaymentDialogProps {
   onClose: () => void;
   selectedBill: EnrichedBill | null;
   form: UseFormReturn<IRecordPaymentFormInput>;
-  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<unknown>;
   isSubmitting: boolean;
 }
 

@@ -15,11 +15,13 @@ export interface SelectProps
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, label, options, error, id, ...props }, ref) => {
+    const generatedId = React.useId();
+    const selectId = id || generatedId;
     return (
       <div className="w-full mb-4">
         {label && (
           <label
-            htmlFor={id}
+            htmlFor={selectId}
             className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5"
           >
             {label}
@@ -29,7 +31,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         <div className="relative">
           <select
             ref={ref}
-            id={id}
+            id={selectId}
             className={cn(
               "w-full px-3.5 py-2.5 pr-10 text-sm bg-white border border-slate-200 rounded-md outline-none appearance-none transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10",
               error &&

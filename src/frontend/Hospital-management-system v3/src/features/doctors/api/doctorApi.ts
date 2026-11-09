@@ -5,7 +5,6 @@ import type { CreateDoctorRequest } from '../types/CreateDoctorRequest';
 import type { UpdateDoctorRequest } from '../types/UpdateDoctorRequest';
 
 export const doctorApi = {
-  // Backend now returns array directly (RESTful)
   async getAllDoctors(): Promise<DoctorResponse[]> {
     const response = await axiosInstance.get<DoctorResponse[]>('/api/doctors');
     return response.data;
@@ -17,13 +16,13 @@ export const doctorApi = {
   },
 
   async createDoctor(request: CreateDoctorRequest): Promise<DoctorResponse> {
-    // Backend returns { status, response, isSuccess } — not { doctor }
-    const response = await axiosInstance.post<any>('/api/doctors', request);
+    const response = await axiosInstance.post<DoctorResponse>('/api/doctors', request);
     return response.data;
   },
 
   async updateDoctor(request: UpdateDoctorRequest): Promise<DoctorResponse> {
-    const response = await axiosInstance.put<any>(`/api/doctors/${request.doctorId}`, request);
+    const { doctorId, ...body } = request;
+    const response = await axiosInstance.put<DoctorResponse>(`/api/doctors/${doctorId}`, body);
     return response.data;
   },
 
@@ -32,12 +31,12 @@ export const doctorApi = {
   },
 
   async createDepartment(request: Omit<DepartmentResponse, 'departmentId' | 'createdOn' | 'updatedOn'>): Promise<DepartmentResponse> {
-    const response = await axiosInstance.post<any>('/api/departments', request);
+    const response = await axiosInstance.post<DepartmentResponse>('/api/departments', request);
     return response.data;
   },
 
   async updateDepartment(id: string, request: Partial<DepartmentResponse>): Promise<DepartmentResponse> {
-    const response = await axiosInstance.put<any>(`/api/departments/${id}`, request);
+    const response = await axiosInstance.put<DepartmentResponse>(`/api/departments/${id}`, request);
     return response.data;
   },
 

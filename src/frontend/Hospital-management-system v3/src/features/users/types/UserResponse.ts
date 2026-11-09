@@ -8,6 +8,6 @@ export interface UserResponse {
   contactNumber?: string;
   department?: string;
   status: 'Active' | 'Inactive';
-  createdOn?: string;
-  updatedOn?: string;
+  createdOn?: string | null;
+  updatedOn?: string | null;
 }

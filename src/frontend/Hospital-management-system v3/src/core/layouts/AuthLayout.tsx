@@ -3,13 +3,16 @@ import { HeartPulse, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../providers/ThemeProvider';
 import { Button } from '../components/ui/Button';
 import { useLanguage } from '../providers/LanguageProvider';
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../providers/AuthProvider';
 
 
 export const AuthLayout = () => {
+  const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
 
+  if (user) return <Navigate to="/dashboard" replace />;
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative transition-colors duration-200">
       

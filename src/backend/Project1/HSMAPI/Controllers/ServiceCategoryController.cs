@@ -10,6 +10,7 @@ namespace HSMAPI.Controllers
 {
     [Route("api/ServiceCategoryController")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class ServiceCategoryController(ServicesCategoryService servicesCategoryService) : ControllerBase
     {
         [HttpGet]

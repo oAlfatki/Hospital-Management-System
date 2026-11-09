@@ -1,4 +1,5 @@
 import React from 'react';
+import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './ThemeProvider';
 import { LanguageProvider } from './LanguageProvider';
@@ -20,6 +21,7 @@ export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children
         <LanguageProvider>
           <AuthProvider>
             {children}
+            <Toaster position="top-center" />
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>

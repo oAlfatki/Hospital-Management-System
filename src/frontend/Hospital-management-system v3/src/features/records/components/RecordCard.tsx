@@ -66,7 +66,7 @@ export const RecordCard: React.FC<RecordCardProps> = ({
         </div>
       </div>
 
-      {/* AES-256 Simulated Encryption footnote */}
+      {/* Persisted clinical version history */}
       <p className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/5 px-2 py-1 rounded inline-flex items-center gap-1 w-max">
         <CheckCircle className="h-3 w-3" /> {t('secureAesEncryptedFootnote')}
       </p>

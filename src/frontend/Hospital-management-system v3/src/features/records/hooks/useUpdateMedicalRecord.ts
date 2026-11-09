@@ -10,6 +10,7 @@ export function useUpdateMedicalRecord() {
   return useMutation<MedicalRecord, ApiError, UpdateRecordRequest>({
     mutationFn: (request) => recordService.update(request),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['medical_records'] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
     },

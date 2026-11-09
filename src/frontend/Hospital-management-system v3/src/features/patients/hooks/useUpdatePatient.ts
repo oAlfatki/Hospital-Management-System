@@ -10,6 +10,7 @@ export function useUpdatePatient() {
   return useMutation<Patient, ApiError, UpdatePatientRequest>({
     mutationFn: patientService.update,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({
         queryKey: ["patients"],
       });

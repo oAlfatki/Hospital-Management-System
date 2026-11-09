@@ -23,6 +23,23 @@ export const Dialog = ({
   className = "",
   size = "md",
 }: DialogProps) => {
+  const titleId = React.useId();
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const timer = window.setTimeout(() => panelRef.current?.querySelector<HTMLElement>('input, select, textarea, button')?.focus(), 0);
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Tab') return;
+      const controls = Array.from(panelRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]') || []);
+      const first = controls[0], last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => { window.clearTimeout(timer); document.removeEventListener('keydown', handleKey); previous?.focus(); };
+  }, [isOpen, onClose]);
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
 
@@ -55,6 +72,10 @@ export const Dialog = ({
 
           {/* Dialog */}
           <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
             initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -84,13 +105,14 @@ export const Dialog = ({
           >
             {title && (
               <div className="flex items-center justify-between border-b border-border px-6 py-5">
-                <h2 className="text-xl font-semibold text-text">
+                <h2 id={titleId} className="text-xl font-semibold text-text">
                   {title}
                 </h2>
 
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Close dialog"
                   onClick={onClose}
                   className="text-text-muted hover:bg-surface-muted hover:text-brand"
                 >

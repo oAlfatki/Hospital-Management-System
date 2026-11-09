@@ -10,6 +10,7 @@ export function useCreateBill() {
   return useMutation<Bill, ApiError, CreateBillRequest>({
     mutationFn: (request) => billingService.create(request),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['bills'] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
     },

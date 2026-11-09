@@ -8,6 +8,7 @@ export function useCreateDoctor() {
   return useMutation({
     mutationFn: (request: CreateDoctorRequest) => doctorService.createDoctor(request),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['doctors-list'] });
     },
   });

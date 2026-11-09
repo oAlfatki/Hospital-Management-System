@@ -8,12 +8,5 @@ export const notificationApi = {
     return response.data;
   },
 
-  async create(notification: Partial<NotificationLog>): Promise<NotificationLog> {
-    const response = await axiosInstance.post<any>(ENDPOINTS.NOTIFICATIONS, notification);
-    return response.data;
-  },
 
-  async delete(id: string): Promise<void> {
-    await axiosInstance.delete(`${ENDPOINTS.NOTIFICATIONS}/${id}`);
-  },
 };

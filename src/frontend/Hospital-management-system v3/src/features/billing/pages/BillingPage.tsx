@@ -24,8 +24,8 @@ export const BillingPage: React.FC = () => {
   const { t } = useLanguage();
 
   const { data: rawBills = [], isLoading: isBillsLoading, error: billsError } = useBills();
-  const { data: patientsData, isLoading: isPatientsLoading } = usePatients(1, 100);
-  const patients = patientsData?.items || [];
+  const { data: patientsData, isLoading: isPatientsLoading } = usePatients();
+  const patients = patientsData || [];
 
   const sendReminderMutation = useSendBillReminderMutation();
 
@@ -85,6 +85,7 @@ export const BillingPage: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       toast.success(t('toastBillingReportExported'));
     } catch {
       toast.error(t('toastFailedExportCsv'));

@@ -11,16 +11,16 @@ import ErrorHandler from "../core/components/errors/ErrorHandler";
 import { AuthLayout } from "../core/layouts/AuthLayout";
 import { DashboardLayout } from "../core/layouts/DashboardLayout";
 
-import { LoginPage } from "../features/users/pages/LoginPage";
-import { DashboardPage } from "../features/dashboard/pages/DashboardPage";
-import { PatientsPage } from "../features/patients/pages/PatientsPage";
-import { AppointmentsPage } from "../features/appointments/pages/AppointmentsPage";
-import { RecordsPage } from "../features/records/pages/RecordsPage";
-import { BillingPage } from "../features/billing/pages/BillingPage";
-import { DoctorsPage } from "../features/doctors/pages/DoctorsPage";
-import { UsersPage } from "../features/users/pages/UsersPage";
-import { NotificationsPage } from "../features/notifications/pages/NotificationsPage";
-import { AuditPage } from "../features/audit/pages/AuditPage";
+const LoginPage = React.lazy(() => import("../features/users/pages/LoginPage").then(m => ({ default: m.LoginPage })));
+const DashboardPage = React.lazy(() => import("../features/dashboard/pages/DashboardPage").then(m => ({ default: m.DashboardPage })));
+const PatientsPage = React.lazy(() => import("../features/patients/pages/PatientsPage").then(m => ({ default: m.PatientsPage })));
+const AppointmentsPage = React.lazy(() => import("../features/appointments/pages/AppointmentsPage").then(m => ({ default: m.AppointmentsPage })));
+const RecordsPage = React.lazy(() => import("../features/records/pages/RecordsPage").then(m => ({ default: m.RecordsPage })));
+const BillingPage = React.lazy(() => import("../features/billing/pages/BillingPage").then(m => ({ default: m.BillingPage })));
+const DoctorsPage = React.lazy(() => import("../features/doctors/pages/DoctorsPage").then(m => ({ default: m.DoctorsPage })));
+const UsersPage = React.lazy(() => import("../features/users/pages/UsersPage").then(m => ({ default: m.UsersPage })));
+const NotificationsPage = React.lazy(() => import("../features/notifications/pages/NotificationsPage").then(m => ({ default: m.NotificationsPage })));
+const AuditPage = React.lazy(() => import("../features/audit/pages/AuditPage").then(m => ({ default: m.AuditPage })));
 
 const router = createBrowserRouter(
   createRoutesFromElements(

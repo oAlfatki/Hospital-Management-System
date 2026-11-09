@@ -8,7 +8,10 @@ import { useLanguage } from '@/src/core/providers/LanguageProvider';
 import type { IDepartmentFormInput } from '../types/IDepartmentFormInput';
 import type { Doctor } from '../types/Doctor';
 
+import type { Department } from '../types/Department';
+
 interface DepartmentDialogProps {
+  selectedDepartment: Department | null;
   isOpen: boolean;
   doctors: Doctor[];
   form: UseFormReturn<IDepartmentFormInput>;
@@ -19,37 +22,38 @@ interface DepartmentDialogProps {
 
 export const DepartmentDialog: React.FC<DepartmentDialogProps> = ({
   isOpen,
+  selectedDepartment,
   doctors,
   form,
   onSubmit,
   isSubmitting,
   onClose,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { register, formState: { errors }, reset } = form;
 
   useEffect(() => {
     if (isOpen) {
       reset({
-        name: '',
-        headOfDepartment: '',
-        description: '',
+        name: selectedDepartment?.name || '',
+        headOfDepartment: selectedDepartment?.headOfDepartment || '',
+        description: selectedDepartment?.description || '',
       });
     }
-  }, [isOpen, reset]);
+  }, [isOpen, selectedDepartment, reset]);
 
   return (
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={t('configureNewClinicalDepartment')}
+      title={selectedDepartment ? (language === 'ar' ? 'تعديل القسم' : 'Edit department') : t('configureNewClinicalDepartment')}
       footer={
         <>
           <Button variant="outline" onClick={onClose} className="h-9">
             {t('commonCancel')}
           </Button>
           <Button onClick={onSubmit} disabled={isSubmitting} className="h-9">
-            {isSubmitting ? t('commonLoading') : t('createDepartment')}
+            {isSubmitting ? t('commonLoading') : selectedDepartment ? (language === 'ar' ? 'حفظ' : 'Save') : t('createDepartment')}
           </Button>
         </>
       }
@@ -68,7 +72,7 @@ export const DepartmentDialog: React.FC<DepartmentDialogProps> = ({
           options={[
             { value: '', label: t('unassignedLabel') },
             ...doctors
-              .filter((d) => d.status === 'Active')
+              .filter((d) => d.status === 'Active' && d.departmentId === selectedDepartment?.departmentId)
               .map((d) => ({ value: d.doctorId, label: d.name })),
           ]}
         />

@@ -32,6 +32,7 @@ export const useEditRecordForm = ({ selectedRecord, onSuccess }: UseEditRecordFo
     updateMutation.mutate(
       {
         recordId: selectedRecord.recordId,
+        version: selectedRecord.version,
         ...values,
       },
       {

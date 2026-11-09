@@ -21,6 +21,7 @@ export function useUserForm({ mode, selectedUser, onSuccess }: UseUserFormProps)
   const updateUser = useUpdateUser();
 
   const form = useForm<IUserFormInput>({
+    context: { mode },
     resolver: yupResolver(UserSchema) as any,
     defaultValues: {
       name: '',
@@ -51,7 +52,7 @@ export function useUserForm({ mode, selectedUser, onSuccess }: UseUserFormProps)
 
   const handleFormSubmit: SubmitHandler<IUserFormInput> = async (data) => {
     if (mode === 'create') {
-      await createUser.mutateAsync(UserMapper.toCreateRequest(data), {
+      createUser.mutate(UserMapper.toCreateRequest(data), {
         onSuccess() {
           toast.success(t('toastStaffUserCreated'));
           onSuccess();
@@ -65,7 +66,7 @@ export function useUserForm({ mode, selectedUser, onSuccess }: UseUserFormProps)
     }
 
     if (selectedUser) {
-      await updateUser.mutateAsync(UserMapper.toUpdateRequest(selectedUser.userId, data), {
+      updateUser.mutate(UserMapper.toUpdateRequest(selectedUser.userId, data), {
         onSuccess() {
           toast.success(t('toastStaffUserCreated'));
           onSuccess();

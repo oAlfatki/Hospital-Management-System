@@ -148,7 +148,7 @@ export const PatientDialog = ({
             {...register("status")}
           />
 
-          <div className="col-span-2 mb-4">
+          <div className="md:col-span-2 mb-4">
             <label className="mb-1.5 block text-tiny font-bold uppercase tracking-wider text-text-muted">
               {t("residentialAddress")}
             </label>
@@ -166,7 +166,7 @@ export const PatientDialog = ({
             )}
           </div>
 
-          <div className="col-span-2 mb-4">
+          <div className="md:col-span-2 mb-4">
             <label className="mb-1.5 block text-tiny font-bold uppercase tracking-wider text-text-muted">
               {t("clinicalMedicalHistory")}
             </label>

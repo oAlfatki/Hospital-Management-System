@@ -14,7 +14,7 @@ namespace HSMAPI.Filters
         public void OnActionExecuting(ActionExecutingContext context)
         {
             // هذا الكود ينفذ قبل الـ Action Method
-            _logger.LogInformation($"Executing action {context.ActionDescriptor.DisplayName} on controller {context.Controller} with arguments {JsonSerializer.Serialize(context.ActionArguments)}");
+            _logger.LogInformation($"Executing action {context.ActionDescriptor.DisplayName} on controller {context.Controller} ");
         }
 
         public void OnActionExecuted(ActionExecutedContext context)

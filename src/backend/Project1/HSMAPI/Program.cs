@@ -1,60 +1,76 @@
-using HSMAPI.Filters;
-using HSMAPI.Middleware;
 using HSMBusiness;
 using HSMBusiness.Erorrs;
 using HSMBusiness.Services;
 using HSMDataAccess.Data;
-using HSMDataAccess.DTOs;
+using HSMDataAccess.Entities;
 using HSMDataAccess.RepositoryServices;
+using HSMAPI.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-namespace HSMAPI
+using System.Security.Claims;
+using System.Threading.RateLimiting;
+
+namespace HSMAPI;
+public partial class Program
 {
-    public class Program
+    public static async Task Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+        builder.Services.AddControllers().AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new HSMAPI.Contracts.TimeOnlyConverter()));
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        builder.Services.AddProblemDetails();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<WorkflowService>();
+        builder.Services.AddScoped<PasswordHasher<User>>();
+        var origins = builder.Configuration.GetSection("FrontendOrigins").Get<string[]>() ?? ["http://localhost:3000"];
+        builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
+        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
         {
-            var builder = WebApplication.CreateBuilder(args);
-            // Add services to the container.
-            builder.Services.AddControllers(options=>{ 
-                options.Filters.Add<LogActivityFilter>(); 
-            });
-            // options.Filters.Add<LogActivityFilter>(); 
-            //لما اكون بدي احط 
-            // Global filter:بيشتغل عاي اكشن بال بالكونترولير
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            // Allow Frontend (React dev server) to call the API
-            builder.Services.AddCors(options =>
+            o.Cookie.Name = "hms_session";
+            o.Cookie.HttpOnly = true;
+            o.Cookie.SameSite = SameSiteMode.Strict;
+            o.Cookie.SecurePolicy = builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")
+                ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+            o.ExpireTimeSpan = TimeSpan.FromHours(8);
+            o.Events.OnRedirectToLogin = c => { c.Response.StatusCode = 401; return Task.CompletedTask; };
+            o.Events.OnRedirectToAccessDenied = c => { c.Response.StatusCode = 403; return Task.CompletedTask; };
+            o.Events.OnValidatePrincipal = async c =>
             {
-                options.AddPolicy("AllowFrontend", policy =>
-                {
-                    policy.WithOrigins(
-                        "http://localhost:5173",
-                        "http://localhost:3000",
-                        "http://localhost:4173"
-                    )
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-                });
-            });
-
-            var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                Console.WriteLine($"Connection String: {connectionString}");
-            }
-            builder.Services.AddDbContext<AppDBContext>(options =>
-                options.UseSqlServer(connectionString));
+                var db = c.HttpContext.RequestServices.GetRequiredService<AppDBContext>();
+                var id = c.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.ID == id);
+                if (user is null || !user.Status) { c.RejectPrincipal(); return; }
+                var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.ID.Trim()), new Claim(ClaimTypes.Role, user.Role.Trim()) }, CookieAuthenticationDefaults.AuthenticationScheme);
+                c.ReplacePrincipal(new ClaimsPrincipal(identity));
+            };
+        });
+        builder.Services.AddAuthorization(o => o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+        builder.Services.AddRateLimiter(o =>
+        {
+            o.RejectionStatusCode = 429;
+            o.AddPolicy("login", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+                { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+        });
+        builder.Services.AddDbContext<AppDBContext>((services, options) =>
+        {
+            var config = services.GetRequiredService<IConfiguration>();
+            var connection = config.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrWhiteSpace(connection)) throw new InvalidOperationException("Set ConnectionStrings__DefaultConnection before starting the API.");
+            if (config["Database:Provider"] == "Sqlite") options.UseSqlite(connection);
+            else options.UseSqlServer(connection);
+        });
             builder.Services.AddScoped<AppointmentRepository>();
             builder.Services.AddScoped<AppointmentError>();
             builder.Services.AddScoped<AppointmentService>();
             builder.Services.AddScoped<AuditLogRepository>();
             builder.Services.AddScoped<AuditLogService>();
             builder.Services.AddScoped<BillRepository>();
-            builder.Services.AddScoped<BillService>();
+            builder.Services.AddScoped<HSMBusiness.Services.BillService>();
             builder.Services.AddScoped<BillServiceRepository>();
             builder.Services.AddScoped<BillServiceService>();
             builder.Services.AddScoped<DepartmentRepository>();
@@ -81,23 +97,55 @@ namespace HSMAPI
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<BillServiceRepository>();
             builder.Services.AddScoped<BillServiceService>();
-            var app = builder.Build();  
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+
+        var app = builder.Build();
+        app.Use(async (context, next) =>
+        {
+            try { await next(); }
+            catch (WorkflowException e) { await Results.Problem(statusCode: e.Status, title: e.Message).ExecuteAsync(context); }
+            catch (DbUpdateConcurrencyException) { await Results.Problem(statusCode: 409, title: "Data changed. Refresh before retrying.").ExecuteAsync(context); }
+            catch (DbUpdateException e)
             {
-                //Any thing app.Use it means middleware
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.Logger.LogError(e, "Database update failed");
+                await Results.Problem(statusCode: 409, title: "Data conflicts with an existing or linked record.").ExecuteAsync(context);
             }
-            
-            app.UseHttpsRedirection();
-            app.UseCors("AllowFrontend");
-            app.UseAuthorization();
-            
-            app.UseMiddleware<ProfilingMiddleware>();
-            app.UseMiddleware<RateLimitingMiddleware>();
-            app.MapControllers();
-            app.Run();
+            catch (Exception e)
+            {
+                app.Logger.LogError(e, "Request failed");
+                await Results.Problem(statusCode: 500, title: "An unexpected server error occurred.").ExecuteAsync(context);
+            }
+        });
+        if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }
+        if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing")) { app.UseHsts(); app.UseHttpsRedirection(); }
+        app.UseCors();
+        // Cookie-authenticated writes accept only configured browser origins.
+        app.Use(async (context, next) =>
+        {
+            var origin = context.Request.Headers.Origin.ToString();
+            if (origin.Length > 0 && !HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method)
+                && !HttpMethods.IsOptions(context.Request.Method) && !origins.Contains(origin))
+            { await Results.Problem(statusCode: 403, title: "Origin is not allowed.").ExecuteAsync(context); return; }
+            await next();
+        });
+        app.UseAuthentication(); app.UseAuthorization(); app.UseRateLimiter();
+        app.MapControllers();
+        app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
+        if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+        {
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
+            if (builder.Configuration.GetValue<bool>("Database:Initialize")) await db.Database.EnsureCreatedAsync();
+            var email = builder.Configuration["Bootstrap:Email"];
+            var password = builder.Configuration["Bootstrap:Password"];
+            if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(password) && !await db.Users.AnyAsync())
+            {
+                if (password.Length < 12) throw new InvalidOperationException("Bootstrap password must have at least 12 characters.");
+                var admin = new User { ID = WorkflowService.Id(), Name = "Administrator", Role = "Admin", Status = true,
+                    Person = WorkflowService.NewPerson("Administrator", email, "0000000000") };
+                admin.PasswordHash = scope.ServiceProvider.GetRequiredService<PasswordHasher<User>>().HashPassword(admin, password);
+                db.Users.Add(admin); await db.SaveChangesAsync();
+            }
         }
+        await app.RunAsync();
     }
 }

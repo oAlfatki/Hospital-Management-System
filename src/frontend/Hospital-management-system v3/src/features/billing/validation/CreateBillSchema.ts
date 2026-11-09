@@ -7,7 +7,7 @@ export const CreateBillSchema = yup.object().shape({
     .of(
       yup.object().shape({
         serviceName: yup.string().required('Service name is required'),
-        cost: yup.number().min(0, 'Cost must be positive').required(),
+        cost: yup.number().min(0.01, 'Cost must be positive').required(),
       })
     )
     .min(1, 'At least one service item is required')

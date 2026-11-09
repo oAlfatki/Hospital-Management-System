@@ -19,7 +19,7 @@ interface CreateBillDialogProps {
   setNewItemCost: (val: string) => void;
   addServiceItem: () => void;
   removeServiceItem: (idx: number) => void;
-  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<unknown>;
   isSubmitting: boolean;
 }
 

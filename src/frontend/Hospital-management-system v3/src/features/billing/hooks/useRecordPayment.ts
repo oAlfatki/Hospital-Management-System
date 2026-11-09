@@ -10,6 +10,7 @@ export function useRecordPayment() {
   return useMutation<Bill, ApiError, RecordPaymentRequest>({
     mutationFn: (request) => billingService.recordPayment(request),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['bills'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });

@@ -10,6 +10,7 @@ export function useUpdateAppointmentStatus() {
     mutationFn: ({ appointmentId, newStatus }) =>
       appointmentService.updateStatus(appointmentId, newStatus),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });

@@ -9,6 +9,6 @@ export interface PatientResponse {
   address?: string;
   status: "Active" | "Inactive" | "Deceased";
   createdBy: string;
-  createdOn: string;
-  updatedOn: string;
+  createdOn: string | null;
+  updatedOn: string | null;
 }

@@ -10,6 +10,7 @@ export function useScheduleAppointment() {
   return useMutation<Appointment, ApiError, CreateAppointmentRequest>({
     mutationFn: (request) => appointmentService.schedule(request),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });

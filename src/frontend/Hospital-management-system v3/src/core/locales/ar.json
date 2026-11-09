@@ -29,7 +29,7 @@
 "weeklyTrackedPayment": "اتجاهات الدفع الأسبوعية المحصلة",
 "physicianWorkloads": "أعباء عمل الأطباء",
 "totalConsultationsHandled": "إجمالي الاستشارات الطبية لكل طبيب",
-"activePatientsLabel": "+12% مقارنة بالأسبوع الماضي",
+"activePatientsLabel": "الملفات النشطة المسجلة",
 "requiresBillingFollowup": "يتطلب متابعة الفواتير",
 "visits": "الزيارات",
 "bookings": "الحجوزات",
@@ -85,7 +85,7 @@
 
 "hmsTitle": "نظام إدارة المستشفى",
 "secureStaffPortalLogin": "دخول بوابة الموظفين الآمنة",
-"staffPortalHint": "يتم قفل/فتح أدوار الموظفين تلقائيًا بناءً على بيانات الاعتماد. يغلق حساب المستخدم بعد 3 محاولات فاشلة.",
+"staffPortalHint": "استخدم حساب الموظف المعتمد. تواصل مع مسؤول النظام إذا تعذر عليك تسجيل الدخول.",
 "staffEmailAddress": "البريد الإلكتروني للموظف",
 "staffSecurityPassword": "كلمة المرور الأمنية",
 "signInToPortal": "تسجيل الدخول إلى البوابة",
@@ -114,7 +114,7 @@
 
 "__Audit_Logs": "================ Audit Logs ================",
 
-"secureTamperProofLedger": "سجل إداري آمن ومقاوم للتلاعب يتتبع تسجيلات المستخدمين، وجلسات تسجيل الدخول، وتعديلات الفواتير.",
+"secureTamperProofLedger": "سجل إداري يتتبع التغييرات المحفوظة على سجلات النظام والفواتير.",
 "exportAuditSpreadsheet": "تصدير جدول التدقيق",
 "searchAuditTrail": "البحث في سجل التدقيق بواسطة معرف المستخدم، الاسم، وصف الإجراء، أو معرف التدقيق...",
 "allActions": "جميع الإجراءات",
@@ -155,7 +155,7 @@
 "staffRole": "دور الموظف",
 "contactPhone": "هاتف الاتصال",
 "initialPasswordNote": "ملاحظة كلمة المرور الأولية",
-"initialPasswordText": "للإعداد الأولي الآمن، يتم تعيين كلمة مرور الحساب تلقائيًا إلى الاسم الأول للبريد الإلكتروني بحرف كبير متبوعًا بـ 123!. مثال: للبريد الإلكتروني bob@hms.com، تكون كلمة المرور Bob123!.",
+"initialPasswordText": "يحدد المسؤول كلمة مرور أولية لا تقل عن 12 حرفًا.",
 
 "__Patients": "================ Patients ================",
 
@@ -282,7 +282,7 @@
 "colDiagnosis": "التشخيص",
 "colTreatmentPlan": "خطة العلاج الموصى بها",
 "colActivePrescriptions": "الوصفات الطبية النشطة",
-"colSecureEncryptionFootnote": "سجل سريري آمن مشفر بتقنية AES-256",
+"colSecureEncryptionFootnote": "سجل طبي محفوظ مع تاريخ الإصدارات",
 "colLastUpdated": "آخر تحديث:",
 "vHistory": "تاريخ الإصدارات",
 "modifyRecord": "تعديل السجل",
@@ -310,7 +310,7 @@
 "rbacProtectedClinicalRecords": "سجلات سريرية محمية بصلاحيات الأدوار",
 "unauthorizedRoleDetected": "تم اكتشاف دور غير مصرح له. الوصول إلى التشخيصات السريرية للمريض وتاريخه الطبي ووصفات الأدوية يقتصر بشكل صارم على الأطباء والممرضات النشطين.",
 "securityAuditAlert": "تنبيه تدقيق الأمن",
-"unauthorizedAccessLogged": "تم تسجيل محاولة الوصول غير المصرح بها هذه داخل سجل تدقيق النظام تحت معرف المستخدم:",
+"unauthorizedAccessLogged": "لا يملك حسابك صلاحية الوصول إلى هذه البيانات. معرف المستخدم:",
 "toastRecordInitialized": "تم تهيئة السجل الطبي السريري بنجاح!",
 "toastFailedCreateRecord": "فشل إنشاء السجل الطبي.",
 "toastRecordUpdated": "تم تحديث السجل الطبي بنجاح. تم تجميع إصدار جديد.",
@@ -383,7 +383,7 @@
 "toastClinicalRecordInitialized": "تم تهيئة السجل الطبي السريري بنجاح!",
 "toastMedicalRecordUpdated": "تم تحديث السجل الطبي بنجاح. تم تجميع إصدار جديد.",
 "rbacProtectedClinicalRecordsDesc": "تم اكتشاف دور غير مصرح له. الوصول إلى التشخيصات السريرية للمريض وتاريخه الطبي ووصفات الأدوية يقتصر بشكل صارم على الأطباء والممرضات النشطين.",
-"unauthorizedLogAlert": "تم تسجيل محاولة الوصول غير المصرح بها هذه داخل سجل تدقيق النظام تحت معرف المستخدم:",
+"unauthorizedLogAlert": "لا يملك حسابك صلاحية الوصول إلى هذه البيانات. معرف المستخدم:",
 "medicalRecordsManagement": "إدارة السجلات الطبية",
 "medicalRecordsManagementDesc": "سجل آمن للملفات الطبية مع تدقيق الإصدارات ومقارنة التغييرات المطبقة.",
 "quickSearchRecordsPlaceholder": "بحث سريع بمعرف المريض، الاسم، رقم السجل، أو الهاتف...",
@@ -392,7 +392,7 @@
 "noActiveTherapySpecified": "لا توجد خطة علاجية نشطة محددة.",
 "activePrescriptionsCol": "الوصفات الطبية النشطة",
 "noDrugsPrescribed": "لا توجد أدوية موصوفة.",
-"secureAesEncryptedFootnote": "سجل سريري آمن مشفر بتقنية AES-256",
+"secureAesEncryptedFootnote": "سجل طبي محفوظ مع تاريخ الإصدارات",
 "lastUpdatedPrefix": "آخر تحديث:",
 "vHistoryBtn": "تاريخ الإصدارات",
 "modifyRecordBtn": "تعديل السجل",
@@ -413,7 +413,7 @@
 "toastInvalidServiceItem": "يرجى إدخال اسم خدمة صالح وتكلفة عددية.",
 "toastCorrectFormErrors": "يرجى تصحيح الأخطاء في النموذج المالي.",
 "toastRecordedPayment": "تم تسجيل الدفع بنجاح!",
-"toastBillingReminderSent": "تم إرسال إشعار تذكير الفواتير الآلي بنجاح إلى المريض!",
+"toastBillingReminderSent": "تمت إضافة تذكير الدفع إلى قائمة الإرسال",
 "toastFailedSendReminder": "فشل إرسال إشعار التذكير.",
 "toastBillingReportExported": "تم تصدير تقرير الفواتير إلى جدول بنجاح!",
 "toastFailedExportCsv": "فشل تصدير تقرير CSV.",
@@ -432,7 +432,7 @@
 "commonUnpaid": "غير مدفوعة",
 "invoiceBtn": "الفاتورة",
 "payBtn": "سداد",
-"generateAndDispatchInvoice": "إنشاء وإرسال الفاتورة",
+"generateAndDispatchInvoice": "إنشاء الفاتورة",
 "addItemBtn": "إضافة بند",
 "taxRateLabel": "نسبة الضريبة (%)",
 "flatDiscountLabel": "خصم ثابت ($)",
@@ -461,5 +461,6 @@
 
 "validationPatientNameRequired": "اسم المريض مطلوب",
   "validationDateOfBirthRequired": "تاريخ الميلاد مطلوب",
-  "validationContactNumberRequired": "رقم الهاتف مطلوب"
+  "validationContactNumberRequired": "رقم الهاتف مطلوب",
+  "validationPasswordMin": "كلمة المرور يجب أن تكون 12 حرفًا على الأقل"
 }

@@ -10,7 +10,7 @@ interface EditRecordDialogProps {
   onClose: () => void;
   selectedRecord: EnrichedMedicalRecord | null;
   form: UseFormReturn<IUpdateRecordFormInput>;
-  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<unknown>;
   isSubmitting: boolean;
 }
 

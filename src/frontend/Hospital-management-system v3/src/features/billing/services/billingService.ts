@@ -34,7 +34,7 @@ export const billingService = {
       return [
         b.billId,
         patientName,
-        `"${servicesStr}"`,
+        servicesStr,
         b.subtotal,
         b.taxPercent,
         b.discountAmount,
@@ -46,6 +46,11 @@ export const billingService = {
       ];
     });
 
-    return [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const cell = (value: string | number) => {
+      const raw = String(value);
+      const text = typeof value === 'string' && /^[=+@\t\r-]/.test(raw) ? "'" + raw : raw;
+      return '"' + text.replace(/"/g, '""') + '"';
+    };
+    return '\uFEFF' + [headers, ...rows].map(row => row.map(cell).join(',')).join('\r\n');
   },
 };

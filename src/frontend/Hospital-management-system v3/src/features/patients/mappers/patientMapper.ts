@@ -17,8 +17,8 @@ export const PatientMapper = {
       medicalHistory: response.medicalHistory,
       status: response.status,
       createdBy: response.createdBy,
-      createdOn: response.createdOn,
-      updatedOn: response.updatedOn,
+      createdOn: response.createdOn || '',
+      updatedOn: response.updatedOn || '',
     };
   },
 
@@ -32,7 +32,7 @@ export const PatientMapper = {
       dateOfBirth: form.dateOfBirth,
       gender: form.gender,
       contactNumber: form.contactNumber.trim(),
-      email: form.email || undefined,
+      email: form.email.trim(),
       address: form.address || undefined,
       medicalHistory: form.medicalHistory || undefined,
       status: form.status,
@@ -49,7 +49,7 @@ export const PatientMapper = {
       dateOfBirth: form.dateOfBirth,
       gender: form.gender,
       contactNumber: form.contactNumber.trim(),
-      email: form.email || undefined,
+      email: form.email.trim(),
       address: form.address || undefined,
       medicalHistory: form.medicalHistory || undefined,
       status: form.status,

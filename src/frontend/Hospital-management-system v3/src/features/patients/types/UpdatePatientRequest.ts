@@ -6,7 +6,7 @@ export interface UpdatePatientRequest {
   gender: "Male" | "Female" | "Other" | "Prefer not to say";
 
   contactNumber: string;
-  email?: string;
+  email: string;
   address?: string;
   medicalHistory?: string;
 

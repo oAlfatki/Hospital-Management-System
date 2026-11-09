@@ -8,6 +8,7 @@ export function useSendBillReminder() {
   return useMutation<void, ApiError, string>({
     mutationFn: (billId) => billingService.sendReminder(billId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
     },

@@ -15,6 +15,9 @@ import { useDepartmentForm } from '../hooks/useDepartmentForm';
 import { useUpdateDoctor } from '../hooks/useUpdateDoctor';
 import { DoctorDialog } from '../components/DoctorDialog';
 import { DepartmentDialog } from '../components/DepartmentDialog';
+import type { Department } from '../types/Department';
+import toast from 'react-hot-toast';
+import { DoctorMapper } from '../mappers/doctorMapper';
 import type { Doctor } from '../types/Doctor';
 
 export const DoctorsPage: React.FC = () => {
@@ -33,7 +36,9 @@ export const DoctorsPage: React.FC = () => {
     onSuccess: dialog.closeDoctorDialog,
   });
 
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const departmentForm = useDepartmentForm({
+    selectedDepartment,
     onSuccess: dialog.closeDepartmentDialog,
   });
 
@@ -51,10 +56,7 @@ export const DoctorsPage: React.FC = () => {
     if (!user) return;
     const newStatus = doctor.status === 'Active' ? 'Inactive' : 'Active';
 
-    updateDoctorMutation.mutate({
-      doctorId: doctor.doctorId,
-      status: newStatus,
-    });
+    updateDoctorMutation.mutate(DoctorMapper.toUpdateRequest(doctor.doctorId, { ...DoctorMapper.toDoctorFormValues(doctor), status: newStatus }), { onError: (error: Error) => toast.error(error.message) });
   };
 
   const isManagementOrAdmin = user?.role === 'Admin' || user?.role === 'Management';
@@ -74,7 +76,7 @@ export const DoctorsPage: React.FC = () => {
                 {t('addPhysician')}
               </Button>
             ) : (
-              <Button onClick={dialog.openCreateDepartment} className="gap-2 h-9 text-xs">
+              <Button onClick={() => { setSelectedDepartment(null); dialog.openCreateDepartment(); }} className="gap-2 h-9 text-xs">
                 <Plus className="h-4 w-4" />
                 {t('addDepartment')}
               </Button>
@@ -188,6 +190,7 @@ export const DoctorsPage: React.FC = () => {
                 <th className="py-3.5 px-6">{t('colHeadOfDepartment')}</th>
                 <th className="py-3.5 px-6">{t('colDescription')}</th>
                 <th className="py-3.5 px-6">{t('colDateConfigured')}</th>
+                <th className="py-3.5 px-6">{t('commonActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
@@ -203,6 +206,9 @@ export const DoctorsPage: React.FC = () => {
                     <td className="py-4 px-6 text-slate-500 truncate max-w-sm">{dept.description || t('noDescriptionAdded')}</td>
                     <td className="py-4 px-6 text-xs text-slate-400">
                       {formatDate(dept.createdOn, language === 'ar' ? 'ar-EG' : 'en-US')}
+                    </td>
+                    <td className="py-4 px-6">
+                      <Button variant="ghost" aria-label={language === 'ar' ? 'تعديل القسم' : 'Edit department'} onClick={() => { setSelectedDepartment(dept); dialog.openCreateDepartment(); }}><Edit2 className="h-4 w-4" /></Button>
                     </td>
                   </tr>
                 );
@@ -225,6 +231,7 @@ export const DoctorsPage: React.FC = () => {
       />
 
       <DepartmentDialog
+        selectedDepartment={selectedDepartment}
         isOpen={dialog.isDepartmentOpen}
         doctors={doctors}
         form={departmentForm.form}

@@ -6,6 +6,6 @@ export interface DoctorResponse {
   contactNumber?: string;
   email: string;
   status: 'Active' | 'Inactive';
-  createdOn?: string;
-  updatedOn?: string;
+  createdOn?: string | null;
+  updatedOn?: string | null;
 }

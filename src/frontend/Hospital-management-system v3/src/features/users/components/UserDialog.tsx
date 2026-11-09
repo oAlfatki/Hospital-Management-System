@@ -35,6 +35,7 @@ export const UserDialog: React.FC<UserDialogProps> = ({
     if (isOpen) {
       if (mode === 'edit' && selectedUser) {
         reset({
+          password: '',
           name: selectedUser.name,
           email: selectedUser.email,
           role: selectedUser.role,
@@ -44,6 +45,7 @@ export const UserDialog: React.FC<UserDialogProps> = ({
         });
       } else if (mode === 'create') {
         reset({
+          password: '',
           name: '',
           email: '',
           role: 'Nurse',
@@ -66,7 +68,7 @@ export const UserDialog: React.FC<UserDialogProps> = ({
             {t('commonCancel')}
           </Button>
           <Button onClick={onSubmit} disabled={isSubmitting} className="h-9">
-            {isSubmitting ? t('commonLoading') : t('addStaffAccount')}
+            {isSubmitting ? t('commonLoading') : mode === 'edit' ? (language === 'ar' ? 'حفظ التغييرات' : 'Save changes') : t('addStaffAccount')}
           </Button>
         </>
       }
@@ -106,15 +108,14 @@ export const UserDialog: React.FC<UserDialogProps> = ({
             maxLength={10}
           />
         </div>
-        <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-850 rounded-lg text-xs space-y-1.5">
-          <div className="flex items-center gap-2.5 font-bold text-slate-500 uppercase tracking-wider">
-            <Key className="h-4 w-4 text-emerald-500" />
-            {t('initialPasswordNote')}
-          </div>
-          <p className="text-slate-400 leading-relaxed mt-1">
-            {t('initialPasswordText')}
-          </p>
-        </div>
+        <Input
+          label={language === 'ar' ? 'كلمة المرور (12 حرفًا على الأقل)' : 'Password (at least 12 characters)'}
+          type="password"
+          autoComplete="new-password"
+          {...register('password', { required: mode === 'create' })}
+          error={errors.password?.message ? t(errors.password.message as any) : undefined}
+          required={mode === 'create'}
+        />
       </form>
     </Dialog>
   );

@@ -16,7 +16,7 @@ interface ScheduleAppointmentDialogProps {
   conflictError: string | null;
   slotSuggestions: string[];
   applySuggestedSlot: (slot: string) => void;
-  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<unknown>;
   isSubmitting: boolean;
 }
 

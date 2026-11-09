@@ -17,8 +17,8 @@ export const DoctorMapper = {
       contactNumber: doc.contactNumber,
       email: doc.email,
       status: doc.status,
-      createdOn: doc.createdOn || new Date().toISOString(),
-      updatedOn: doc.updatedOn || new Date().toISOString(),
+      createdOn: doc.createdOn || '',
+      updatedOn: doc.updatedOn || '',
     };
   },
 
@@ -32,8 +32,8 @@ export const DoctorMapper = {
       name: dept.name,
       headOfDepartment: dept.headOfDepartment,
       description: dept.description,
-      createdOn: dept.createdOn || new Date().toISOString(),
-      updatedOn: dept.updatedOn || new Date().toISOString(),
+      createdOn: dept.createdOn || '',
+      updatedOn: dept.updatedOn || '',
     };
   },
 
@@ -52,16 +52,8 @@ export const DoctorMapper = {
     };
   },
 
-  toUpdateRequest(doctorId: string, form: Partial<IDoctorFormInput>): UpdateDoctorRequest {
-    return {
-      doctorId,
-      ...(form.name && { name: form.name.trim() }),
-      ...(form.departmentId && { departmentId: form.departmentId }),
-      ...(form.specialty && { specialty: form.specialty.trim() }),
-      ...(form.contactNumber && { contactNumber: form.contactNumber.trim() }),
-      ...(form.email && { email: form.email.trim() }),
-      ...(form.status && { status: form.status }),
-    };
+  toUpdateRequest(doctorId: string, form: IDoctorFormInput): UpdateDoctorRequest {
+    return { doctorId, ...this.toCreateRequest(form) };
   },
 
   toDoctorFormValues(doctor: Doctor): IDoctorFormInput {

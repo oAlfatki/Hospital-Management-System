@@ -16,8 +16,8 @@ export const AppointmentMapper = {
       status: res.status,
       notificationSent: res.notificationSent,
       createdBy: res.createdBy,
-      createdOn: res.createdOn,
-      updatedOn: res.updatedOn,
+      createdOn: res.createdOn || '',
+      updatedOn: res.updatedOn || '',
     };
   },
 

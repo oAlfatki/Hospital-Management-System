@@ -1,55 +1,28 @@
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { DepartmentSchema } from '../validation/DoctorSchema';
-import { useCreateDepartment } from './useCreateDepartment';
+import { doctorApi } from '../api/doctorApi';
 import type { IDepartmentFormInput } from '../types/IDepartmentFormInput';
+import type { Department } from '../types/Department';
 import { useLanguage } from '@/src/core/providers/LanguageProvider';
-
-interface UseDepartmentFormProps {
-  onSuccess: () => void;
-}
-
-export function useDepartmentForm({ onSuccess }: UseDepartmentFormProps) {
+interface Props { onSuccess: () => void; selectedDepartment: Department | null; }
+export function useDepartmentForm({ onSuccess, selectedDepartment }: Props) {
   const { t } = useLanguage();
-  const createDepartment = useCreateDepartment();
-
-  const form = useForm<IDepartmentFormInput>({
-    resolver: yupResolver(DepartmentSchema) as any,
-    defaultValues: {
-      name: '',
-      headOfDepartment: '',
-      description: '',
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (data: IDepartmentFormInput) => selectedDepartment
+      ? doctorApi.updateDepartment(selectedDepartment.departmentId, data)
+      : doctorApi.createDepartment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments-list'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(t('toastDepartmentCreated')); onSuccess();
     },
+    onError: (error: Error) => toast.error(error.message),
   });
-
-  const { reset } = form;
-
-  const resetForm = () => {
-    reset({
-      name: '',
-      headOfDepartment: '',
-      description: '',
-    });
-  };
-
-  const handleFormSubmit: SubmitHandler<IDepartmentFormInput> = async (data) => {
-    await createDepartment.mutateAsync(data, {
-      onSuccess() {
-        toast.success(t('toastDepartmentCreated'));
-        onSuccess();
-        resetForm();
-      },
-      onError(error: any) {
-        toast.error(error.message || t('toastFailedCreateDepartment'));
-      },
-    });
-  };
-
-  return {
-    form,
-    resetForm,
-    onSubmit: form.handleSubmit(handleFormSubmit),
-    isSubmitting: createDepartment.isPending,
-  };
+  const form = useForm<IDepartmentFormInput>({ resolver: yupResolver(DepartmentSchema), defaultValues: { name: '', headOfDepartment: '', description: '' } });
+  const submit: SubmitHandler<IDepartmentFormInput> = data => mutation.mutate(data);
+  return { form, resetForm: () => form.reset(), onSubmit: form.handleSubmit(submit), isSubmitting: mutation.isPending };
 }

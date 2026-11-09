@@ -10,6 +10,7 @@ namespace HSMAPI.Controllers
 {
     [Route("api/EmployeeController")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class EmployeeController(EmployeeService employeeService) : ControllerBase
     {
         [HttpGet]

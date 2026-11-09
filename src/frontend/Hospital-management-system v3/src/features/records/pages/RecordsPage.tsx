@@ -24,16 +24,9 @@ export const RecordsPage: React.FC = () => {
 
   const isAuthorized = !!user && (user.role === 'Doctor' || user.role === 'Nurse');
 
-  // Trigger service logs in background if unauthorized, just like original logic
-  useEffect(() => {
-    if (user && !isAuthorized) {
-      recordService.getAll().catch(() => {});
-    }
-  }, [user, isAuthorized]);
-
   const { data: rawRecords = [], isLoading: isRecordsLoading, error: recordsError } = useMedicalRecords();
-  const { data: patientsData, isLoading: isPatientsLoading } = usePatients(1, 100);
-  const patients = patientsData?.items || [];
+  const { data: patientsData, isLoading: isPatientsLoading } = usePatients();
+  const patients = patientsData || [];
 
   const dialog = useRecordDialog();
 

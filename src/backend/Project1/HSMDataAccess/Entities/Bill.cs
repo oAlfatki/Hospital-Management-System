@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +8,14 @@ namespace HSMDataAccess.Entities
 {
     public class Bill
     {
+        public DateTime? CreatedOn { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedOn { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = "";
+        public decimal TaxPercent { get; set; }
+        public int Revision { get; set; }
+        public ICollection<BillLine> Lines { get; set; } = new List<BillLine>();
+        public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+
         public string ID { get; set; } = null!;
         public string PatientID { get; set; } = null!;
         public string Status { get; set; } = null!;

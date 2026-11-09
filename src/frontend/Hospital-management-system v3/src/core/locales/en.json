@@ -26,7 +26,7 @@
 "weeklyTrackedPayment": "Weekly tracked payment intake trends",
 "physicianWorkloads": "Physician Workloads",
 "totalConsultationsHandled": "Total consultations handled per doctor",
-"activePatientsLabel": "+12% from last week",
+"activePatientsLabel": "Registered active patients",
 "requiresBillingFollowup": "Requires billing follow-up",
 "visits": "Visits",
 "bookings": "Bookings",
@@ -81,7 +81,7 @@
 
 "hmsTitle": "Hospital Management System",
 "secureStaffPortalLogin": "Secure staff portal login",
-"staffPortalHint": "Staff roles lock/unlock automatically based on credentials. Fail counter locks accounts after 3 attempts.",
+"staffPortalHint": "Use your assigned staff account. Contact your administrator if you cannot sign in.",
 "staffEmailAddress": "Staff Email Address",
 "staffSecurityPassword": "Staff Security Password",
 "signInToPortal": "Sign In To Portal",
@@ -110,7 +110,7 @@
 
 "__Audit_Logs": "================ Audit Logs ================",
 
-"secureTamperProofLedger": "Secure, tamper-proof administrative ledger tracking user registrations, session logins, and billing modifications.",
+"secureTamperProofLedger": "Administrative history of saved changes to system records and invoices.",
 "exportAuditSpreadsheet": "Export Audit spreadsheet",
 "searchAuditTrail": "Search audit trail by User ID, Name, Action Description, or Audit ID...",
 "allActions": "All Actions",
@@ -151,7 +151,7 @@
 "staffRole": "Staff Role",
 "contactPhone": "Contact Phone",
 "initialPasswordNote": "Initial Password Note",
-"initialPasswordText": "For initial secure setup, the account password defaults automatically to their capitalized email prefix combined with 123!. E.g., for email bob@hms.com, password is Bob123!.",
+"initialPasswordText": "An administrator sets an initial password of at least 12 characters.",
 
 "__Patients": "================ Patients ================",
 
@@ -278,7 +278,7 @@
 "colDiagnosis": "Diagnosis",
 "colTreatmentPlan": "Recommended Treatment Plan",
 "colActivePrescriptions": "Active Prescriptions",
-"colSecureEncryptionFootnote": "Secure AES-256 Encrypted Clinical Record",
+"colSecureEncryptionFootnote": "Clinical record with saved version history",
 "colLastUpdated": "Last updated:",
 "vHistory": "vHistory",
 "modifyRecord": "Modify Record",
@@ -306,7 +306,7 @@
 "rbacProtectedClinicalRecords": "RBAC Protected Clinical Records",
 "unauthorizedRoleDetected": "Unauthorized role detected. Access to clinical patient diagnostics, medical histories, and drug prescriptions is strictly limited to active Doctors and Nurses.",
 "securityAuditAlert": "Security Audit Alert",
-"unauthorizedAccessLogged": "This unauthorized access attempt was logged inside the system audit trail under user ID:",
+"unauthorizedAccessLogged": "Your account does not have permission to access these records. User ID:",
 "toastRecordInitialized": "Clinical Medical Record successfully initialized!",
 "toastFailedCreateRecord": "Failed to create record.",
 "toastRecordUpdated": "Medical Record successfully updated. New version compiled.",
@@ -379,7 +379,7 @@
 "toastClinicalRecordInitialized": "Clinical Medical Record successfully initialized!",
 "toastMedicalRecordUpdated": "Medical Record successfully updated. New version compiled.",
 "rbacProtectedClinicalRecordsDesc": "Unauthorized role detected. Access to clinical patient diagnostics, medical histories, and drug prescriptions is strictly limited to active Doctors and Nurses.",
-"unauthorizedLogAlert": "This unauthorized access attempt was logged inside the system audit trail under user ID:",
+"unauthorizedLogAlert": "Your account does not have permission to access these records. User ID:",
 "medicalRecordsManagement": "Medical Records Management",
 "medicalRecordsManagementDesc": "Secure clinical files registry with version auditing and change comparisons.",
 "quickSearchRecordsPlaceholder": "Quick search by Patient ID, Patient Name, Record Number, or Contact...",
@@ -388,7 +388,7 @@
 "noActiveTherapySpecified": "No active therapy specified.",
 "activePrescriptionsCol": "Active Prescriptions",
 "noDrugsPrescribed": "No drugs prescribed.",
-"secureAesEncryptedFootnote": "Secure AES-256 Encrypted Clinical Record",
+"secureAesEncryptedFootnote": "Clinical record with saved version history",
 "lastUpdatedPrefix": "Last updated:",
 "vHistoryBtn": "vHistory",
 "modifyRecordBtn": "Modify Record",
@@ -409,7 +409,7 @@
 "toastInvalidServiceItem": "Please enter a valid service name and numeric cost.",
 "toastCorrectFormErrors": "Please correct errors in the form.",
 "toastRecordedPayment": "Recorded payment successfully!",
-"toastBillingReminderSent": "Automated billing reminder notification dispatched successfully to patient!",
+"toastBillingReminderSent": "Payment reminder queued",
 "toastFailedSendReminder": "Failed to send reminder notification.",
 "toastBillingReportExported": "Billing ledger report exported to CSV successfully!",
 "toastFailedExportCsv": "Failed to export billing report to CSV.",
@@ -428,7 +428,7 @@
 "commonUnpaid": "Unpaid",
 "invoiceBtn": "Invoice",
 "payBtn": "Pay",
-"generateAndDispatchInvoice": "Generate & Dispatch Invoice",
+"generateAndDispatchInvoice": "Generate invoice",
 "addItemBtn": "Add Item",
 "taxRateLabel": "Tax Rate (%)",
 "flatDiscountLabel": "Flat Discount ($)",
@@ -457,7 +457,6 @@
 
  "validationPatientNameRequired": "Patient name is required",
   "validationDateOfBirthRequired": "Date of birth is required",
-  "validationContactNumberRequired": "Contact phone number is required"
-
-
+  "validationContactNumberRequired": "Contact phone number is required",
+  "validationPasswordMin": "Password must have at least 12 characters"
 }

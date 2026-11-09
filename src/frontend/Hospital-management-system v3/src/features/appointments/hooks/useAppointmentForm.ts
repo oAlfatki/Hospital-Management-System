@@ -30,7 +30,7 @@ export const useAppointmentForm = ({
     defaultValues: {
       patientId: defaultPatientId,
       doctorId: defaultDoctorId,
-      appointmentDate: '2026-06-29',
+      appointmentDate: new Date().toLocaleDateString('en-CA'),
       appointmentTime: '09:00',
       durationMinutes: 30,
     },
@@ -72,7 +72,7 @@ export const useAppointmentForm = ({
     form.reset({
       patientId: pId,
       doctorId: dId,
-      appointmentDate: '2026-06-29',
+      appointmentDate: new Date().toLocaleDateString('en-CA'),
       appointmentTime: '09:00',
       durationMinutes: 30,
     });

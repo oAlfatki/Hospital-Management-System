@@ -1,0 +1,30 @@
+name: Verify hospital workflows
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/frontend/Hospital-management-system v3/package-lock.json
+      - run: dotnet build HospitalManagement.sln --configuration Release
+      - run: dotnet test tests/HSMAPI.Tests/HSMAPI.Tests.csproj --configuration Release
+      - run: npm ci
+        working-directory: src/frontend/Hospital-management-system v3
+      - run: npm run lint && npm run build
+        working-directory: src/frontend/Hospital-management-system v3
+      - run: npx playwright install --with-deps chromium
+        working-directory: src/frontend/Hospital-management-system v3
+      - run: npm run test:e2e
+        working-directory: src/frontend/Hospital-management-system v3
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure-evidence
+          path: src/frontend/Hospital-management-system v3/test-results/

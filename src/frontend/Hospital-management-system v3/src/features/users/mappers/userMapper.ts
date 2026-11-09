@@ -14,8 +14,8 @@ export const UserMapper = {
       contactNumber: response.contactNumber,
       department: response.department,
       status: response.status,
-      createdOn: response.createdOn || new Date().toISOString(),
-      updatedOn: response.updatedOn || new Date().toISOString(),
+      createdOn: response.createdOn || '',
+      updatedOn: response.updatedOn || '',
     };
   },
 
@@ -25,6 +25,7 @@ export const UserMapper = {
 
   toCreateRequest(form: IUserFormInput): CreateUserRequest {
     return {
+      password: form.password || undefined,
       name: form.name.trim(),
       email: form.email.trim(),
       role: form.role,
@@ -34,16 +35,8 @@ export const UserMapper = {
     };
   },
 
-  toUpdateRequest(userId: string, form: Partial<IUserFormInput>): UpdateUserRequest {
-    return {
-      userId,
-      ...(form.name && { name: form.name.trim() }),
-      ...(form.email && { email: form.email.trim() }),
-      ...(form.role && { role: form.role }),
-      ...(form.contactNumber !== undefined && { contactNumber: form.contactNumber.trim() }),
-      ...(form.department !== undefined && { department: form.department.trim() }),
-      ...(form.status && { status: form.status }),
-    };
+  toUpdateRequest(userId: string, form: IUserFormInput): UpdateUserRequest {
+    return { userId, ...this.toCreateRequest(form) };
   },
 
   toFormValues(user: User): IUserFormInput {

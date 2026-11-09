@@ -8,31 +8,12 @@ import type { UpdateDoctorRequest } from '../types/UpdateDoctorRequest';
 export const doctorService = {
   async getDoctors(): Promise<Doctor[]> {
     const responses = await doctorApi.getAllDoctors();
-    // Backend returns DoctorDTO array — map to domain shape
-    return (responses as any[]).map((r) => ({
-      doctorId: r.iD ?? r.doctorId ?? r.id ?? "",
-      name: r.name ?? r.userID ?? "",
-      departmentId: r.departmentID ?? r.departmentId ?? "",
-      specialty: r.specialization ?? r.specialty ?? "",
-      contactNumber: r.contactNumber,
-      email: r.email ?? "",
-      status: r.status === true || r.status === "Active" ? "Active" : "Inactive",
-      createdOn: r.createdOn ?? new Date().toISOString(),
-      updatedOn: r.updatedOn ?? new Date().toISOString(),
-    }));
+    return DoctorMapper.toDomainList(responses);
   },
 
   async getDepartments(): Promise<Department[]> {
     const responses = await doctorApi.getAllDepartments();
-    // Backend returns DepartmentDTO array
-    return (responses as any[]).map((r) => ({
-      departmentId: r.iD ?? r.departmentId ?? r.id ?? "",
-      name: r.name ?? "",
-      headOfDepartment: r.headOfDepartment,
-      description: r.description,
-      createdOn: r.createdOn ?? new Date().toISOString(),
-      updatedOn: r.updatedOn ?? new Date().toISOString(),
-    }));
+    return DoctorMapper.toDepartmentDomainList(responses);
   },
 
   async createDoctor(request: CreateDoctorRequest): Promise<Doctor> {

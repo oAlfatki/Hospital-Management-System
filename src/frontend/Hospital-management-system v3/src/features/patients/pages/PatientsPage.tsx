@@ -39,18 +39,12 @@ export const PatientsPage = () => {
 
   const pagination = usePatientPagination();
 
-  const { data, isLoading, error } = usePatients(
-    pagination.page,
-    pagination.pageSize,
-  );
-  const {
-    pageNumber,
-    totalPages,
-    totalCount,
-    items: patients = [],
-  } = data ?? {};
-
+  const { data: patients = [], isLoading, error } = usePatients();
   const filters = usePatientFilters(patients);
+  const totalCount = filters.filteredPatients.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pagination.pageSize));
+  const pageNumber = Math.min(pagination.page, totalPages);
+  const visiblePatients = filters.filteredPatients.slice((pageNumber - 1) * pagination.pageSize, pageNumber * pagination.pageSize);
 
   const patientForm = usePatientForm({
     mode: dialog.mode,
@@ -76,7 +70,7 @@ export const PatientsPage = () => {
         description={t("patientDirectoryDesc")}
       >
         <Button
-          onClick={dialog.openRegisterDialog}
+          onClick={() => { patientForm.resetForm(); dialog.openRegisterDialog(); }}
           className="h-10 gap-2 px-5 bg-brand hover:bg-brand-dark text-white shadow-card transition-all duration-normal"
         >
           <Plus className="h-4 w-4" />
@@ -101,16 +95,16 @@ export const PatientsPage = () => {
       {/* Directory Listing Table */}
       {
         <PatientTable
-          patients={filters.filteredPatients}
-          onEdit={dialog.openEditDialog}
+          patients={visiblePatients}
+          onEdit={patient => { patientForm.loadPatient(patient); dialog.openEditDialog(patient); }}
           pagination={
             <Paginator
               page={pageNumber ?? 1}
               pageCount={totalPages ?? 1}
               total={totalCount ?? 1}
               isLoading={isLoading}
-              onClickPrev={pagination.onClickPrev}
-              onClickNext={pagination.onClickNext}
+              onClickPrev={() => pagination.setPage(Math.max(1, pageNumber - 1))}
+              onClickNext={() => pagination.setPage(Math.min(totalPages, pageNumber + 1))}
             />
           }
         />

@@ -1,9 +1,4 @@
-export interface UpdateDoctorRequest {
+import type { CreateDoctorRequest } from './CreateDoctorRequest';
+export interface UpdateDoctorRequest extends CreateDoctorRequest {
   doctorId: string;
-  name?: string;
-  departmentId?: string;
-  specialty?: string;
-  contactNumber?: string;
-  email?: string;
-  status?: 'Active' | 'Inactive';
 }

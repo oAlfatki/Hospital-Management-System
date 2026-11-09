@@ -4,7 +4,6 @@ import type { PatientResponse } from "../types/PatientResponse";
 import type { UpdatePatientRequest } from "../types/UpdatePatientRequest";
 
 export const patientApi = {
-  // Backend returns a plain array: PatientDTO[]
   async getAll(): Promise<PatientResponse[]> {
     const response = await axiosInstance.get<PatientResponse[]>("/api/patients");
     return response.data;
@@ -24,9 +23,10 @@ export const patientApi = {
   },
 
   async update(updatePatientRequest: UpdatePatientRequest): Promise<PatientResponse> {
+    const { patientId, ...body } = updatePatientRequest;
     const response = await axiosInstance.put<PatientResponse>(
-      `/api/patients/${updatePatientRequest.patientId}`,
-      updatePatientRequest,
+      `/api/patients/${patientId}`,
+      body,
     );
     return response.data;
   },

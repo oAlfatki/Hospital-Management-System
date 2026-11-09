@@ -8,9 +8,9 @@ export interface RecordResponse {
   prescriptions: string;
   status: 'Active' | 'Archived';
   createdBy: string;
-  createdOn: string;
+  createdOn: string | null;
   updatedBy: string;
-  updatedOn: string;
+  updatedOn: string | null;
   version: number;
   history: RecordVersion[];
 }

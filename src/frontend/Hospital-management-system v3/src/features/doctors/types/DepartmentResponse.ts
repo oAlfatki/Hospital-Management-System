@@ -3,6 +3,6 @@ export interface DepartmentResponse {
   name: string;
   headOfDepartment?: string;
   description?: string;
-  createdOn?: string;
-  updatedOn?: string;
+  createdOn?: string | null;
+  updatedOn?: string | null;
 }

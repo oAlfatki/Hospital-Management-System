@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.Entities;
+using HSMDataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -23,6 +23,8 @@ namespace HSMDataAccess.Data
         public virtual DbSet<Department> Departments { get; set; }
         public virtual DbSet<Employee> Employees { get; set; }
         public virtual DbSet<Bill> Bills { get; set; }
+        public DbSet<BillLine> BillLines { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         public virtual DbSet<Patient> Patients { get; set; }
         public virtual DbSet<Notification> Notifications { get; set; }
         public virtual DbSet<Report> Reports { get; set; }
@@ -34,6 +36,11 @@ namespace HSMDataAccess.Data
         public virtual DbSet<BillService> BillServices { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            if (Database.IsSqlite())
+            {
+                ConfigureWorkflowModel(modelBuilder);
+                return;
+            }
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.ID);
@@ -44,7 +51,7 @@ namespace HSMDataAccess.Data
 
                 entity.ToTable(e =>
                             e.HasCheckConstraint
-                            ("CK_Users_Role", "([Role]='Management' OR [Role]=' Accounts' OR [Role]='Nurse' OR [Role]='Doctor' OR [Role]='Admin')"));
+                            ("CK_Users_Role", "([Role]='Management' OR [Role]='Accounts' OR [Role]='Nurse' OR [Role]='Doctor' OR [Role]='Admin')"));
                 entity.ToTable(e =>
                             e.HasCheckConstraint
                             ("CK_Users_Status", "([Status]=(1) OR [Status]=(0))"));
@@ -52,8 +59,8 @@ namespace HSMDataAccess.Data
                 entity.Property(e => e.ID)
                 .ValueGeneratedOnAdd();
                 entity.Property(e => e.Name)
-                .HasColumnType("nchar(10)")
-                .HasMaxLength(10)
+                .HasColumnType("nvarchar(200)")
+                .HasMaxLength(200)
                 .IsRequired();
                 entity.Property(e => e.Role)
                 .IsRequired();
@@ -79,7 +86,7 @@ namespace HSMDataAccess.Data
                 entity.Property(e => e.ID)
                  .HasColumnType("nchar(10)")
                 .HasMaxLength(10)
-                .HasDefaultValueSql("(N'(left(CONVERT([nvarchar](36),newid()),(10)))')")
+                .HasDefaultValueSql("LEFT(CONVERT(nvarchar(36), NEWID()), 10)")
                 .ValueGeneratedOnAdd();
                 
                 entity.HasIndex(e => e.DepartmentID, "IX_Doctors_Departments");
@@ -99,8 +106,8 @@ namespace HSMDataAccess.Data
                 .HasColumnType("bit")
                 .IsRequired();
                 entity.HasOne(d => d.Department)
-                .WithOne(d=>d.Doctor)
-                 .HasForeignKey<Doctor>(d => d.DepartmentID)
+                .WithMany()
+                 .HasForeignKey(d => d.DepartmentID)
                  .OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(d => d.User)
                 .WithOne(u => u.doctor)
@@ -108,13 +115,14 @@ namespace HSMDataAccess.Data
             });
             modelBuilder.Entity<Department>(entity =>
             {
+                entity.Ignore(e => e.Doctor);
                 entity.Property(e => e.ID)
                  .HasColumnType("nchar(10)")
                 .HasMaxLength(10)
                 .HasDefaultValueSql("LEFT(CONVERT(nvarchar(36), NEWID()), 10)");
                 entity.Property(e => e.Name)
-                 .HasColumnType("nchar(10)")
-                .HasMaxLength(10);
+                 .HasColumnType("nvarchar(100)")
+                .HasMaxLength(100);
                 entity.Property(e => e.HeadOf)
                  .HasColumnType("nchar(10)")
                 .HasMaxLength(10);
@@ -134,7 +142,7 @@ namespace HSMDataAccess.Data
                   {
                       t
                       .HasCheckConstraint
-                      ("CK_People_Gender", "([Gender]='Female' OR [Gender]='Male')");
+                      ("CK_People_Gender", "([Gender]='Female' OR [Gender]='Male' OR [Gender]='Other' OR [Gender]='Prefer not to say')");
                   });
                 entity.ToTable(
                   t =>
@@ -148,7 +156,7 @@ namespace HSMDataAccess.Data
                 entity.Property(e => e.ID)
                  .HasColumnType("nchar(10)")
                 .HasMaxLength(10)
-                .HasDefaultValueSql("(N'(left(CONVERT([nvarchar](36),newid()),(10)))')");
+                .HasDefaultValueSql("LEFT(CONVERT(nvarchar(36), NEWID()), 10)");
                 entity.Property(e => e.Name)
                 .HasColumnType("nvarchar(200)")
                 .HasMaxLength(200);
@@ -159,8 +167,8 @@ namespace HSMDataAccess.Data
                 .HasColumnType("nvarchar(250)")
                 .HasMaxLength(250);
                 entity.Property(e => e.Gender)
-                .HasColumnType("nchar(10)")
-                .HasMaxLength(10);
+                .HasColumnType("nvarchar(30)")
+                .HasMaxLength(30);
                 entity.Property(e => e.Address)
                .HasColumnType("text");
                 entity.Property(e => e.DateOfBirth)
@@ -180,7 +188,7 @@ namespace HSMDataAccess.Data
                 entity.Property(e => e.ID)
                   .HasColumnType("nchar(10)")
                  .HasMaxLength(10)
-                 .HasDefaultValueSql("(N'(left(CONVERT([nvarchar](36),newid()),(10)))')");
+                 .HasDefaultValueSql("LEFT(CONVERT(nvarchar(36), NEWID()), 10)");
                 entity.Property(e => e.ID)
                 .HasColumnType("nchar(10)")
                 .HasMaxLength(10);
@@ -202,7 +210,7 @@ namespace HSMDataAccess.Data
                 entity.Property(e => e.ID)
                   .HasColumnType("nchar(10)")
                  .HasMaxLength(10)
-                 .HasDefaultValueSql("(N'(left(CONVERT([nvarchar](36),newid()),(10)))')");
+                 .HasDefaultValueSql("LEFT(CONVERT(nvarchar(36), NEWID()), 10)");
                 entity.Property(e => e.Salary)
                 .HasColumnType("decimal(10, 2)")
                 .IsRequired();
@@ -417,7 +425,7 @@ namespace HSMDataAccess.Data
                 entity.Property(e => e.ID)
                 .HasColumnType("nchar(10)")
                .HasMaxLength(10)
-               .HasDefaultValueSql("(N'(left(CONVERT([nvarchar](36),newid()),(10)))')");
+               .HasDefaultValueSql("LEFT(CONVERT(nvarchar(36), NEWID()), 10)");
                 entity.Property(e => e.ID)
                     .HasColumnType("nchar(10)")
                     .IsRequired();
@@ -448,7 +456,7 @@ namespace HSMDataAccess.Data
                     .IsRequired();
 
                 entity.Property(e => e.Discount)
-                    .HasColumnType("decimal(5,2)");
+                    .HasColumnType("decimal(10,2)");
 
                 entity.Property(e => e.InsuranceCoverage)
                     .HasColumnType("decimal(5,2)");
@@ -666,6 +674,49 @@ namespace HSMDataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            ConfigureWorkflowModel(modelBuilder);
         }
+        private void ConfigureWorkflowModel(ModelBuilder model)
+        {
+            model.Entity<Department>().Ignore(x => x.Doctor);
+            model.Entity<Doctor>().HasOne(x => x.Department).WithMany().HasForeignKey(x => x.DepartmentID).OnDelete(DeleteBehavior.Restrict);
+            model.Entity<Doctor>().HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonID).OnDelete(DeleteBehavior.Restrict);
+            model.Entity<Doctor>().HasOne(x => x.User).WithOne(x => x.doctor).HasForeignKey<Doctor>(x => x.UserID).OnDelete(DeleteBehavior.Restrict);
+            model.Entity<User>().HasOne(x => x.Person).WithOne().HasForeignKey<User>(x => x.PersonID).OnDelete(DeleteBehavior.Restrict);
+            model.Entity<Patient>().HasOne(x => x.Person).WithOne(x => x.Patient).HasForeignKey<Patient>(x => x.PersonID).OnDelete(DeleteBehavior.Restrict);
+            model.Entity<Employee>().HasOne(x => x.Person).WithOne(x => x.Employee).HasForeignKey<Employee>(x => x.PersonID).OnDelete(DeleteBehavior.Restrict);
+            model.Entity<Person>().HasIndex(x => x.Email).IsUnique();
+            model.Entity<Person>().Property(x => x.ContactNumber).IsRequired(false);
+            model.Entity<Person>().HasIndex(x => x.ContactNumber).IsUnique().HasFilter("[ContactNumber] IS NOT NULL");
+            model.Entity<BillLine>().HasOne(x => x.Bill).WithMany(x => x.Lines).HasForeignKey(x => x.BillID).OnDelete(DeleteBehavior.Cascade);
+            model.Entity<Payment>().HasOne(x => x.Bill).WithMany(x => x.Payments).HasForeignKey(x => x.BillID).OnDelete(DeleteBehavior.Restrict);
+            model.Entity<Bill>().Property(x => x.Revision).IsConcurrencyToken();
+            model.Entity<MedicalRecord>().Property(x => x.Version).IsConcurrencyToken();
+            model.Entity<Bill>().Property(x => x.TaxPercent).HasPrecision(5, 2);
+            model.Entity<BillLine>().Property(x => x.ID).HasMaxLength(10);
+            model.Entity<Payment>().Property(x => x.ID).HasMaxLength(10);
+            model.Entity<BillLine>().Property(x => x.Cost).HasPrecision(10, 2);
+            model.Entity<Payment>().Property(x => x.Amount).HasPrecision(10, 2);
+            model.Entity<Bill>().HasIndex(x => x.Invoice).IsUnique();
+            model.Entity<Notification>().HasOne(x => x.patient).WithMany(x => x.notification).HasForeignKey(x => x.PatientID).OnDelete(DeleteBehavior.Restrict);
+            if (Database.IsSqlite())
+            {
+                model.Entity<BillService>().HasKey(x => new { x.BillID, x.ServiceID });
+                model.Entity<BillService>().Ignore(x => x.TotalPrice);
+                // Legacy navigation names do not follow EF's foreign-key naming convention.
+                model.Entity<Appointment>().HasOne(x => x.patient).WithMany(x => x.appointment).HasForeignKey(x => x.PatientID).OnDelete(DeleteBehavior.Restrict);
+                model.Entity<Appointment>().HasOne(x => x.doctor).WithMany(x => x.appointment).HasForeignKey(x => x.DoctorID).OnDelete(DeleteBehavior.Restrict);
+                model.Entity<Bill>().HasOne(x => x.patient).WithMany(x => x.bill).HasForeignKey(x => x.PatientID).OnDelete(DeleteBehavior.Restrict);
+                model.Entity<MedicalRecord>().HasOne(x => x.patient).WithMany(x => x.medicalRecord).HasForeignKey(x => x.PatientID).OnDelete(DeleteBehavior.Restrict);
+
+                model.Entity<Notification>().HasOne(x => x.User).WithMany(x => x.notification).HasForeignKey(x => x.UserID).OnDelete(DeleteBehavior.Restrict);
+                model.Entity<AuditLog>().HasOne(x => x.user).WithMany(x => x.auditLog).HasForeignKey(x => x.UserID).OnDelete(DeleteBehavior.Restrict);
+                model.Entity<Report>().HasOne(x => x.user).WithMany(x => x.report).HasForeignKey(x => x.GeneratedBy).OnDelete(DeleteBehavior.Restrict);
+                model.Entity<MedicalServices>().HasOne(x => x.serviceCategory).WithMany(x => x.medicalService).HasForeignKey(x => x.CategoryID);
+                model.Entity<BillService>().HasOne(x => x.bill).WithMany(x => x.billService).HasForeignKey(x => x.BillID);
+                model.Entity<BillService>().HasOne(x => x.medicalService).WithMany(x => x.billServices).HasForeignKey(x => x.ServiceID);
+            }
+        }
+
     }
 }

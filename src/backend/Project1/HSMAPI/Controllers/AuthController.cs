@@ -1,182 +1,82 @@
-using HSMBusiness.Services;
-using HSMDataAccess.DTOs;
+using HSMAPI.Contracts;
+using HSMAPI.Services;
+using HSMDataAccess.Data;
 using HSMDataAccess.Entities;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using static HSMAPI.Services.WorkflowService;
 
-namespace HSMAPI.Controllers
+namespace HSMAPI.Controllers;
+
+[ApiController, Authorize, Route("api/auth")]
+public class AuthController(AppDBContext db, WorkflowService workflow, PasswordHasher<User> hasher) : ControllerBase
 {
-    [Route("api/auth")]
-    [ApiController]
-    public class AuthController(UserService userService) : ControllerBase
+    [HttpPost("login"), AllowAnonymous, EnableRateLimiting("login")]
+    public async Task<IActionResult> Login(LoginRequest request)
     {
-        /// <summary>
-        /// Login endpoint — called by the frontend on sign-in.
-        /// Accepts { email, password } and returns { success, user?, error? }
-        /// </summary>
-        [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        var email = request.Email.Trim().ToLowerInvariant();
+        var u = await db.Users.Include(x => x.Person).SingleOrDefaultAsync(x => x.Person.Email == email);
+        var valid = false;
+        if (u is not null && u.Status)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            {
-                return BadRequest(new { success = false, error = "Email and password are required" });
-            }
-
-            // Get all users and find one matching email + password
-            var usersResult = await userService.GetAll();
-            if (usersResult.userList == null)
-            {
-                return Unauthorized(new { success = false, error = "Invalid credentials" });
-            }
-
-            var matchedUser = usersResult.userList.FirstOrDefault(u =>
-                u.Name != null && u.Name.Equals(request.Email, StringComparison.OrdinalIgnoreCase) &&
-                u.PasswordHash != null && u.PasswordHash == request.Password
-            );
-
-            if (matchedUser == null)
-            {
-                return Unauthorized(new { success = false, error = "Invalid email or password" });
-            }
-
-            return Ok(new
-            {
-                success = true,
-                user = new
-                {
-                    userId = matchedUser.UserID,
-                    name = matchedUser.Name,
-                    role = matchedUser.Role ?? "Doctor",
-                    email = request.Email,
-                    status = matchedUser.Status ? "Active" : "Inactive"
-                }
-            });
+            try { valid = hasher.VerifyHashedPassword(u, u.PasswordHash, request.Password) != PasswordVerificationResult.Failed; }
+            catch (FormatException) { /* Legacy plaintext credentials require an administrator password reset. */ }
         }
-
-        [HttpGet("{Id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetUserByIdAsync(string Id)
-        {
-            if (string.IsNullOrEmpty(Id))
-                return BadRequest(new { message = "ID is required" });
-
-            var user = await userService.GetByID(Id);
-            if (user.userDTO == null)
-                return NotFound(new { message = "User not found" });
-
-            return Ok(user.userDTO);
-        }
-
-        [HttpGet("users", Name = "GetAllUsers")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            var usersList = await userService.GetAll();
-            if (usersList.Item4 == null)
-                return NotFound(new { message = "No users found" });
-
-            return Ok(usersList.userList);
-        }
-
-        [HttpPost("register", Name = "CreateUser")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateUser(UserDTO user)
-        {
-            if (user == null)
-                return NotFound();
-
-            var NumOfUser = await userService.NumberOfPerson(user.PersonID);
-            if (!NumOfUser.IsSuccess)
-            {
-                return StatusCode(500, new
-                {
-                    status = NumOfUser.Status,
-                    response = NumOfUser.Response,
-                    isSuccess = NumOfUser.IsSuccess,
-                    errors = NumOfUser.errors
-                });
-            }
-            userService.Mode = UserService.enMode.Add;
-            var result = await userService.Save(user);
-
-            if (!result.IsSuccess)
-            {
-                return BadRequest(new
-                {
-                    status = result.Status,
-                    response = result.Response,
-                    isSuccess = result.IsSuccess,
-                    errors = result.errors
-                });
-            }
-
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess,
-                errors = result.errors
-            });
-        }
-
-        [HttpPut("{ID}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateUser(string ID, UserDTO user)
-        {
-            if (user == null || string.IsNullOrEmpty(ID))
-                return BadRequest();
-
-            userService.Mode = UserService.enMode.Update;
-            var result = await userService.Save(user, ID);
-
-            if (!result.IsSuccess)
-                return BadRequest(new
-                {
-                    status = result.Status,
-                    response = result.Response,
-                    isSuccess = result.IsSuccess,
-                    errors = result.errors
-                });
-
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess,
-                errors = result.errors
-            });
-        }
-
-        [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> DeleteUser(string id)
-        {
-            if (string.IsNullOrEmpty(id))
-                return BadRequest();
-
-            var result = await userService.Delete(id);
-
-            if (!result.IsSuccess)
-                return BadRequest();
-
-            return Ok(result.Response);
-        }
+        if (!valid || u is null) return Unauthorized(new { message = "Invalid email or password.", success = false });
+        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, u.ID.Trim()), new Claim(ClaimTypes.Name, u.Person.Name), new Claim(ClaimTypes.Role, u.Role.Trim()) };
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
+        return Ok(new { success = true, user = UserView(u) });
     }
-
-    /// <summary>Request body for POST /api/auth/login</summary>
-    public class LoginRequest
+    [HttpGet("session")]
+    public async Task<IActionResult> Session()
     {
-        public string Email { get; set; } = null!;
-        public string Password { get; set; } = null!;
+        var u = await db.Users.Include(x => x.Person).SingleAsync(x => x.ID == workflow.Actor);
+        return Ok(UserView(u));
+    }
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(); return NoContent();
+    }
+    [HttpGet("users"), Authorize(Roles = "Admin")]
+    public async Task<IActionResult> All() => Ok((await db.Users.Include(x => x.Person).AsNoTracking().ToListAsync()).Select(UserView));
+    [HttpPost("register"), Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create(StaffRequest r)
+    {
+        Require(!string.IsNullOrWhiteSpace(r.Password) && r.Password.Length >= 12, "An initial password of at least 12 characters is required.");
+        var existingPerson = await db.People.SingleOrDefaultAsync(x => x.Email == r.Email.Trim().ToLowerInvariant());
+        Doctor? doctor = null;
+        if (existingPerson is not null)
+        {
+            doctor = await db.Doctors.SingleOrDefaultAsync(x => x.PersonID == existingPerson.ID && x.UserID == null);
+            Require(r.Role == "Doctor" && doctor is not null, "Email is already registered.", 409);
+        }
+        await workflow.CheckPerson(r.Email, r.ContactNumber, existingPerson?.ID);
+        var u = new User { ID = Id(), Person = existingPerson ?? NewPerson(r.Name, r.Email, r.ContactNumber), Name = r.Name.Trim(),
+            Role = r.Role, Status = r.Status == "Active", DepartmentName = r.Department, CreatedBy = workflow.Actor };
+        u.Person.Name = r.Name.Trim();
+        if (!string.IsNullOrWhiteSpace(r.ContactNumber)) u.Person.ContactNumber = r.ContactNumber;
+        u.PasswordHash = hasher.HashPassword(u, r.Password!); db.Users.Add(u);
+        if (doctor is not null) doctor.User = u;
+        await workflow.Save("User", "Create", u.ID); return StatusCode(201, UserView(u));
+    }
+    [HttpPut("{id}"), Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(string id, StaffRequest r)
+    {
+        var u = await db.Users.Include(x => x.Person).SingleOrDefaultAsync(x => x.ID == id); if (u is null) return NotFound();
+        Require(id != workflow.Actor || (r.Role == "Admin" && r.Status == "Active"), "You cannot remove your own administrator access.", 409);
+        await workflow.CheckPerson(r.Email, r.ContactNumber, u.PersonID);
+        u.Name = r.Name.Trim(); u.Person.Name = u.Name; u.Person.Email = r.Email.Trim().ToLowerInvariant();
+        u.Person.ContactNumber = string.IsNullOrWhiteSpace(r.ContactNumber) ? null! : r.ContactNumber; u.Role = r.Role; u.Status = r.Status == "Active";
+        u.DepartmentName = r.Department; u.UpdatedOn = DateTime.UtcNow;
+        if (!string.IsNullOrEmpty(r.Password)) u.PasswordHash = hasher.HashPassword(u, r.Password);
+        await workflow.Save("User", "Update", id); return Ok(UserView(u));
     }
 }

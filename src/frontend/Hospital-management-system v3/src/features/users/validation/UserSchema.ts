@@ -1,6 +1,7 @@
 import * as yup from 'yup';
 
 export const UserSchema = yup.object({
+  password: yup.string().when('$mode', { is: 'create', then: schema => schema.required('validationPasswordMin') }).test('password-length', 'validationPasswordMin', value => !value || value.length >= 12),
   name: yup
     .string()
     .trim()
