@@ -458,5 +458,20 @@
  "validationPatientNameRequired": "Patient name is required",
   "validationDateOfBirthRequired": "Date of birth is required",
   "validationContactNumberRequired": "Contact phone number is required",
-  "validationPasswordMin": "Password must have at least 12 characters"
+  "validationPasswordMin": "Password must have at least 12 characters",
+"deleteAction": "Delete",
+"confirmDelete": "Permanently delete this record? This cannot be undone.",
+"deleteSucceeded": "Record deleted",
+"editAction": "Edit",
+"saveChangesAction": "Save changes",
+"searchDoctors": "Search physicians by name, specialty, department or contact",
+"searchDepartments": "Search departments by name, head or description",
+"searchUsers": "Search staff by name, email, role or contact",
+"searchAppointments": "Search appointments by patient, physician, date or status",
+"noSearchResults": "No matching records",
+"editAppointment": "Edit appointment",
+"editInvoice": "Edit invoice",
+"editNotification": "Edit notification",
+"notificationMessage": "Message",
+"notificationType": "Delivery channel"
 }

@@ -254,6 +254,19 @@ namespace HSMBusiness.Services
             await _appointment.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Appointment", "Update", id));
             return AppointmentMapper.ToResponse(appointment);
         }));
+        public Task<ResultResponse<AppointmentResponse>> UpdateAppointmentAsync(string id, AppointmentRequest request, string actor) => ExecuteAsync(() => _appointment.InTransactionAsync(async () =>
+        {
+            var appointment = Found(await _appointment.GetByIDAsync(id), "Appointment not found.");
+            Require(appointment.Status != "Cancelled", "Cancelled appointments cannot be edited.", 409);
+            Require(await patientService.IsActivePatientAsync(request.PatientId), "Active patient not found.", 404);
+            Require(await doctorService.IsActiveDoctorAsync(request.DoctorId), "Active doctor not found.", 404);
+            appointment.PatientID = request.PatientId; appointment.DoctorID = request.DoctorId;
+            appointment.Date = request.AppointmentDate; appointment.Time = request.AppointmentTime; appointment.Duration = request.DurationMinutes;
+            appointment.Status = "Rescheduled"; appointment.NotificationSent = false; appointment.UpdatedOn = DateTime.UtcNow;
+            await ValidateSlotAsync(appointment);
+            await _appointment.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Appointment", "Update", id));
+            return AppointmentMapper.ToResponse(appointment);
+        }));
         private async Task ValidateSlotAsync(Appointment appointment)
         {
             Require(appointment.Time.HasValue && appointment.Date != default, "Appointment date and time are required.");

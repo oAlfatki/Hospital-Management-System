@@ -163,10 +163,7 @@ namespace HSMBusiness.Services
         {
             Require(await _patientService.IsActivePatientAsync(request.PatientId), "Active patient not found.", 404);
             Require(request.DueDate >= DateOnly.FromDateTime(DateTime.UtcNow), "Due date cannot be in the past.");
-            var subtotal = request.Services.Sum(s => Money(s.Cost));
-            var discount = Money(request.DiscountAmount); var taxPercent = Money(request.TaxPercent);
-            var total = Money(subtotal + Money(subtotal * taxPercent / 100) - discount);
-            Require(subtotal <= 99999999 && total <= 99999999 && total > 0 && discount <= subtotal, "Discount must not exceed subtotal and total must be positive.");
+            var (subtotal, discount, taxPercent, total) = CalculateInvoice(request);
             var bill = new Bill { ID = Id(), PatientID = request.PatientId, Status = "Unpaid", Date = DateTime.UtcNow,
                 DueDate = request.DueDate.ToDateTime(TimeOnly.MinValue), Invoice = $"INV-{Guid.NewGuid():N}", GrossAmount = subtotal,
                 Discount = discount, TaxPercent = taxPercent, PatientResponsibility = total, PartialPaymentAmount = 0, CreatedBy = actor,
@@ -175,6 +172,21 @@ namespace HSMBusiness.Services
             await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Billing", "Create", bill.ID));
             return ToInvoiceResponse(bill);
         }, 201);
+        public Task<ResultResponse<BillResponse>> UpdateInvoiceAsync(string id, BillRequest request, string actor) => ExecuteAsync(() => _repository.InTransactionAsync(async () =>
+        {
+            var bill = Found(await _repository.GetDetailedByIdAsync(id), "Invoice not found.");
+            Require((bill.PartialPaymentAmount ?? 0) == 0 && bill.Payments.Count == 0 && bill.Status != "Cancelled", "Invoices with payments or cancelled invoices cannot be edited.", 409);
+            Require(await _patientService.IsActivePatientAsync(request.PatientId), "Active patient not found.", 404);
+            Require(request.DueDate >= DateOnly.FromDateTime(DateTime.UtcNow), "Due date cannot be in the past.");
+            var (subtotal, discount, taxPercent, total) = CalculateInvoice(request);
+            bill.PatientID = request.PatientId; bill.GrossAmount = subtotal; bill.Discount = discount; bill.TaxPercent = taxPercent;
+            bill.PatientResponsibility = total; bill.DueDate = request.DueDate.ToDateTime(TimeOnly.MinValue);
+            bill.Lines.Clear();
+            foreach (var item in request.Services) bill.Lines.Add(new BillLine { ServiceName = item.ServiceName.Trim(), Cost = Money(item.Cost) });
+            bill.Revision++; bill.UpdatedOn = DateTime.UtcNow;
+            await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Billing", "Update", id));
+            return ToInvoiceResponse(bill);
+        }));
         public Task<ResultResponse<BillResponse>> RecordInvoicePaymentAsync(string id, PaymentRequest request, string actor) => ExecuteAsync(() => _repository.InTransactionAsync(async () =>
         {
             var bill = Found(await _repository.GetDetailedByIdAsync(id), "Invoice not found.");
@@ -200,7 +212,15 @@ namespace HSMBusiness.Services
             return true;
         }, 204);
 
-            private static BillResponse ToInvoiceResponse(Bill bill)
+        private static (decimal Subtotal, decimal Discount, decimal TaxPercent, decimal Total) CalculateInvoice(BillRequest request)
+        {
+            var subtotal = request.Services.Sum(s => Money(s.Cost));
+            var discount = Money(request.DiscountAmount); var taxPercent = Money(request.TaxPercent);
+            var total = Money(subtotal + Money(subtotal * taxPercent / 100) - discount);
+            Require(subtotal <= 99999999 && total <= 99999999 && total > 0 && discount <= subtotal, "Discount must not exceed subtotal and total must be positive.");
+            return (subtotal, discount, taxPercent, total);
+        }
+        private static BillResponse ToInvoiceResponse(Bill bill)
         {
             var due = Money(bill.PatientResponsibility - (bill.PartialPaymentAmount ?? 0));
             var status = bill.Status == "Cancelled" ? "Cancelled" : bill.Status == "Pending Insurance" ? "Pending Insurance" : due <= 0 ? "Paid"

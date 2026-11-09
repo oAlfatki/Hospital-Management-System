@@ -1,4 +1,8 @@
 import React from 'react';
+import { useUserFilters } from '../hooks/useUserFilters';
+import { SearchInput } from '@/src/core/components/ui/SearchInput';
+import { DeleteButton } from '@/src/core/components/ui/DeleteButton';
+import { useDeleteUser } from '../hooks/useDeleteUser';
 import toast from 'react-hot-toast';
 import { UserPlus, ShieldAlert, Edit2 } from 'lucide-react';
 import { useAuth, useLanguage } from '@/src/core/providers';
@@ -22,6 +26,8 @@ export const UsersPage: React.FC = () => {
   const { data: users = [], isLoading, error } = useUsers();
   const updateUserMutation = useUpdateUser();
   const dialog = useUserDialog();
+  const deletion = useDeleteUser();
+  const { search, setSearch, filteredUsers } = useUserFilters(users);
 
   const userForm = useUserForm({
     mode: dialog.mode,
@@ -75,6 +81,7 @@ export const UsersPage: React.FC = () => {
         </Button>
       </PageHeader>
 
+      <SearchInput value={search} onChange={setSearch} placeholder={t('searchUsers')} />
       {/* Users table */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-xs overflow-hidden">
         <table className="w-full text-start text-sm border-collapse">
@@ -90,14 +97,14 @@ export const UsersPage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
-            {users.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
                   {t('noUserAccountsFound')}
                 </td>
               </tr>
             ) : (
-              users.map((u) => (
+              filteredUsers.map((u) => (
                 <tr key={u.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                   <td className="py-4 px-6 font-mono text-xs font-semibold text-slate-500">{u.userId}</td>
                   <td className="py-4 px-6 font-bold text-slate-800 dark:text-slate-100">{u.name}</td>
@@ -118,6 +125,7 @@ export const UsersPage: React.FC = () => {
                     </Badge>
                   </td>
                   <td className="py-4 px-6 text-center">
+                    <DeleteButton name={u.name} label="Delete account" disabled={deletion.isPending || u.userId === currentUser?.userId} onDelete={() => deletion.mutate(u.userId)} />
                     <Button variant="ghost" aria-label={language === 'ar' ? 'تعديل الحساب' : 'Edit account'} onClick={() => dialog.openEditDialog(u)}><Edit2 className="h-4 w-4" /></Button>
                     <Button
                       variant="ghost"

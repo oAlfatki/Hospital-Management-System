@@ -83,4 +83,7 @@ public class RecordUpdateRequest
     [Required, RegularExpression("Active|Archived")] public string Status { get; set; } = "Active";
     [Range(1, int.MaxValue)] public int Version { get; set; }
 }
+public record NotificationUpdateRequest(
+    [Required, StringLength(1000, MinimumLength = 1)] string Message,
+    [Required, RegularExpression("Email|SMS")] string Type);
 public record LoginRequest([Required, EmailAddress] string Email, [Required] string Password);

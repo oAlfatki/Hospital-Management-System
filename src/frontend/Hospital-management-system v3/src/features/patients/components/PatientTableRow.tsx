@@ -8,9 +8,12 @@ import { PatientStatusBadge } from "./PatientStatusBadge";
 interface PatientTableRowProps {
   patient: Patient;
   onEdit: (patient: Patient) => void;
+  onDelete?: (patient: Patient) => void;
+  deleting?: boolean;
+  canEdit?: boolean;
 }
 
-export function PatientTableRow({ patient, onEdit }: PatientTableRowProps) {
+export function PatientTableRow({ patient, onEdit, onDelete, deleting, canEdit }: PatientTableRowProps) {
   const { language, t } = useLanguage();
 
   const calculatedAge =
@@ -64,7 +67,7 @@ export function PatientTableRow({ patient, onEdit }: PatientTableRowProps) {
       {/* Actions */}
       <td className="px-6 py-5">
         <div className="flex justify-center">
-          <PatientRowActions patient={patient} onEdit={onEdit} />
+          <PatientRowActions patient={patient} onEdit={onEdit} onDelete={onDelete} deleting={deleting} canEdit={canEdit} />
         </div>
       </td>
     </tr>

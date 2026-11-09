@@ -160,6 +160,14 @@ namespace HSMBusiness.Services
             await _medicalRecord.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "MedicalRecord", "Update", id));
             return MedicalRecordMapper.ToResponse(record);
         });
+        public Task<ResultResponse<bool>> DeleteClinicalRecordAsync(string id, int version, string actor) => ExecuteAsync(async () =>
+        {
+            var record = Found(await _medicalRecord.GetByIDAsync(id), "Medical record not found.");
+            Require(record.Version == version, "Record was changed by another user. Refresh before deleting.", 409);
+            _medicalRecord.StageRemove(record);
+            await _medicalRecord.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "MedicalRecord", "Delete", id));
+            return true;
+        }, 204);
         private static void AppendVersion(MedicalRecord record)
         {
             var history = MedicalRecordMapper.ReadHistory(record);

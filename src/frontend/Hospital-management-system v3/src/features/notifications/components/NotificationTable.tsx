@@ -6,9 +6,12 @@ import { NotificationTableRow } from './NotificationTableRow';
 
 interface NotificationTableProps {
   notifications: EnrichedNotification[];
+  onEdit: (notification: EnrichedNotification) => void;
+  onDelete: (id: string) => void;
+  deleting: boolean;
 }
 
-export const NotificationTable: React.FC<NotificationTableProps> = ({ notifications }) => {
+export const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, onEdit, onDelete, deleting }) => {
   const { t } = useLanguage();
 
   return (
@@ -19,13 +22,13 @@ export const NotificationTable: React.FC<NotificationTableProps> = ({ notificati
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
             {notifications.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
+                <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
                   {t('noNotificationsFound')}
                 </td>
               </tr>
             ) : (
               notifications.map((nf) => (
-                <NotificationTableRow key={nf.notificationId} notification={nf} />
+                <NotificationTableRow key={nf.notificationId} notification={nf} onEdit={onEdit} onDelete={onDelete} deleting={deleting} />
               ))
             )}
           </tbody>

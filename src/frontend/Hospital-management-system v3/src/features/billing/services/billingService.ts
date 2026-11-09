@@ -6,6 +6,10 @@ import type { RecordPaymentRequest } from '../types/RecordPaymentRequest';
 import type { Patient } from '@/src/features/patients/types/Patient';
 
 export const billingService = {
+  delete: (id: string): Promise<void> => billingApi.delete(id),
+  async update(id: string, request: CreateBillRequest): Promise<Bill> {
+    return BillingMapper.toDomain(await billingApi.update(id, request));
+  },
   async getAll(): Promise<Bill[]> {
     const responses = await billingApi.getAll();
     return BillingMapper.toDomainList(responses);

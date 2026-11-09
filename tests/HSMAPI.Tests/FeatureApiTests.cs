@@ -289,6 +289,13 @@ public class FeatureApiTests : IAsyncLifetime
         await Read(await c.PostAsync($"/api/billing/{bill}/reminders", null), role is "Admin" or "Accounts" or "Management" ? 202 : 403);
         var unpaid = await Bill(patient);
         await Read(await c.DeleteAsync($"/api/billing/{unpaid}"), role == "Admin" ? 204 : 403);
+        await Read(await c.PutAsJsonAsync("/api/appointments/missing", Appointment(patient, doctor)), role == "Accounts" ? 403 : 404);
+        await Read(await c.DeleteAsync("/api/appointments/missing"), role == "Admin" ? 404 : 403);
+        await Read(await c.PutAsJsonAsync("/api/billing/missing", Invoice(patient)), role is "Admin" or "Accounts" or "Management" ? 404 : 403);
+        await Read(await c.DeleteAsync("/api/auth/missing"), role == "Admin" ? 404 : 403);
+        await Read(await c.DeleteAsync("/api/records/missing?version=1"), role is "Doctor" or "Nurse" ? 404 : 403);
+        await Read(await c.PutAsJsonAsync("/api/notifications/missing", new { message = "Updated", type = "Email" }), role is "Admin" or "Management" ? 404 : 403);
+        await Read(await c.DeleteAsync("/api/notifications/missing"), role is "Admin" or "Management" ? 404 : 403);
         var (unlinkedPatient, _) = await Patient();
         await Read(await c.DeleteAsync($"/api/patients/{unlinkedPatient}"), role == "Admin" ? 204 : 403);
     }
@@ -410,5 +417,99 @@ public class FeatureApiTests : IAsyncLifetime
         var responses = await Task.WhenAll(a.PostAsJsonAsync("/api/appointments", request), b.PostAsJsonAsync("/api/appointments", request));
         Assert.Equal(new[] { 201, 409 }, responses.Select(r => (int)r.StatusCode).OrderBy(x => x).ToArray());
         Assert.Single((await Read(await admin.GetAsync("/api/appointments"))).EnumerateArray());
+    }
+
+    [Fact]
+    public async Task AppointmentEditing_ChangesParticipantsAndDurationButRejectsConflictsAndCancelledRows()
+    {
+        var (p1, _) = await Patient(); var (p2, _) = await Patient(); var (d1, _) = await Doctor(); var (d2, _) = await Doctor();
+        var created = await Read(await admin.PostAsJsonAsync("/api/appointments", Appointment(p1, d1)), 201);
+        var id = created.GetProperty("appointmentId").GetString();
+        var update = new { patientId = p2, doctorId = d2, appointmentDate = DateTime.Today.AddDays(4).ToString("yyyy-MM-dd"), appointmentTime = "11:00", durationMinutes = 60 };
+        await Read(await admin.PutAsJsonAsync($"/api/appointments/{id}", update));
+        var saved = await Read(await admin.GetAsync($"/api/appointments/{id}"));
+        Assert.Equal(p2, saved.GetProperty("patientId").GetString()); Assert.Equal(d2, saved.GetProperty("doctorId").GetString());
+        Assert.Equal(60, saved.GetProperty("durationMinutes").GetInt32());
+        await Read(await admin.PostAsJsonAsync("/api/appointments", Appointment(p1, d1)), 201);
+        await Read(await admin.PutAsJsonAsync($"/api/appointments/{id}", Appointment(p1, d1)), 409);
+        Assert.Equal(p2, (await Read(await admin.GetAsync($"/api/appointments/{id}"))).GetProperty("patientId").GetString());
+        await Read(await admin.PatchAsJsonAsync($"/api/appointments/{id}/status", new { status = "Cancelled" }));
+        await Read(await admin.PutAsJsonAsync($"/api/appointments/{id}", update), 409);
+    }
+
+    [Fact]
+    public async Task InvoiceEditing_ReplacesLinesRecalculatesAmountsAndProtectsPaidInvoices()
+    {
+        var (p1, _) = await Patient(); var (p2, _) = await Patient(); var id = await Bill(p1);
+        var request = new { patientId = p2, services = new[] { new { serviceName = "Lab", cost = 80m }, new { serviceName = "Therapy", cost = 40m } }, taxPercent = 10m, discountAmount = 12m, dueDate = DateTime.Today.AddDays(5).ToString("yyyy-MM-dd") };
+        await Read(await admin.PutAsJsonAsync($"/api/billing/{id}", request));
+        var saved = await Read(await admin.GetAsync($"/api/billing/{id}"));
+        Assert.Equal(p2, saved.GetProperty("patientId").GetString()); Assert.Equal(120m, saved.GetProperty("totalAmount").GetDecimal());
+        Assert.Equal(2, saved.GetProperty("services").GetArrayLength()); Assert.Contains(saved.GetProperty("services").EnumerateArray(), x => x.GetProperty("serviceName").GetString() == "Lab");
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDBContext>(); Assert.Equal(2, await db.BillLines.CountAsync(x => x.BillID == id));
+        }
+        await Read(await admin.PostAsJsonAsync($"/api/billing/{id}/payments", new { amountToPay = 20 }));
+        await Read(await admin.PutAsJsonAsync($"/api/billing/{id}", Invoice(p1, 10m)), 409);
+        await Read(await admin.DeleteAsync($"/api/billing/{id}"), 409);
+        saved = await Read(await admin.GetAsync($"/api/billing/{id}")); Assert.Equal(120m, saved.GetProperty("totalAmount").GetDecimal()); Assert.Equal(20m, saved.GetProperty("paidAmount").GetDecimal());
+    }
+
+    [Fact]
+    public async Task InvoiceEditing_RejectsInvalidBodiesWithoutChangingTheExistingInvoice()
+    {
+        var (patient, _) = await Patient(); var id = await Bill(patient);
+        await Read(await admin.PutAsJsonAsync($"/api/billing/{id}", new { patientId = patient, services = Array.Empty<object>(), dueDate = DateTime.Today.AddDays(3).ToString("yyyy-MM-dd") }), 400);
+        await Read(await admin.PutAsJsonAsync($"/api/billing/{id}", Invoice("missing")), 404);
+        await Read(await admin.PutAsJsonAsync($"/api/billing/{id}", new { patientId = patient, services = new[] { new { serviceName = "Lab", cost = 10 } }, discountAmount = 20, dueDate = DateTime.Today.AddDays(3).ToString("yyyy-MM-dd") }), 400);
+        Assert.Equal(100m, (await Read(await admin.GetAsync($"/api/billing/{id}"))).GetProperty("totalAmount").GetDecimal());
+    }
+
+    [Fact]
+    public async Task StaffDeletion_DeletesUnusedAccountsButProtectsSelfAndAccountsWithActivity()
+    {
+        var self = (await Read(await admin.GetAsync("/api/auth/session"))).GetProperty("userId").GetString();
+        await Read(await admin.DeleteAsync($"/api/auth/{self}"), 409);
+        var staff = await Read(await admin.PostAsJsonAsync("/api/auth/register", Staff("Nurse", "delete@feature.test")), 201);
+        var id = staff.GetProperty("userId").GetString(); await Read(await admin.DeleteAsync($"/api/auth/{id}"), 204);
+        await Read(await admin.PostAsJsonAsync("/api/auth/login", new { email = "delete@feature.test", password = Password }), 401);
+        var linked = await Read(await admin.PostAsJsonAsync("/api/auth/register", Staff("Management", "linked@feature.test")), 201);
+        using var c = app.CreateClient(); await Login(c, "linked@feature.test"); await Read(await c.PostAsJsonAsync("/api/patients", PersonBody()), 201);
+        await Read(await admin.DeleteAsync("/api/auth/" + linked.GetProperty("userId").GetString()), 409);
+    }
+
+    [Fact]
+    public async Task RecordDeletion_RequiresTheLatestVersionAndWritesAnAuditEntry()
+    {
+        var (patient, _) = await Patient(); await Read(await admin.PostAsJsonAsync("/api/auth/register", Staff("Nurse", "delete-record@feature.test")), 201);
+        using var c = app.CreateClient(); await Login(c, "delete-record@feature.test");
+        var record = await Read(await c.PostAsJsonAsync("/api/records", new { patientId = patient, diagnosis = "Diagnosis", treatment = "Treatment", status = "Active" }), 201);
+        var id = record.GetProperty("recordId").GetString();
+        await Read(await c.DeleteAsync($"/api/records/{id}?version=2"), 409);
+        await Read(await c.DeleteAsync($"/api/records/{id}?version=1"), 204);
+        Assert.Empty((await Read(await c.GetAsync("/api/records"))).EnumerateArray());
+        await Read(await c.DeleteAsync($"/api/records/{id}?version=1"), 404);
+        Assert.Contains((await Read(await admin.GetAsync("/api/audit"))).EnumerateArray(), x => x.GetProperty("action").GetString() == "Delete" && x.GetProperty("entity").GetString() == "MedicalRecord");
+    }
+
+    [Fact]
+    public async Task Notifications_CanEditAndDeletePendingRowsButCannotAlterSentHistory()
+    {
+        var (patient, _) = await Patient(); var bill = await Bill(patient);
+        var notification = await Read(await admin.PostAsync($"/api/billing/{bill}/reminders", null), 202); var id = notification.GetProperty("notificationId").GetString();
+        await Read(await admin.PutAsJsonAsync($"/api/notifications/{id}", new { message = "Updated reminder", type = "SMS" }));
+        var saved = (await Read(await admin.GetAsync("/api/notifications"))).EnumerateArray().Single();
+        Assert.Equal("Updated reminder", saved.GetProperty("message").GetString()); Assert.Equal("SMS", saved.GetProperty("type").GetString()); Assert.Equal(patient, saved.GetProperty("patientId").GetString());
+        await Read(await admin.PutAsJsonAsync($"/api/notifications/{id}", new { message = " ", type = "Email" }), 400);
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDBContext>(); var n = await db.Notifications.FindAsync(id); n!.Status = "Sent"; n.SentOn = DateTime.UtcNow; await db.SaveChangesAsync();
+        }
+        await Read(await admin.PutAsJsonAsync($"/api/notifications/{id}", new { message = "Tampered", type = "Email" }), 409);
+        await Read(await admin.DeleteAsync($"/api/notifications/{id}"), 409);
+        var pending = await Read(await admin.PostAsync($"/api/billing/{bill}/reminders", null), 202); var pendingId = pending.GetProperty("notificationId").GetString();
+        await Read(await admin.DeleteAsync($"/api/notifications/{pendingId}"), 204);
+        Assert.Single((await Read(await admin.GetAsync("/api/notifications"))).EnumerateArray());
     }
 }

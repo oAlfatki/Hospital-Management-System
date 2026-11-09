@@ -1,3 +1,5 @@
+import { useUpdateAppointment } from './useUpdateAppointment';
+import type { Appointment } from '../types/appointments.types';
 import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -21,6 +23,8 @@ export const useAppointmentForm = ({
   const { t } = useLanguage();
   const { toast } = useToast();
   const scheduleMutation = useScheduleAppointmentMutation();
+  const updateMutation = useUpdateAppointment();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [conflictError, setConflictError] = useState<string | null>(null);
   const [slotSuggestions, setSlotSuggestions] = useState<string[]>([]);
@@ -40,26 +44,13 @@ export const useAppointmentForm = ({
     setConflictError(null);
     setSlotSuggestions([]);
 
-    scheduleMutation.mutate(
-      {
-        ...values,
-        durationMinutes: Number(values.durationMinutes),
-      },
-      {
-        onSuccess: () => {
-          toast.success(t('toastAppointmentScheduled'));
-          onSuccess();
-        },
-        onError: (err: any) => {
-          const msg = err.message || t('toastFailedSchedule');
-          setConflictError(msg);
-          if (err.suggestions) {
-            setSlotSuggestions(err.suggestions);
-          }
-          toast.error(msg);
-        },
-      }
-    );
+    const request = { ...values, durationMinutes: Number(values.durationMinutes) };
+    const callbacks = {
+      onSuccess: () => { toast.success(editingId ? t('saveChangesAction') : t('toastAppointmentScheduled')); onSuccess(); },
+      onError: (err: Error) => { setConflictError(err.message); toast.error(err.message); },
+    };
+    if (editingId) updateMutation.mutate({ id: editingId, request }, callbacks);
+    else scheduleMutation.mutate(request, callbacks);
   };
 
   const applySuggestedSlot = (slot: string) => {
@@ -68,7 +59,13 @@ export const useAppointmentForm = ({
     setSlotSuggestions([]);
   };
 
+  const loadAppointment = (appointment: Appointment) => {
+    setEditingId(appointment.appointmentId);
+    form.reset({ patientId: appointment.patientId, doctorId: appointment.doctorId, appointmentDate: appointment.appointmentDate, appointmentTime: appointment.appointmentTime.slice(0, 5), durationMinutes: appointment.durationMinutes });
+    setConflictError(null); setSlotSuggestions([]);
+  };
   const resetForm = (pId = '', dId = '') => {
+    setEditingId(null);
     form.reset({
       patientId: pId,
       doctorId: dId,
@@ -86,7 +83,8 @@ export const useAppointmentForm = ({
     slotSuggestions,
     applySuggestedSlot,
     onSubmit: form.handleSubmit(onSubmit),
-    isSubmitting: scheduleMutation.isPending,
+    editingId, loadAppointment,
+    isSubmitting: scheduleMutation.isPending || updateMutation.isPending,
     resetForm,
   };
 };

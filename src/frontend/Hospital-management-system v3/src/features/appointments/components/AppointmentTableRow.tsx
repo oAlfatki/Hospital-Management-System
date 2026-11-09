@@ -1,3 +1,4 @@
+import { DeleteButton } from '@/src/core/components/ui/DeleteButton';
 import React from 'react';
 import { useLanguage } from '@/src/core/providers';
 import { Button, Badge, formatDate, formatTime } from '@/src/core';
@@ -7,12 +8,16 @@ interface AppointmentTableRowProps {
   appointment: EnrichedAppointment;
   onOpenReschedule: (appt: EnrichedAppointment) => void;
   onCancel: (apptId: string) => void;
+  onEdit: (appt: EnrichedAppointment) => void;
+  onDelete?: (id: string) => void;
+  deleting: boolean;
+  canWrite: boolean;
 }
 
 export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
   appointment: appt,
   onOpenReschedule,
-  onCancel,
+  onCancel, onEdit, onDelete, deleting, canWrite,
 }) => {
   const { t, language } = useLanguage();
   const locale = language === 'ar' ? 'ar-EG' : 'en-US';
@@ -67,8 +72,10 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
         </Badge>
       </td>
       <td className="py-4 px-6">
-        {appt.status !== 'Cancelled' ? (
+        {onDelete && <DeleteButton name={appt.patientName} label="Delete appointment" disabled={deleting} onDelete={() => onDelete(appt.appointmentId)} />}
+        {canWrite && appt.status !== 'Cancelled' ? (
           <div className="flex items-center justify-center gap-1.5">
+            <Button variant="ghost" aria-label={t('editAppointment')} onClick={() => onEdit(appt)}>{t('editAction')}</Button>
             <Button
               variant="ghost"
               onClick={() => onOpenReschedule(appt)}

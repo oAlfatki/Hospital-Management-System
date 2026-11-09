@@ -8,12 +8,16 @@ interface AppointmentTableProps {
   appointments: EnrichedAppointment[];
   onOpenReschedule: (appt: EnrichedAppointment) => void;
   onCancel: (apptId: string) => void;
+  onEdit: (appt: EnrichedAppointment) => void;
+  onDelete?: (id: string) => void;
+  deleting: boolean;
+  canWrite: boolean;
 }
 
 export const AppointmentTable: React.FC<AppointmentTableProps> = ({
   appointments,
   onOpenReschedule,
-  onCancel,
+  onCancel, onEdit, onDelete, deleting, canWrite,
 }) => {
   const { t } = useLanguage();
 
@@ -35,7 +39,7 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
                   key={appt.appointmentId}
                   appointment={appt}
                   onOpenReschedule={onOpenReschedule}
-                  onCancel={onCancel}
+                  onCancel={onCancel} onEdit={onEdit} onDelete={onDelete} deleting={deleting} canWrite={canWrite}
                 />
               ))
             )}

@@ -1,4 +1,7 @@
-import React, { useMemo } from 'react';
+import { useDeleteNotification } from '../hooks/useDeleteNotification';
+import { EditNotificationDialog } from '../components/EditNotificationDialog';
+import type { NotificationLog } from '../types/notifications.types';
+import React, { useMemo, useState } from 'react';
 import { useLanguage } from '@/src/core/providers';
 import { Select, PageHeader, FilterBar, SearchInput, LoadingState, ErrorState } from '@/src/core';
 import { useNotifications } from '../hooks/useNotifications';
@@ -25,6 +28,8 @@ export const NotificationsPage: React.FC = () => {
   }, [rawNotifications, patients]);
 
   const filters = useNotificationFilters(enrichedNotifications);
+  const deletion = useDeleteNotification();
+  const [editing, setEditing] = useState<NotificationLog | null>(null);
 
   if (isLoading) {
     return <LoadingState message={t('commonLoading')} />;
@@ -77,7 +82,8 @@ export const NotificationsPage: React.FC = () => {
       </FilterBar>
 
       {/* Log list */}
-      <NotificationTable notifications={filters.filteredNotifications} />
+      <NotificationTable notifications={filters.filteredNotifications} onEdit={setEditing} onDelete={id => deletion.mutate(id)} deleting={deletion.isPending} />
+      <EditNotificationDialog notification={editing} onClose={() => setEditing(null)} />
     </div>
   );
 };

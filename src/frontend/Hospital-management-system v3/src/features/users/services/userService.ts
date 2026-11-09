@@ -5,6 +5,7 @@ import type { CreateUserRequest } from '../types/CreateUserRequest';
 import type { UpdateUserRequest } from '../types/UpdateUserRequest';
 
 export const userService = {
+  delete: (id: string): Promise<void> => userApi.delete(id),
   async getAll(): Promise<User[]> {
     const responses = await userApi.getAll();
     return UserMapper.toDomainList(responses);

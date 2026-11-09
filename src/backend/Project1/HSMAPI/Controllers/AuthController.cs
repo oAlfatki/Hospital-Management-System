@@ -43,6 +43,9 @@ public class AuthController(UserService service) : ControllerBase
     [HttpPost("register"), Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(StaffRequest request) => (await service.RegisterStaffAsync(request, Actor)).ToActionResult(this);
 
+    [HttpDelete("{id}"), Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(string id) => (await service.DeleteStaffProfileAsync(id, Actor)).ToActionResult(this);
+
     [HttpPut("{id}"), Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(string id, StaffRequest request) => (await service.UpdateStaffProfileAsync(id, request, Actor)).ToActionResult(this);
 }

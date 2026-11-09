@@ -7,12 +7,15 @@ interface PatientTableProps {
   patients: Patient[];
   pagination?: React.ReactNode;
   onEdit: (patient: Patient) => void;
+  onDelete?: (patient: Patient) => void;
+  deleting?: boolean;
+  canEdit?: boolean;
 }
 
 export function PatientTable({
   patients,
   pagination,
-  onEdit,
+  onEdit, onDelete, deleting, canEdit,
 }: PatientTableProps) {
   return (
     <DataTable pagination={pagination}>
@@ -22,7 +25,7 @@ export function PatientTable({
           <PatientTableRow
             key={patient.patientId}
             patient={patient}
-            onEdit={onEdit}
+            onEdit={onEdit} onDelete={onDelete} deleting={deleting} canEdit={canEdit}
           />
         ))}
       </tbody>

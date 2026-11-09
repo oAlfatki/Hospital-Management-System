@@ -21,6 +21,10 @@ public class MedicalRecordController(MedicalRecordService service) : ControllerB
     public async Task<IActionResult> Create(RecordRequest request) =>
         (await service.CreateClinicalRecordAsync(request, Actor)).ToActionResult(this);
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id, [FromQuery] int version) =>
+        (await service.DeleteClinicalRecordAsync(id, version, Actor)).ToActionResult(this);
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, RecordUpdateRequest request) =>
         (await service.UpdateClinicalRecordAsync(id, request, Actor)).ToActionResult(this);

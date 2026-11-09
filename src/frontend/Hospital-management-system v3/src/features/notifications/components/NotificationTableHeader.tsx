@@ -14,7 +14,7 @@ export const NotificationTableHeader: React.FC = () => {
         <th className="py-3 px-6">{t('colDispatchedOn')}</th>
         <th className="py-3 px-6">{t('colStatus')}</th>
         <th className="py-3 px-6 text-center">{language === 'ar' ? 'تأكيد الاستلام' : 'Receipt Confirmation'}</th>
-      </tr>
+      <th className="py-3.5 px-6">{t('commonActions')}</th></tr>
     </thead>
   );
 };

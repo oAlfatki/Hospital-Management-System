@@ -1,3 +1,4 @@
+import { DeleteButton } from '@/src/core/components/ui/DeleteButton';
 import { Pencil } from "lucide-react";
 import type { Patient } from "../types/Patient";
 
@@ -5,14 +6,18 @@ import type { Patient } from "../types/Patient";
 interface PatientRowActionsProps {
   patient: Patient;
   onEdit: (patient: Patient) => void;
+  onDelete?: (patient: Patient) => void;
+  deleting?: boolean;
+  canEdit?: boolean;
 }
 
 export function PatientRowActions({
   patient,
-  onEdit,
+  onEdit, onDelete, deleting, canEdit = true,
 }: PatientRowActionsProps) {
   return (
-    <button
+    <>
+    {canEdit && <button
       type="button"
       aria-label="Edit patient"
       onClick={() => onEdit(patient)}
@@ -29,6 +34,8 @@ export function PatientRowActions({
       "
     >
       <Pencil className="h-4 w-4" />
-    </button>
+    </button>}
+    {onDelete && <DeleteButton name={patient.name} label="Delete patient" disabled={deleting} onDelete={() => onDelete(patient)} />}
+    </>
   );
 }

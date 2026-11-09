@@ -462,5 +462,20 @@
 "validationPatientNameRequired": "اسم المريض مطلوب",
   "validationDateOfBirthRequired": "تاريخ الميلاد مطلوب",
   "validationContactNumberRequired": "رقم الهاتف مطلوب",
-  "validationPasswordMin": "كلمة المرور يجب أن تكون 12 حرفًا على الأقل"
+  "validationPasswordMin": "كلمة المرور يجب أن تكون 12 حرفًا على الأقل",
+"deleteAction": "حذف",
+"confirmDelete": "هل تريد حذف هذا السجل نهائيًا؟ لا يمكن التراجع عن الحذف.",
+"deleteSucceeded": "تم حذف السجل",
+"editAction": "تعديل",
+"saveChangesAction": "حفظ التعديلات",
+"searchDoctors": "ابحث باسم الطبيب أو تخصصه أو قسمه أو بيانات التواصل",
+"searchDepartments": "ابحث باسم القسم أو رئيسه أو وصفه",
+"searchUsers": "ابحث باسم الموظف أو بريده أو دوره أو بيانات التواصل",
+"searchAppointments": "ابحث بالمريض أو الطبيب أو التاريخ أو الحالة",
+"noSearchResults": "لا توجد سجلات مطابقة",
+"editAppointment": "تعديل الموعد",
+"editInvoice": "تعديل الفاتورة",
+"editNotification": "تعديل الإشعار",
+"notificationMessage": "الرسالة",
+"notificationType": "قناة الإرسال"
 }

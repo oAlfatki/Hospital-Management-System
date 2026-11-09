@@ -5,6 +5,7 @@ import type { CreateRecordRequest } from '../types/CreateRecordRequest';
 import type { UpdateRecordRequest } from '../types/UpdateRecordRequest';
 
 export const recordService = {
+  delete: (id: string, version: number): Promise<void> => recordApi.delete(id, version),
   async getAll(): Promise<MedicalRecord[]> {
     const responses = await recordApi.getAll();
     return RecordMapper.toDomainList(responses);

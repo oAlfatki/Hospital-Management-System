@@ -9,6 +9,7 @@ import { AlertTriangle } from 'lucide-react';
 
 interface ScheduleAppointmentDialogProps {
   isOpen: boolean;
+  editing?: boolean;
   onClose: () => void;
   patients: Patient[];
   doctors: Doctor[];
@@ -21,7 +22,7 @@ interface ScheduleAppointmentDialogProps {
 }
 
 export const ScheduleAppointmentDialog: React.FC<ScheduleAppointmentDialogProps> = ({
-  isOpen,
+  isOpen, editing,
   onClose,
   patients,
   doctors,
@@ -39,14 +40,14 @@ export const ScheduleAppointmentDialog: React.FC<ScheduleAppointmentDialogProps>
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={t('scheduleClinicalConsultation')}
+      title={t(editing ? 'editAppointment' : 'scheduleClinicalConsultation')}
       footer={
         <>
           <Button variant="outline" onClick={onClose} className="h-9">
             {t('commonCancel')}
           </Button>
           <Button onClick={onSubmit} disabled={isSubmitting} className="h-9">
-            {t('bookAppointment')}
+            {t(editing ? 'saveChangesAction' : 'bookAppointment')}
           </Button>
         </>
       }

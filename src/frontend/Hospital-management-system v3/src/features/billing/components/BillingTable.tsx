@@ -6,6 +6,9 @@ import { BillingTableRow } from './BillingTableRow';
 
 interface BillingTableProps {
   bills: EnrichedBill[];
+  onEdit: (bill: EnrichedBill) => void;
+  onDelete?: (id: string) => void;
+  deleting: boolean;
   onOpenDetails: (bill: EnrichedBill) => void;
   onOpenPayment: (bill: EnrichedBill) => void;
   onSendReminder: (billId: string) => void;
@@ -15,7 +18,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
   bills,
   onOpenDetails,
   onOpenPayment,
-  onSendReminder,
+  onSendReminder, onEdit, onDelete, deleting,
 }) => {
   const { t } = useLanguage();
 
@@ -38,7 +41,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
                   bill={b}
                   onOpenDetails={onOpenDetails}
                   onOpenPayment={onOpenPayment}
-                  onSendReminder={onSendReminder}
+                  onSendReminder={onSendReminder} onEdit={onEdit} onDelete={onDelete} deleting={deleting}
                 />
               ))
             )}

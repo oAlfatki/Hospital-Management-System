@@ -204,3 +204,93 @@ test('failures: dashboard errors and failed logout are visible without losing a 
   await page.getByTitle(en.logout, { exact: true }).click(); await expect(page.getByText('Unable to connect to the server.', { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/dashboard/); await page.unroute('**/api/auth/logout'); await logout(page);
 });
+
+
+test('patient deletion: confirmation can be cancelled and confirmed removal survives reload', async ({ page }) => {
+  const target = await patient(page.request);
+  await page.goto('/patients'); await page.getByPlaceholder(en.searchPatientsPlaceholder).fill(target.name);
+  const row = page.getByRole('row').filter({ hasText: target.patientId });
+  page.once('dialog', dialog => dialog.dismiss()); await row.getByRole('button', { name: 'Delete patient' }).click(); await expect(row).toBeVisible();
+  page.once('dialog', dialog => dialog.accept()); await row.getByRole('button', { name: 'Delete patient' }).click(); await expect(row).toHaveCount(0);
+  await page.reload(); await page.getByPlaceholder(en.searchPatientsPlaceholder).fill(target.name); await expect(row).toHaveCount(0);
+  expect((await page.request.get(`/api/patients/${target.patientId}`)).status()).toBe(404);
+});
+
+test('doctors and departments: both searches and confirmed deletions operate on the selected record', async ({ page }) => {
+  const target = await doctor(page.request);
+  await page.goto('/doctors'); await page.getByPlaceholder(en.searchDoctors).fill(target.name);
+  const card = page.getByTestId('doctor-card').filter({ hasText: target.name }); await expect(card).toHaveCount(1);
+  page.once('dialog', dialog => dialog.accept()); await card.getByRole('button', { name: 'Delete doctor' }).click(); await expect(card).toHaveCount(0);
+  await page.getByRole('button', { name: new RegExp(en.departmentsMasterTab) }).click(); await page.getByPlaceholder(en.searchDepartments).fill(target.departmentId);
+  const row = page.getByRole('row').filter({ hasText: target.departmentId }); await expect(row).toHaveCount(1);
+  page.once('dialog', dialog => dialog.accept()); await row.getByRole('button', { name: 'Delete department' }).click(); await expect(row).toHaveCount(0);
+  await page.reload(); await expect(page.getByText(target.name, { exact: true })).toHaveCount(0);
+});
+
+test('users: search finds email and unused-account deletion prevents subsequent authentication', async ({ page }) => {
+  const target = await staff(page.request, 'Nurse');
+  await page.goto('/users'); await page.getByPlaceholder(en.searchUsers).fill(target.email);
+  const row = page.getByRole('row').filter({ hasText: target.email }); await expect(row).toHaveCount(1);
+  page.once('dialog', dialog => dialog.accept()); await row.getByRole('button', { name: 'Delete account' }).click(); await expect(row).toHaveCount(0);
+  await page.reload(); await page.getByPlaceholder(en.searchUsers).fill(target.email); await expect(row).toHaveCount(0);
+  expect((await page.request.post('/api/auth/login', { data: { email: target.email, password } })).status()).toBe(401);
+});
+
+test('appointments: search and complete edit persist patient, physician and duration before deletion', async ({ page }) => {
+  const first = await patient(page.request); const second = await patient(page.request); const d1 = await doctor(page.request); const d2 = await doctor(page.request);
+  const day = new Date(Date.now() + 6 * 86400000).toISOString().slice(0, 10);
+  const appt = await data(await page.request.post('/api/appointments', { data: { patientId: first.patientId, doctorId: d1.doctorId, appointmentDate: day, appointmentTime: '14:00', durationMinutes: 30 } }));
+  await page.goto('/appointments'); await page.getByPlaceholder(en.searchAppointments).fill(appt.appointmentId);
+  const row = page.getByRole('row').filter({ hasText: appt.appointmentId }); await expect(row).toHaveCount(1);
+  await row.getByRole('button', { name: en.editAppointment, exact: true }).click(); const dialog = page.getByRole('dialog');
+  await expect(dialog.locator('[name=patientId]')).toHaveValue(first.patientId);
+  await dialog.locator('[name=patientId]').selectOption(second.patientId); await dialog.locator('[name=doctorId]').selectOption(d2.doctorId);
+  await dialog.locator('[name=durationMinutes]').selectOption('60'); await dialog.locator('[name=appointmentTime]').fill('15:00');
+  await dialog.getByRole('button', { name: en.saveChangesAction }).click(); await expect(dialog).toBeHidden(); await expect(row).toContainText(second.name); await expect(row).toContainText(d2.name); await expect(row).toContainText('60');
+  await page.reload(); await page.getByPlaceholder(en.searchAppointments).fill(appt.appointmentId); await expect(row).toContainText(second.name);
+  page.once('dialog', dialog => dialog.accept()); await row.getByRole('button', { name: 'Delete appointment' }).click(); await expect(row).toHaveCount(0);
+  expect((await page.request.get(`/api/appointments/${appt.appointmentId}`)).status()).toBe(404);
+});
+
+test('billing: edit preloads and replaces lines, recalculates total and allows unpaid deletion', async ({ page }) => {
+  const target = await patient(page.request); const bill = await invoice(page.request, target.patientId);
+  await page.goto('/billing'); await page.getByPlaceholder(en.searchBillingRecordsPlaceholder).fill(bill.billId);
+  const row = page.getByRole('row').filter({ hasText: bill.billId }); await row.getByRole('button', { name: en.editInvoice }).click();
+  const dialog = page.getByRole('dialog'); await expect(dialog.locator('[name=patientId]')).toHaveValue(target.patientId);
+  await expect(dialog.getByText('Consultation', { exact: true })).toBeVisible();
+  await dialog.getByTitle('Remove service').click(); await dialog.getByPlaceholder(en.serviceNamePlaceholder).fill('Replacement laboratory'); await dialog.getByPlaceholder(en.costPlaceholder).fill('200'); await dialog.getByRole('button', { name: en.addItemBtn }).click();
+  await dialog.locator('[name=taxPercent]').fill('10'); await dialog.locator('[name=discountAmount]').fill('20');
+  await dialog.getByRole('button', { name: en.saveChangesAction }).click(); await expect(dialog).toBeHidden(); await expect(row).toContainText('$200.00');
+  const persisted = await data(await page.request.get(`/api/billing/${bill.billId}`), 200); expect(persisted.services).toEqual([{ serviceName: 'Replacement laboratory', cost: 200 }]); expect(persisted.taxPercent).toBe(10);
+  await page.reload(); await page.getByPlaceholder(en.searchBillingRecordsPlaceholder).fill(bill.billId); await expect(row).toContainText('$200.00');
+  page.once('dialog', dialog => dialog.accept()); await row.getByRole('button', { name: 'Delete invoice' }).click(); await expect(row).toHaveCount(0);
+});
+
+test('billing: invoices with payments expose neither editing nor an enabled deletion', async ({ page }) => {
+  const target = await patient(page.request); const bill = await invoice(page.request, target.patientId);
+  await data(await page.request.post(`/api/billing/${bill.billId}/payments`, { data: { amountToPay: 10 } }), 200);
+  await page.goto('/billing'); await page.getByPlaceholder(en.searchBillingRecordsPlaceholder).fill(bill.billId);
+  const row = page.getByRole('row').filter({ hasText: bill.billId }); await expect(row.getByRole('button', { name: en.editInvoice })).toHaveCount(0); await expect(row.getByRole('button', { name: 'Delete invoice' })).toBeDisabled();
+});
+
+test('notifications: pending message/channel editing and deletion persist without changing recipient', async ({ page }) => {
+  const target = await patient(page.request); const bill = await invoice(page.request, target.patientId);
+  const notification = await data(await page.request.post(`/api/billing/${bill.billId}/reminders`), 202);
+  await page.goto('/notifications'); await page.getByPlaceholder(en.searchNotificationLogs).fill(target.name);
+  const row = page.getByRole('row').filter({ hasText: notification.notificationId }); await row.getByRole('button', { name: en.editNotification }).click();
+  const dialog = page.getByRole('dialog'); await expect(dialog.getByLabel(en.notificationMessage)).toHaveValue(notification.message);
+  await dialog.getByLabel(en.notificationMessage).fill('Updated pending payment reminder'); await dialog.getByLabel(en.notificationType).selectOption('SMS'); await dialog.getByRole('button', { name: en.saveChangesAction }).click(); await expect(dialog).toBeHidden(); await expect(row).toContainText('Updated pending payment reminder'); await expect(row).toContainText('SMS'); await expect(row).toContainText(target.name);
+  await page.reload(); await page.getByPlaceholder(en.searchNotificationLogs).fill(target.name); await expect(row).toContainText('Updated pending payment reminder');
+  page.once('dialog', dialog => dialog.accept()); await row.getByRole('button', { name: 'Delete notification' }).click(); await expect(row).toHaveCount(0);
+});
+
+test('records: clinical deletion removes the selected record and keeps an audit trace', async ({ page }) => {
+  const target = await patient(page.request); const user = await staff(page.request, 'Nurse');
+  await logout(page); await login(page, user.email);
+  const record = await data(await page.request.post('/api/records', { data: { patientId: target.patientId, diagnosis: 'Delete selected clinical record', treatment: 'Clinical treatment', status: 'Active' } }));
+  await page.goto('/records'); await page.getByPlaceholder(en.quickSearchRecordsPlaceholder).fill(target.name);
+  await expect(page.getByText('Delete selected clinical record', { exact: true })).toBeVisible();
+  page.once('dialog', dialog => dialog.accept()); await page.getByRole('button', { name: 'Delete medical record' }).click(); await expect(page.getByText('Delete selected clinical record', { exact: true })).toHaveCount(0);
+  await page.reload(); await page.getByPlaceholder(en.quickSearchRecordsPlaceholder).fill(target.name); await expect(page.getByText('Delete selected clinical record', { exact: true })).toHaveCount(0);
+  const remaining = await data(await page.request.get('/api/records'), 200); expect((remaining as unknown as { recordId: string }[]).some(r => r.recordId === record.recordId)).toBe(false);
+});

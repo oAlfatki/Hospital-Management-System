@@ -1,3 +1,4 @@
+import { DeleteButton } from '@/src/core/components/ui/DeleteButton';
 import React from 'react';
 import { useLanguage } from '@/src/core/providers';
 import { Button, Badge, formatCurrency, formatDate } from '@/src/core';
@@ -6,6 +7,9 @@ import { Receipt, Landmark, Bell } from 'lucide-react';
 
 interface BillingTableRowProps {
   bill: EnrichedBill;
+  onEdit: (bill: EnrichedBill) => void;
+  onDelete?: (id: string) => void;
+  deleting: boolean;
   onOpenDetails: (bill: EnrichedBill) => void;
   onOpenPayment: (bill: EnrichedBill) => void;
   onSendReminder: (billId: string) => void;
@@ -15,7 +19,7 @@ export const BillingTableRow: React.FC<BillingTableRowProps> = ({
   bill: b,
   onOpenDetails,
   onOpenPayment,
-  onSendReminder,
+  onSendReminder, onEdit, onDelete, deleting,
 }) => {
   const { t, language } = useLanguage();
   const locale = language === 'ar' ? 'ar-EG' : 'en-US';
@@ -52,6 +56,8 @@ export const BillingTableRow: React.FC<BillingTableRowProps> = ({
       </td>
       <td className="py-4 px-6">
         <div className="flex items-center justify-center gap-2">
+          {b.paidAmount === 0 && b.status !== 'Cancelled' && <Button variant="ghost" aria-label={t('editInvoice')} onClick={() => onEdit(b)}>{t('editAction')}</Button>}
+          {onDelete && <DeleteButton name={b.billId} label="Delete invoice" disabled={deleting || b.paidAmount > 0} onDelete={() => onDelete(b.billId)} />}
           <Button
             variant="ghost"
             onClick={() => onOpenDetails(b)}

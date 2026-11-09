@@ -9,6 +9,7 @@ import { Trash2 } from 'lucide-react';
 
 interface CreateBillDialogProps {
   isOpen: boolean;
+  editing?: boolean;
   onClose: () => void;
   patients: Patient[];
   form: UseFormReturn<ICreateBillFormInput>;
@@ -24,7 +25,7 @@ interface CreateBillDialogProps {
 }
 
 export const CreateBillDialog: React.FC<CreateBillDialogProps> = ({
-  isOpen,
+  isOpen, editing,
   onClose,
   patients,
   form,
@@ -45,7 +46,7 @@ export const CreateBillDialog: React.FC<CreateBillDialogProps> = ({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={t('generateClinicalServicesInvoice')}
+      title={t(editing ? 'editInvoice' : 'generateClinicalServicesInvoice')}
       size="lg"
       footer={
         <>
@@ -53,7 +54,7 @@ export const CreateBillDialog: React.FC<CreateBillDialogProps> = ({
             {t('commonCancel')}
           </Button>
           <Button onClick={onSubmit} disabled={isSubmitting} className="h-9">
-            {t('generateAndDispatchInvoice')}
+            {t(editing ? 'saveChangesAction' : 'generateAndDispatchInvoice')}
           </Button>
         </>
       }

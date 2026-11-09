@@ -1,3 +1,8 @@
+import { useDoctorFilters } from '../hooks/useDoctorFilters';
+import { DeleteButton } from '@/src/core/components/ui/DeleteButton';
+import { SearchInput } from '@/src/core/components/ui/SearchInput';
+import { useDeleteDoctor } from '../hooks/useDeleteDoctor';
+import { useDeleteDepartment } from '../hooks/useDeleteDepartment';
 import React, { useState } from 'react';
 import { Plus, Building, Mail, Phone, Edit2 } from 'lucide-react';
 import { useAuth, useLanguage } from '@/src/core/providers';
@@ -42,6 +47,9 @@ export const DoctorsPage: React.FC = () => {
     onSuccess: dialog.closeDepartmentDialog,
   });
 
+  const doctorDeletion = useDeleteDoctor();
+  const departmentDeletion = useDeleteDepartment();
+  const { search, setSearch, filteredDoctors, filteredDepartments } = useDoctorFilters(doctors, departments);
   const [activeTab, setActiveTab] = useState<'doctors' | 'departments'>('doctors');
 
   if (isDocsLoading || isDeptsLoading) {
@@ -109,10 +117,12 @@ export const DoctorsPage: React.FC = () => {
         </button>
       </div>
 
+      <SearchInput value={search} onChange={setSearch} placeholder={t(activeTab === 'doctors' ? 'searchDoctors' : 'searchDepartments')} />
+      {(activeTab === 'doctors' ? filteredDoctors : filteredDepartments).length === 0 && <p role="status">{t('noSearchResults')}</p>}
       {/* ACTIVE VIEW TAB */}
       {activeTab === 'doctors' ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {doctors.map((doc) => {
+          {filteredDoctors.map((doc) => {
             const dept = departments.find((d) => d.departmentId === doc.departmentId);
             return (
               <div
@@ -164,6 +174,7 @@ export const DoctorsPage: React.FC = () => {
                     {doc.status === 'Active' ? t('commonActive') : t('commonInactive')}
                   </Badge>
 
+                  {isManagementOrAdmin && <DeleteButton name={doc.name} label="Delete doctor" disabled={doctorDeletion.isPending} onDelete={() => doctorDeletion.mutate(doc.doctorId)} />}
                   {isManagementOrAdmin && (
                     <Button
                       variant="ghost"
@@ -196,7 +207,7 @@ export const DoctorsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
-              {departments.map((dept) => {
+              {filteredDepartments.map((dept) => {
                 const hod = doctors.find((d) => d.doctorId === dept.headOfDepartment);
                 return (
                   <tr key={dept.departmentId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
@@ -210,7 +221,10 @@ export const DoctorsPage: React.FC = () => {
                       {formatDate(dept.createdOn, language === 'ar' ? 'ar-EG' : 'en-US')}
                     </td>
                     <td className="py-4 px-6">
+                      {isManagementOrAdmin && <>
+                      <DeleteButton name={dept.name} label="Delete department" disabled={departmentDeletion.isPending} onDelete={() => departmentDeletion.mutate(dept.departmentId)} />
                       <Button variant="ghost" aria-label={language === 'ar' ? 'تعديل القسم' : 'Edit department'} onClick={() => { setSelectedDepartment(dept); dialog.openCreateDepartment(); }}><Edit2 className="h-4 w-4" /></Button>
+                      </>}
                     </td>
                   </tr>
                 );

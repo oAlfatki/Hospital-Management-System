@@ -1,3 +1,4 @@
+import { useDeleteBill } from '../hooks/useDeleteBill';
 import React, { useMemo } from 'react';
 import { useAuth, useLanguage } from '@/src/core/providers';
 import { Button, useToast, LoadingState, ErrorState, PageHeader, FilterBar, SearchInput } from '@/src/core';
@@ -30,6 +31,7 @@ export const BillingPage: React.FC = () => {
   const sendReminderMutation = useSendBillReminderMutation();
 
   const dialog = useBillingDialog();
+  const deletion = useDeleteBill();
 
   // Enriched bills calculation
   const enrichedBills = useMemo<EnrichedBill[]>(() => {
@@ -141,6 +143,8 @@ export const BillingPage: React.FC = () => {
       {/* Invoicing Ledger Table */}
       <BillingTable
         bills={filters.filteredBills}
+        onEdit={bill => { billingForm.loadBill(bill); dialog.openInvoiceDialog(); }}
+        onDelete={user?.role === 'Admin' ? id => deletion.mutate(id) : undefined} deleting={deletion.isPending}
         onOpenDetails={dialog.openDetailsDialog}
         onOpenPayment={dialog.openPaymentDialog}
         onSendReminder={handleSendReminder}
@@ -148,6 +152,7 @@ export const BillingPage: React.FC = () => {
 
       {/* Dialogs */}
       <CreateBillDialog
+        editing={!!billingForm.editingId}
         isOpen={dialog.isInvoiceOpen}
         onClose={dialog.closeInvoiceDialog}
         patients={patients}

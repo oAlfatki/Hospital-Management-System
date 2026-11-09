@@ -4,6 +4,7 @@ import type { CreateUserRequest } from '../types/CreateUserRequest';
 import type { UpdateUserRequest } from '../types/UpdateUserRequest';
 
 export const userApi = {
+  async delete(id: string): Promise<void> { await axiosInstance.delete(`/api/auth/${id}`); },
   async getAll(): Promise<UserResponse[]> {
     const response = await axiosInstance.get<UserResponse[]>('/api/auth/users');
     return response.data;

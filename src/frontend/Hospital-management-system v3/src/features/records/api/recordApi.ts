@@ -5,6 +5,7 @@ import type { CreateRecordRequest } from '../types/CreateRecordRequest';
 import type { UpdateRecordRequest } from '../types/UpdateRecordRequest';
 
 export const recordApi = {
+  async delete(id: string, version: number): Promise<void> { await axiosInstance.delete(`/api/records/${id}?version=${version}`); },
   async getAll(): Promise<RecordResponse[]> {
     const response = await axiosInstance.get<RecordResponse[]>(ENDPOINTS.MEDICAL_RECORDS);
     return response.data;

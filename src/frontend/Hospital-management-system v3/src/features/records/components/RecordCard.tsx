@@ -1,3 +1,4 @@
+import { DeleteButton } from '@/src/core/components/ui/DeleteButton';
 import React from 'react';
 import { useLanguage } from '@/src/core/providers';
 import { Button, Badge, formatDate } from '@/src/core';
@@ -6,12 +7,14 @@ import { CheckCircle, History, Edit2 } from 'lucide-react';
 
 interface RecordCardProps {
   record: EnrichedMedicalRecord;
+  onDelete: () => void;
+  deleting: boolean;
   onOpenHistory: (record: EnrichedMedicalRecord) => void;
   onOpenEdit: (record: EnrichedMedicalRecord) => void;
 }
 
 export const RecordCard: React.FC<RecordCardProps> = ({
-  record: rec,
+  record: rec, onDelete, deleting,
   onOpenHistory,
   onOpenEdit,
 }) => {
@@ -78,6 +81,7 @@ export const RecordCard: React.FC<RecordCardProps> = ({
           {formatDate(rec.updatedOn, language === 'ar' ? 'ar-EG' : 'en-US')}
         </p>
         <div className="flex items-center gap-1.5">
+          <DeleteButton name={rec.patientName} label="Delete medical record" onDelete={onDelete} disabled={deleting} />
           <Button
             variant="ghost"
             onClick={() => onOpenHistory(rec)}

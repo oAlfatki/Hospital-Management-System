@@ -1,24 +1,13 @@
-import { useState } from "react";
+import { useDeletePatient } from '../hooks/useDeletePatient';
+import { useAuth } from '@/src/core/providers';
 import { Plus } from "lucide-react";
-import { RegisterPatientSchema as PatientSchema } from "../validation/RegisterPatientSchema";
-import { yupResolver } from "@hookform/resolvers/yup";
-import type { IPatientFormInput } from "../types/IRegisterPatientFormInput";
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { Button } from "../../../core/components/ui/Button";
 import { useLanguage } from "../../../core/providers/LanguageProvider";
-import type { Patient } from "../types/Patient";
 import { usePatients } from "../hooks/usePatients";
-import { useCreatePatient } from "../hooks/useCreatePatient";
-import toast from "react-hot-toast";
 import { Paginator } from "../../../core/components/ui/Paginator";
-import { useUpdatePatient } from "../hooks/useUpdatePatient";
-import { PatientMapper } from "../mappers/patientMapper";
 import { PatientDialog } from "../components/PatientDialog";
-import { useQueryClient } from "@tanstack/react-query";
-import type { Paginated } from "../../../core/types/PaginatedResponse";
 import { LoadingState } from "../../../core/components/ui/LoadingState";
 import { ErrorState } from "../../../core/components/ui/ErrorState";
-import { appConfig } from "../../../core/config/app";
 import { PageHeader } from "../../../core/components/ui/PageHeader";
 import { FilterBar } from "../../../core/components/ui/FilterBar";
 import { SearchInput } from "../../../core/components/ui/SearchInput";
@@ -31,6 +20,9 @@ import { usePatientForm } from "../hooks/usePatientForm";
 
 export const PatientsPage = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const canEdit = !!user && ['Admin', 'Doctor', 'Nurse', 'Management'].includes(user.role);
+  const deletion = useDeletePatient();
 
   // Filter patients by search and status
 
@@ -69,13 +61,13 @@ export const PatientsPage = () => {
         title={t("patientDirectory")}
         description={t("patientDirectoryDesc")}
       >
-        <Button
+        {canEdit && <Button
           onClick={() => { patientForm.resetForm(); dialog.openRegisterDialog(); }}
           className="h-10 gap-2 px-5 bg-brand hover:bg-brand-dark text-white shadow-card transition-all duration-normal"
         >
           <Plus className="h-4 w-4" />
           {t("registerPatient")}
-        </Button>
+        </Button>}
       </PageHeader>
 
       {/* Directory Search & Filter Controls */}
@@ -96,6 +88,8 @@ export const PatientsPage = () => {
       {
         <PatientTable
           patients={visiblePatients}
+          canEdit={canEdit} deleting={deletion.isPending}
+          onDelete={user?.role === 'Admin' ? patient => deletion.mutate(patient.patientId) : undefined}
           onEdit={patient => { patientForm.loadPatient(patient); dialog.openEditDialog(patient); }}
           pagination={
             <Paginator

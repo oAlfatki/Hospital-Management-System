@@ -5,6 +5,8 @@ import { ICreateBillFormInput } from '../types/IBillFormInput';
 import { useCreateBillMutation } from './useCreateBill';
 import { useLanguage } from '@/src/core/providers';
 import { useToast } from '@/src/core';
+import { useUpdateBill } from './useUpdateBill';
+import type { Bill } from '../types/billing.types';
 import { useState } from 'react';
 import { ServiceItem } from '../types/billing.types';
 
@@ -17,6 +19,8 @@ export const useBillingForm = ({ onSuccess, defaultPatientId = '' }: UseBillingF
   const { t } = useLanguage();
   const { toast } = useToast();
   const createBillMutation = useCreateBillMutation();
+  const updateBillMutation = useUpdateBill();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [servicesList, setServicesList] = useState<ServiceItem[]>([
     { serviceName: 'General Consultation', cost: 150 },
@@ -57,21 +61,22 @@ export const useBillingForm = ({ onSuccess, defaultPatientId = '' }: UseBillingF
   };
 
   const onSubmit: SubmitHandler<ICreateBillFormInput> = (values) => {
-    createBillMutation.mutate(
-      { ...values, services: servicesList },
-      {
-        onSuccess: (createdBill) => {
-          toast.success(`${t('toastInvoiceGenerated')} ("${createdBill.billId}")`);
-          onSuccess();
-        },
-        onError: (err: Error) => {
-          toast.error(err.message || t('toastFailedCreateBill'));
-        },
-      }
-    );
+    const request = { ...values, services: servicesList };
+    const callbacks = {
+      onSuccess: () => { toast.success(editingId ? t('saveChangesAction') : t('toastInvoiceGenerated')); onSuccess(); },
+      onError: (err: Error) => toast.error(err.message),
+    };
+    if (editingId) updateBillMutation.mutate({ id: editingId, request }, callbacks);
+    else createBillMutation.mutate(request, callbacks);
   };
 
+  const loadBill = (bill: Bill) => {
+    setEditingId(bill.billId); setServicesList(bill.services.map(item => ({ ...item })));
+    setNewItemName(''); setNewItemCost('');
+    form.reset({ patientId: bill.patientId, services: bill.services, taxPercent: bill.taxPercent, discountAmount: bill.discountAmount, dueDate: bill.dueDate.slice(0, 10) });
+  };
   const resetForm = (patientId = '') => {
+    setEditingId(null);
     setServicesList([{ serviceName: 'General Consultation', cost: 150 }]);
     setNewItemName('');
     setNewItemCost('');
@@ -94,7 +99,8 @@ export const useBillingForm = ({ onSuccess, defaultPatientId = '' }: UseBillingF
     addServiceItem,
     removeServiceItem,
     onSubmit: form.handleSubmit(onSubmit),
-    isSubmitting: createBillMutation.isPending,
+    editingId, loadBill,
+    isSubmitting: createBillMutation.isPending || updateBillMutation.isPending,
     resetForm,
   };
 };

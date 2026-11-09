@@ -1,3 +1,5 @@
+import { DeleteButton } from '@/src/core/components/ui/DeleteButton';
+import { Button } from '@/src/core';
 import React from 'react';
 import { useLanguage } from '@/src/core/providers';
 import { Badge } from '@/src/core';
@@ -6,10 +8,13 @@ import { Mail, MessageSquare, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface NotificationTableRowProps {
   notification: EnrichedNotification;
+  onEdit: (notification: EnrichedNotification) => void;
+  onDelete: (id: string) => void;
+  deleting: boolean;
 }
 
 export const NotificationTableRow: React.FC<NotificationTableRowProps> = ({
-  notification: nf,
+  notification: nf, onEdit, onDelete, deleting,
 }) => {
   const { t, language } = useLanguage();
 
@@ -71,6 +76,12 @@ export const NotificationTableRow: React.FC<NotificationTableRowProps> = ({
             <AlertTriangle className="h-4 w-4" /> {language === 'ar' ? 'قيد الانتظار' : 'Pending'}
           </span>
         )}
+      </td>
+      <td className="py-4 px-6">
+        {nf.status === 'Pending' && !nf.sentOn && !nf.deliveryConfirmation && <div className="flex items-center">
+          <Button variant="ghost" aria-label={t('editNotification')} onClick={() => onEdit(nf)}>{t('editAction')}</Button>
+          <DeleteButton name={nf.message} label="Delete notification" disabled={deleting} onDelete={() => onDelete(nf.notificationId)} />
+        </div>}
       </td>
     </tr>
   );

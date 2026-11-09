@@ -1,3 +1,6 @@
+import { useAppointmentFilters } from '../hooks/useAppointmentFilters';
+import { useDeleteAppointment } from '../hooks/useDeleteAppointment';
+import { SearchInput, FilterBar } from '@/src/core';
 import React, { useMemo } from 'react';
 import { useAuth, useLanguage } from '@/src/core/providers';
 import { Button, useToast, LoadingState, ErrorState, PageHeader } from '@/src/core';
@@ -29,6 +32,8 @@ export const AppointmentsPage: React.FC = () => {
   const updateStatusMutation = useUpdateAppointmentStatusMutation();
 
   const dialog = useAppointmentDialog();
+  const deletion = useDeleteAppointment();
+  const canWrite = !!user && ['Admin', 'Doctor', 'Nurse', 'Management'].includes(user.role);
 
   const enrichedAppointments = useMemo<EnrichedAppointment[]>(() => {
     return rawAppointments.map((a) => {
@@ -42,6 +47,8 @@ export const AppointmentsPage: React.FC = () => {
       };
     });
   }, [rawAppointments, patients, doctors, t]);
+
+  const { search, setSearch, filteredAppointments } = useAppointmentFilters(enrichedAppointments);
 
   const scheduleForm = useAppointmentForm({
     onSuccess: () => dialog.closeScheduleDialog(),
@@ -86,7 +93,7 @@ export const AppointmentsPage: React.FC = () => {
         title={t('appointments')}
         description={t('appointmentsDesc')}
       >
-        <Button
+        {canWrite && <Button
           onClick={() => {
             scheduleForm.resetForm(patients[0]?.patientId || '', doctors[0]?.doctorId || '');
             dialog.openScheduleDialog();
@@ -95,18 +102,24 @@ export const AppointmentsPage: React.FC = () => {
         >
           <Plus className="h-4 w-4" />
           {t('bookAppointment')}
-        </Button>
+        </Button>}
       </PageHeader>
 
+      <FilterBar><SearchInput value={search} onChange={setSearch} placeholder={t('searchAppointments')} /></FilterBar>
       {/* Appointment Registry List */}
       <AppointmentTable
-        appointments={enrichedAppointments}
+        appointments={filteredAppointments}
+        onDelete={user?.role === 'Admin' ? id => deletion.mutate(id) : undefined}
+        deleting={deletion.isPending}
+        canWrite={canWrite}
+        onEdit={appt => { scheduleForm.loadAppointment(appt); dialog.openScheduleDialog(); }}
         onOpenReschedule={dialog.openRescheduleDialog}
         onCancel={handleCancelClick}
       />
 
       {/* Dialogs */}
       <ScheduleAppointmentDialog
+        editing={!!scheduleForm.editingId}
         isOpen={dialog.isScheduleOpen}
         onClose={dialog.closeScheduleDialog}
         patients={patients}

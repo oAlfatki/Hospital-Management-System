@@ -5,6 +5,10 @@ import type { CreateAppointmentRequest } from '../types/CreateAppointmentRequest
 import type { RescheduleAppointmentRequest } from '../types/RescheduleAppointmentRequest';
 
 export const appointmentService = {
+  delete: (id: string): Promise<void> => appointmentApi.delete(id),
+  async update(id: string, request: CreateAppointmentRequest): Promise<Appointment> {
+    return AppointmentMapper.toDomain(await appointmentApi.update(id, request));
+  },
   async getAll(): Promise<Appointment[]> {
     const responses = await appointmentApi.getAll();
     return AppointmentMapper.toDomainList(responses);

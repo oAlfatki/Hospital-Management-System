@@ -50,4 +50,4 @@ The legacy employee, person, report, catalog-category and bill-service APIs are 
 
 ## Feature-by-feature verification
 
-See [the Arabic execution report](FEATURE_TEST_REPORT.ar.md) for the tested operations, discovered legacy CRUD defects, architecture checks, reproducible commands and untested deployment boundaries. The current suites contain 39 .NET tests and 16 Playwright tests (15 browser scenarios and one frontend architecture check). SQL Server runtime and external notification delivery are not included in the passed execution claim.
+See [the Arabic execution report](FEATURE_TEST_REPORT.ar.md) for the tested operations, discovered legacy CRUD defects, architecture checks, reproducible commands and untested deployment boundaries. The current suites contain 45 .NET tests and 24 Playwright tests (23 browser scenarios and one frontend architecture check). SQL Server runtime and external notification delivery are not included in the passed execution claim.

@@ -28,6 +28,9 @@ namespace HSMDataAccess.RepositoryServices
         public Task<List<User>> GetProfilesAsync() => _context.Users.Include(x => x.Person).AsNoTracking().ToListAsync();
         public Task<User?> GetProfileAsync(string id) => _context.Users.Include(x => x.Person).SingleOrDefaultAsync(x => x.ID == id);
         public Task<User?> FindByEmailAsync(string email) => _context.Users.Include(x => x.Person).SingleOrDefaultAsync(x => x.Person.Email == email);
+        public async Task<bool> HasLinkedActivityAsync(string id) =>
+            await _context.Doctors.AnyAsync(x => x.UserID == id) || await _context.AuditLogs.AnyAsync(x => x.UserID == id)
+            || await _context.Notifications.AnyAsync(x => x.UserID == id) || await _context.Reports.AnyAsync(x => x.GeneratedBy == id);
         public Task<bool> HasAnyAsync() => _context.Users.AnyAsync();
 
     }

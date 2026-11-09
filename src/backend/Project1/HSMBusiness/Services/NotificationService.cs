@@ -160,6 +160,23 @@ namespace HSMBusiness.Services
 
         public Task<ResultResponse<IReadOnlyList<NotificationResponse>>> GetNotificationProfilesAsync() => ExecuteAsync<IReadOnlyList<NotificationResponse>>(async () =>
             (await _notifiction.GetAllAsync()).Select(NotificationMapper.ToResponse).ToList());
+        public Task<ResultResponse<NotificationResponse>> UpdatePendingNotificationAsync(string id, NotificationUpdateRequest request, string actor) => ExecuteAsync(async () =>
+        {
+            var notification = Found(await _notifiction.GetByIDAsync(id), "Notification not found.");
+            Require(notification.Status == "Pending" && notification.SentOn is null && notification.DeliveryConfirmation != true, "Only pending, unsent notifications can be edited.", 409);
+            Require(!string.IsNullOrWhiteSpace(request.Message), "Message cannot be empty.");
+            notification.Message = request.Message.Trim(); notification.Type = request.Type;
+            await _notifiction.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Notification", "Update", id));
+            return NotificationMapper.ToResponse(notification);
+        });
+        public Task<ResultResponse<bool>> DeletePendingNotificationAsync(string id, string actor) => ExecuteAsync(async () =>
+        {
+            var notification = Found(await _notifiction.GetByIDAsync(id), "Notification not found.");
+            Require(notification.Status == "Pending" && notification.SentOn is null && notification.DeliveryConfirmation != true, "Only pending, unsent notifications can be deleted.", 409);
+            _notifiction.StageRemove(notification);
+            await _notifiction.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "Notification", "Delete", id));
+            return true;
+        }, 204);
         internal async Task<NotificationResponse> QueuePaymentReminderAsync(string patientId, string invoice, string actor)
         {
             var notification = new Notification { ID = Id(), PatientID = patientId, UserID = actor, Type = "Email",

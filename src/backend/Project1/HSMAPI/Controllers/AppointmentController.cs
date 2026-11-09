@@ -25,6 +25,10 @@ public class AppointmentController(AppointmentService service) : ControllerBase
     public async Task<IActionResult> Create(AppointmentRequest request) =>
         (await service.ScheduleAppointmentAsync(request, Actor)).ToActionResult(this);
 
+    [HttpPut("{id}"), Authorize(Roles = "Admin,Doctor,Nurse,Management")]
+    public async Task<IActionResult> Update(string id, AppointmentRequest request) =>
+        (await service.UpdateAppointmentAsync(id, request, Actor)).ToActionResult(this);
+
     [HttpPatch("{id}/status"), Authorize(Roles = "Admin,Doctor,Nurse,Management")]
     public async Task<IActionResult> Status(string id, AppointmentStatusRequest request) =>
         (await service.ChangeAppointmentStatusAsync(id, request, Actor)).ToActionResult(this);

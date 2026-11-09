@@ -7,18 +7,18 @@ All paths are relative to the same frontend origin. ASP.NET serializes propertie
 | Feature | Operations | Important contract fields |
 | --- | --- | --- |
 | Auth | `POST /api/auth/login`, `GET /api/auth/session`, `POST /api/auth/logout` | Login `{email,password}` → `{success,user}`; session returns the user; no passwords/hashes in responses |
-| Staff | `GET /api/auth/users`, `POST /api/auth/register`, `PUT /api/auth/{id}` | `name,email,role,contactNumber?,department?,status,password?`; creation requires 12+ character password; update password is optional; response identifier `userId` |
+| Staff | `GET /api/auth/users`, `POST /api/auth/register`, `PUT/DELETE /api/auth/{id}` | `name,email,role,contactNumber?,department?,status,password?`; creation requires 12+ character password; update password is optional; response identifier `userId` |
 | Patients | `GET/POST /api/patients`, `GET/PUT/DELETE /api/patients/{id}` | `name,dateOfBirth,gender,contactNumber,email,address,medicalHistory,status`; identifier `patientId`; optional empty medical history allowed |
 | Doctors | `GET/POST /api/doctors`, `GET/PUT/DELETE /api/doctors/{id}` | `name,departmentId,specialty,contactNumber,email,status`; identifier `doctorId`; supports a profile without granting a staff login |
 | Departments | `GET/POST /api/departments`, `PUT/DELETE /api/departments/{id}` | `name,description?,headOfDepartment?`; identifier `departmentId`; head must be an active physician in that department |
-| Appointments | `GET/POST /api/appointments`, `GET/DELETE /api/appointments/{id}` | Create `patientId,doctorId,appointmentDate,appointmentTime,durationMinutes`; identifier `appointmentId`; status is assigned by server |
+| Appointments | `GET/POST /api/appointments`, `GET/PUT/DELETE /api/appointments/{id}` | Create `patientId,doctorId,appointmentDate,appointmentTime,durationMinutes`; identifier `appointmentId`; status is assigned by server |
 | Cancel | `PATCH /api/appointments/{id}/status` | `{status:"Cancelled"}`; retains patient, physician, date, time and duration |
 | Reschedule | `PATCH /api/appointments/{id}/reschedule` | `{newDate,newTime}`; retains associations and duration; detects interval overlaps, excluding cancelled appointments |
-| Billing | `GET/POST /api/billing`, `GET/DELETE /api/billing/{id}` | Create `patientId,services:[{serviceName,cost}],taxPercent,discountAmount,dueDate`; identifier `billId`; subtotal, total and balance calculated on server |
+| Billing | `GET/POST /api/billing`, `GET/PUT/DELETE /api/billing/{id}` | Create `patientId,services:[{serviceName,cost}],taxPercent,discountAmount,dueDate`; identifier `billId`; subtotal, total and balance calculated on server |
 | Payments | `POST /api/billing/{id}/payments` | `{amountToPay}`; adds to existing payment amount; rejects zero, negatives and overpayment; persists dated payment entry |
 | Reminder | `POST /api/billing/{id}/reminders` | No recipient/sender fields accepted; server resolves them; returns HTTP 202 and a Pending notification |
-| Clinical records | `GET/POST /api/records`, `PUT /api/records/{id}` | Create `patientId,diagnosis,treatment,prescriptions,status`; update `diagnosis,treatment,prescriptions,status,version`; identifier `recordId`; response includes `history,version,updatedBy` |
-| Notifications | `GET /api/notifications` | `notificationId,patientId,userId,type,message,status,sentOn,deliveryConfirmation,retries`; `sentOn` is null until sent |
+| Clinical records | `GET/POST /api/records`, `PUT/DELETE /api/records/{id}` | Create `patientId,diagnosis,treatment,prescriptions,status`; update `diagnosis,treatment,prescriptions,status,version`; identifier `recordId`; response includes `history,version,updatedBy` |
+| Notifications | `GET /api/notifications`, `PUT/DELETE /api/notifications/{id}` | `notificationId,patientId,userId,type,message,status,sentOn,deliveryConfirmation,retries`; `sentOn` is null until sent |
 | Audit | `GET /api/audit` | `auditId,userId,userName,entity,action,timestamp,details`; writes are server-owned |
 | Dashboard | `GET /api/dashboard` | `financeVisible,stats,upcomingAppts,revenueData,doctorApptData`; finance fields are null for Doctor/Nurse |
 
@@ -37,4 +37,12 @@ Dates use `YYYY-MM-DD`; time input accepts `HH:mm` and `HH:mm:ss`. Appointment r
 
 PUT operations accept complete writable forms. The frontend's status toggles send the complete current form with the new status, preventing omitted fields from being lost. Record updates additionally submit the exact version originally opened for editing.
 
-The frontend does not expose arbitrary notification creation, audit modification or clinical record deletion. Notifications are created through the supported reminder workflow; clinical history and audit entries are preserved.
+The frontend provides search for every directory/list and confirmed deletion wherever the authenticated role can delete. Searches filter the complete loaded collection before any pagination; they are client-side searches, not server-paginated APIs.
+
+Appointment PUT accepts the same writable contract as creation and can change patient, doctor, date, time and duration. It checks active participants and interval conflicts in a repository transaction and rejects cancelled appointments. The reschedule shortcut remains available.
+
+Invoice PUT accepts the same contract as creation, replaces line items and recalculates totals on the server. Editing is allowed only before any payment and for noncancelled invoices. Paid invoices cannot be deleted; the UI disables deletion and hides editing, while the server independently enforces both rules.
+
+Staff deletion rejects self-deletion and accounts linked to doctors, audits, notifications or reports; these accounts can be deactivated instead. Clinical DELETE requires the currently displayed `?version=N`, rejecting stale versions with 409, and writes a deletion audit entry. Confirmed deletion permanently removes the clinical record and its embedded version history; archiving remains available when retention is needed.
+
+Notification PUT accepts `{message,type}` only. PUT/DELETE apply only to Pending, unsent notifications; recipient, sender, status and delivery timestamps are not client-writable. Sent history remains read-only. Audit entries remain server-owned and cannot be edited/deleted through the UI or API. Dashboard is an aggregate view rather than an editable directory.

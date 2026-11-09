@@ -325,6 +325,15 @@ namespace HSMBusiness.Services
             await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "User", "Update", id));
             return UserMapper.ToResponse(user);
         });
+        public Task<ResultResponse<bool>> DeleteStaffProfileAsync(string id, string actor) => ExecuteAsync(async () =>
+        {
+            var user = Found(await _repository.GetProfileAsync(id), "User not found.");
+            Require(id != actor, "You cannot delete your own administrator account.", 409);
+            Require(!await _repository.HasLinkedActivityAsync(id), "This account has linked activity. Deactivate it instead.", 409);
+            _repository.StageRemove(user);
+            await _repository.SaveChangesWithAuditAsync(AuditLogMapper.CreateEntry(actor, "User", "Delete", id));
+            return true;
+        }, 204);
         public async Task EnsureDevelopmentAdministratorAsync(string? email, string? password)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || await _repository.HasAnyAsync()) return;

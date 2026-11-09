@@ -1,3 +1,4 @@
+import { useDeleteRecord } from '../hooks/useDeleteRecord';
 import React, { useMemo, useEffect } from 'react';
 import { useAuth, useLanguage } from '@/src/core/providers';
 import { Button, PageHeader, FilterBar, SearchInput, LoadingState, ErrorState } from '@/src/core';
@@ -29,6 +30,7 @@ export const RecordsPage: React.FC = () => {
   const patients = patientsData || [];
 
   const dialog = useRecordDialog();
+  const deletion = useDeleteRecord();
 
   const enrichedRecords = useMemo<EnrichedMedicalRecord[]>(() => {
     return rawRecords.map((r) => {
@@ -105,6 +107,7 @@ export const RecordsPage: React.FC = () => {
             <RecordCard
               key={rec.recordId}
               record={rec}
+              onDelete={() => deletion.mutate({ id: rec.recordId, version: rec.version })} deleting={deletion.isPending}
               onOpenHistory={dialog.openHistoryDialog}
               onOpenEdit={dialog.openEditDialog}
             />

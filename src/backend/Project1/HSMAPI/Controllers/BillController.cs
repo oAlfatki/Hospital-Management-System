@@ -25,6 +25,10 @@ public class BillController(BillService service) : ControllerBase
     public async Task<IActionResult> Create(BillRequest request) =>
         (await service.CreateInvoiceAsync(request, Actor)).ToActionResult(this);
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(string id, BillRequest request) =>
+        (await service.UpdateInvoiceAsync(id, request, Actor)).ToActionResult(this);
+
     [HttpPost("{id}/payments")]
     public async Task<IActionResult> Pay(string id, PaymentRequest request) =>
         (await service.RecordInvoicePaymentAsync(id, request, Actor)).ToActionResult(this);
