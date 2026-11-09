@@ -77,7 +77,7 @@ export const BillDetailsDialog: React.FC<BillDetailsDialogProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold">
-                {selectedBill.services.map((item: ServiceItem, idx: number) => (
+                {(selectedBill.services ??[]).map((item: ServiceItem, idx: number) => (
                   <tr key={idx}>
                     <td className="py-2.5 px-4 font-semibold text-slate-700 dark:text-slate-300">
                       {item.serviceName}

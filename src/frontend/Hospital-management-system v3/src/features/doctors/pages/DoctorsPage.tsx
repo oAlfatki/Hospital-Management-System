@@ -145,14 +145,14 @@ export const DoctorsPage: React.FC = () => {
                     <Building className="h-3.5 w-3.5 text-slate-400" />
                     {t('departmentCol')}: <span className="font-semibold">{dept ? dept.name : t('vacant')}</span>
                   </p>
-                  <p className="flex items-center gap-2">
+                  {/* <p className="flex items-center gap-2">
                     <Mail className="h-3.5 w-3.5 text-slate-400" />
                     {doc.email}
                   </p>
                   <p className="flex items-center gap-2">
                     <Phone className="h-3.5 w-3.5 text-slate-400" />
                     {doc.contactNumber || t('noContactProvided')}
-                  </p>
+                  </p> */}
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-850">
