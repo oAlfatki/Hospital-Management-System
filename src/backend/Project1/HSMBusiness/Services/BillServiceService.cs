@@ -1,4 +1,4 @@
-﻿using HSMBusiness.Mappers;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.RepositoryServices;
@@ -32,7 +32,7 @@ namespace HSMBusiness.Services
         }
         public async Task<bool> IsServiceExist(string serviceID)
         {
-           if(!await _servicesCategory.ExistsAsync(serviceID))
+           if(!await _billService.MedicalServiceExistsAsync(serviceID))
             {
                 return false;
             }
@@ -51,12 +51,13 @@ namespace HSMBusiness.Services
             var billServiceEntity =new BillServiceMapper().ToEntity(billServiceDTO);
             if(!await IsServiceExist(billServiceDTO.ServiceID))
             {
-                return (500, false);
+                return (404, false);
             }
             if (!await IsBillExist(billServiceDTO.BillID))
             {
-                return (500, false);
+                return (404, false);
             }
+            if (await _billService.ExistsAsync(billServiceDTO.ServiceID, billServiceDTO.BillID)) return (409, false);
             var AddNew =await _billService.AddAsync(billServiceEntity);
             billServiceEntity.ServiceID = AddNew.ServiceID;
             billServiceEntity.BillID = AddNew.BillID;
@@ -86,12 +87,18 @@ namespace HSMBusiness.Services
                 response =await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return ( response.Status,response.Response,response.IsSuccess);
             }
-            CurrentBillService =new BillServiceMapper().ToEntity(billServiceDTO,BillServiceMapper.enMode.Update);
+            CurrentBillService.Quantity = billServiceDTO.Quantity;
+            CurrentBillService.UnitPrice = billServiceDTO.UnitPrice;
             return (response.Status,response.Response,await _billService.UpdateAsync(CurrentBillService));
         }
         public async Task<(int Status, string?Response, bool IsSuccess)> Save(BillServiceDTO billServiceDTO,string ServiceID = "",string BillID = "")
         {
             var response =await resultPattern.GiveResponse(200,new Dictionary<string,string>(), "BillService");
+            if (billServiceDTO.Quantity is null or <= 0 || billServiceDTO.UnitPrice <= 0)
+            {
+                response = await resultPattern.GiveResponse(400, null);
+                return (response.Status, response.Response, response.IsSuccess);
+            }
             switch (_mode)
             {
                 case enMode.Add:

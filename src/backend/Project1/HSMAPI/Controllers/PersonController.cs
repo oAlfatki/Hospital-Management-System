@@ -102,7 +102,7 @@ namespace HSMAPI.Controllers
                 
                 
             }
-            return Ok(CreatedAtRoute("GetPersonByIdAsync", new { id = people.ID }, people));
+            return CreatedAtRoute("GetPersonByIdAsync", new { id = people.ID }, people);
 
         }
         [HttpPut]

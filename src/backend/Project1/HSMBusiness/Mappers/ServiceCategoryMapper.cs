@@ -1,4 +1,4 @@
-﻿using HSMDataAccess.DTOs;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -18,6 +18,7 @@ namespace HSMBusiness.Mappers
             {
                 return new ServiceCategories
                 {
+                    ID = Guid.NewGuid().ToString("N")[..10],
                     CategoryName = serviceCategoryDTO.CategoryName,
                     CategoryDescription = serviceCategoryDTO.CategoryDescription
                 };

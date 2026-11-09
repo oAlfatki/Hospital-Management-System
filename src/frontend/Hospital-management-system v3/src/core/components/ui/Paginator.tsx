@@ -44,6 +44,7 @@ export function Paginator({
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Previous page"
           disabled={page === 1 || isLoading}
           onClick={onClickPrev}
         >
@@ -57,6 +58,7 @@ export function Paginator({
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Next page"
           disabled={page === pageCount || isLoading}
           onClick={onClickNext}
         >

@@ -17,6 +17,8 @@ namespace HSMDataAccess.RepositoryServices
             _context = context;
         }
 
+        public Task<bool> MedicalServiceExistsAsync(string id) => _context.MedicalServices.AnyAsync(x => x.ID == id);
+
         public async Task<BillService> AddAsync(BillService entity)
         {
             await _context.Set<BillService>().AddAsync(entity);

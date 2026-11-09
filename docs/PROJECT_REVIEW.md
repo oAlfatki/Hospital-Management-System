@@ -47,3 +47,7 @@ The automated suites execute against disposable SQLite databases and do not touc
 Notification dispatch is not configured. Existing payment dates cannot be reconstructed from aggregate paid totals, so those amounts remain on invoices and are not fabricated into current revenue. Existing free-text medical audit trails remain in the database; new record edits persist structured versions. Historical creation timestamps remain null when unknown.
 
 The legacy employee, person, report, catalog-category and bill-service APIs are outside the current SPA's feature screens. They remain available to administrators, rather than silently claiming complete new frontend modules for them.
+
+## Feature-by-feature verification
+
+See [the Arabic execution report](FEATURE_TEST_REPORT.ar.md) for the tested operations, discovered legacy CRUD defects, architecture checks, reproducible commands and untested deployment boundaries. The current suites contain 39 .NET tests and 16 Playwright tests (15 browser scenarios and one frontend architecture check). SQL Server runtime and external notification delivery are not included in the passed execution claim.

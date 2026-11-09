@@ -117,6 +117,7 @@ export const DoctorsPage: React.FC = () => {
             return (
               <div
                 key={doc.doctorId}
+                data-testid="doctor-card"
                 className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-xl shadow-xs flex flex-col space-y-4 relative"
               >
                 <div className="flex items-start justify-between gap-3.5">
@@ -134,6 +135,7 @@ export const DoctorsPage: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="Edit doctor"
                       onClick={() => dialog.openEditDoctor(doc)}
                       className="h-7 w-7 text-slate-400 hover:text-emerald-600"
                     >

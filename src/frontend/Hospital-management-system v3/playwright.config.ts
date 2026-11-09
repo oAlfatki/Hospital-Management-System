@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  reporter: [['list'], ['json', { outputFile: 'test-results/results.json' }]],
   timeout: 120000,
   workers: 1,
   use: {

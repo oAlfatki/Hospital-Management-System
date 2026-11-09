@@ -77,12 +77,7 @@ namespace HSMAPI.Controllers
                     isSuccess = result.IsSuccess
                 });
             }
-            return Ok(new
-            {
-                status = result.Status,
-                response = result.Response,
-                isSuccess = result.IsSuccess
-            });
+            return CreatedAtRoute("GetReportByIdAsync", new { id = reportDTO.ID }, reportDTO);
 
         }
         [HttpPut]
@@ -125,10 +120,7 @@ namespace HSMAPI.Controllers
                     response = result.Response,
                     isSuccess = result.IsSuccess
                 });
-            return Ok(
-            
-                CreatedAtRoute("GetReportByIdAsync", new { id = reportDTO.ID }, reportDTO)
-            );
+            return Ok(reportDTO);
         }
 
         [HttpDelete]

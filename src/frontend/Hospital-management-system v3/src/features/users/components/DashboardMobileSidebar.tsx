@@ -44,6 +44,7 @@ export const DashboardMobileSidebar: React.FC<DashboardMobileSidebarProps> = ({
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Close navigation"
             onClick={onClose}
             className="text-slate-500 dark:text-slate-400 h-8 w-8"
           >

@@ -55,19 +55,20 @@ namespace HSMBusiness.Services
         {
             int Status = 200;
             var personEntity = new PersonMapper().ToEntity(personDTO);
-            if(await CountNumberOfContactNumberIsOne(personEntity.ContactNumber) && await CountNumberOfEmailIsOne(personEntity.Email))
+            if(await CountNumberOfContactNumberIsOne(personEntity.ContactNumber) || await CountNumberOfEmailIsOne(personEntity.Email))
             {
-                Status = 500;
+                Status = 409;
                 return (Status, false);
             }
             var person = await _personRepository.AddAsync(personEntity);
             personEntity.ID =person.ID;
+            personDTO.ID = person.ID;
             if (personEntity.ID == "")
             {
                 Status = 500;
                 return (Status, false);
             }
-            return (Status, false);
+            return (Status, true);
         }
         private async Task<(int Status,string?Response,bool IsSuccess)> _Update(string ID,PersonDTO personDTO)
         {
@@ -79,15 +80,13 @@ namespace HSMBusiness.Services
                 response =await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status,response.Response,response.IsSuccess);
             }
-            personEntity = new PersonMapper().ToEntity(personDTO, PersonMapper.enMode.Update,personEntity);
-            await _personRepository.UpdateAsync(personEntity);
-            if (!await CountNumberOfContactNumberIsOne(personEntity.ContactNumber) && !await CountNumberOfEmailIsOne(personEntity.Email))
+            if (await _personRepository.EmailExistsAsync(personDTO.Email, ID) || await _personRepository.PhoneExistsAsync(personDTO.ContactNumber, ID))
             {
-                response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
+                response = await resultPattern.GiveResponse(409, null);
                 return (response.Status, response.Response, response.IsSuccess);
             }
-            personEntity = new PersonMapper().ToEntity(personDTO,PersonMapper.enMode.Update,personEntity);
-
+            personEntity = new PersonMapper().ToEntity(personDTO, PersonMapper.enMode.Update, personEntity);
+            await _personRepository.UpdateAsync(personEntity);
             return (response.Status,response.Response, response.IsSuccess);
         }
         public async Task<(int Status,string? Response, bool IsSuccess)> Delete(string ID)

@@ -22,3 +22,5 @@ Thumbs.db
 *.db-wal
 playwright-report/
 test-results/
+
+**/TestResults/

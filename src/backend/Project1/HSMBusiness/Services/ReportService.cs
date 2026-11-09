@@ -50,6 +50,7 @@ namespace HSMBusiness.Services
                 return (500, false);
             }
             reportEntity.ID = AddNew.ID;
+            reportDTO.ID = AddNew.ID;
             return (200,reportEntity.ID != "");
         }
         private async Task<(int Status, string?Response, bool IsSuccess)> Update(string ID,ReportDTO reportDTO)

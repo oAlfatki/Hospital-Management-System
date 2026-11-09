@@ -29,7 +29,7 @@ namespace HSMAPI.Controllers
                 return NotFound($"{appointment.Response},{appointment.Response}");
             }
 
-            return Ok($"{appointment.Response},{appointment.Response}");
+            return Ok(appointment.servicesCategoryDTO);
         }
         [HttpGet]
         [Route("All", Name = "GetAllServiceCategories")]
@@ -81,7 +81,7 @@ namespace HSMAPI.Controllers
                     isSuccess = result.IsSuccess
                 });
             }
-            return Ok(CreatedAtRoute("GetServiceCategoryByIdAsync", new { id = serviceCategory.ID }, serviceCategory));
+            return CreatedAtRoute("GetServiceCategoryByIdAsync", new { id = serviceCategory.ID }, serviceCategory);
 
         }
         [HttpPut]

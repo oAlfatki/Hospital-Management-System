@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth, useLanguage } from '@/src/core/providers';
 import { Button, Select, PageHeader, FilterBar, SearchInput, LoadingState, ErrorState } from '@/src/core';
 import { FileDown } from 'lucide-react';
+import { auditService } from '../services/auditService';
 import { useAuditLogs } from '../hooks/useAuditLogs';
 import { useAuditFilters } from '../hooks/useAuditFilters';
 import { AuditTable } from '../components/AuditTable';
@@ -24,17 +25,7 @@ export const AuditPage: React.FC = () => {
       t('colTimestamp'),
       t('colDetailedLogDescription'),
     ];
-    const rows = filters.filteredLogs.map((l) => [
-      l.auditId,
-      l.userId,
-      l.userName || 'Unknown',
-      l.entity,
-      l.action,
-      l.timestamp,
-      `"${l.details || ''}"`,
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const csvContent = auditService.exportToCSV(filters.filteredLogs, headers);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 
@@ -47,6 +38,7 @@ export const AuditPage: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (isLoading) {

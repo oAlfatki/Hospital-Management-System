@@ -1,4 +1,5 @@
 import React from 'react';
+import toast from 'react-hot-toast';
 import { Menu, Sun, Moon, Languages, LogOut, User as UserIcon } from 'lucide-react';
 import { useLanguage, useTheme, useAuth } from '@/src/core/providers';
 import { Button } from '@/src/core/components/ui/Button';
@@ -26,6 +27,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onOpenMobileMe
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Open navigation"
           onClick={onOpenMobileMenu}
           className="md:hidden text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
         >
@@ -52,6 +54,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onOpenMobileMe
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Toggle theme"
           onClick={toggleTheme}
           className="text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 h-8 w-8"
         >
@@ -76,7 +79,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onOpenMobileMe
             <Button
               variant="ghost"
               size="icon"
-              onClick={logout}
+              onClick={() => { void logout().catch((error: Error) => toast.error(error.message)); }}
               title={t('logout') || 'Logout'}
               className="text-slate-500 dark:text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 h-8 w-8"
             >

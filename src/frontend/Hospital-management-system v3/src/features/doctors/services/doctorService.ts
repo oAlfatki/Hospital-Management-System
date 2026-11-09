@@ -6,6 +6,9 @@ import type { CreateDoctorRequest } from '../types/CreateDoctorRequest';
 import type { UpdateDoctorRequest } from '../types/UpdateDoctorRequest';
 
 export const doctorService = {
+  async updateDepartment(id: string, request: import('../types/IDepartmentFormInput').IDepartmentFormInput): Promise<Department> {
+    return DoctorMapper.toDepartmentDomain(await doctorApi.updateDepartment(id, request));
+  },
   async getDoctors(): Promise<Doctor[]> {
     const responses = await doctorApi.getAllDoctors();
     return DoctorMapper.toDomainList(responses);

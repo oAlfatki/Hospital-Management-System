@@ -3,7 +3,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { DepartmentSchema } from '../validation/DoctorSchema';
-import { doctorApi } from '../api/doctorApi';
+import { doctorService } from '../services/doctorService';
 import type { IDepartmentFormInput } from '../types/IDepartmentFormInput';
 import type { Department } from '../types/Department';
 import { useLanguage } from '@/src/core/providers/LanguageProvider';
@@ -13,8 +13,8 @@ export function useDepartmentForm({ onSuccess, selectedDepartment }: Props) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (data: IDepartmentFormInput) => selectedDepartment
-      ? doctorApi.updateDepartment(selectedDepartment.departmentId, data)
-      : doctorApi.createDepartment(data),
+      ? doctorService.updateDepartment(selectedDepartment.departmentId, data)
+      : doctorService.createDepartment(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments-list'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });

@@ -96,7 +96,7 @@ namespace HSMAPI.Controllers
                     isSuccess = result.IsSuccess
                 });
             }
-            return Ok(CreatedAtRoute("GetEmployeeByIdAsync", new { id = employee.ID }, employee));
+            return CreatedAtRoute("GetEmployeeByIdAsync", new { id = employee.ID }, employee);
 
         }
         [HttpPut]

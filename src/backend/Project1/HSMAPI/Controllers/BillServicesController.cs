@@ -95,7 +95,7 @@ namespace HSMAPI.Controllers
                     isSuccess = result.IsSuccess
                 });
             }
-            return Ok(CreatedAtRoute(" GetBillServiceByIdAsync", new { ServiceID = billservice.ServiceID ,BillID=billservice.BillID}, billservice));
+            return CreatedAtRoute(" GetBillServiceByIdAsync", new { ServiceID = billservice.ServiceID ,BillID=billservice.BillID}, billservice);
 
         }
         [HttpPut]

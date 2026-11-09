@@ -13,14 +13,18 @@ namespace HSMAPI.Tests;
 
 public sealed class HospitalFactory : WebApplicationFactory<Program>
 {
+    private readonly string? sqlConnection = Environment.GetEnvironmentVariable("HMS_TEST_SQLSERVER_CONNECTION");
+    private readonly string sqlDatabase = "hms_test_" + Guid.NewGuid().ToString("N");
     private readonly string database = Path.Combine(Path.GetTempPath(), $"hms-test-{Guid.NewGuid():N}.db");
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration((_, c) => c.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["Database:Provider"] = "Sqlite", ["Database:Initialize"] = "true",
-            ["ConnectionStrings:DefaultConnection"] = $"Data Source={database};Pooling=False",
+            ["Database:Provider"] = string.IsNullOrEmpty(sqlConnection) ? "Sqlite" : "SqlServer", ["Database:Initialize"] = "true",
+            ["ConnectionStrings:DefaultConnection"] = string.IsNullOrEmpty(sqlConnection)
+                ? $"Data Source={database};Pooling=False"
+                : new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sqlConnection) { InitialCatalog = sqlDatabase, Pooling = false }.ConnectionString,
             ["Bootstrap:Email"] = "admin@example.test", ["Bootstrap:Password"] = WorkflowTests.Password
         }));
     }
@@ -28,6 +32,12 @@ public sealed class HospitalFactory : WebApplicationFactory<Program>
     {
         base.Dispose(disposing);
         if (disposing && File.Exists(database)) File.Delete(database);
+        if (disposing && !string.IsNullOrEmpty(sqlConnection))
+        {
+            var connection = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sqlConnection) { InitialCatalog = sqlDatabase, Pooling = false }.ConnectionString;
+            using var db = new AppDBContext(new DbContextOptionsBuilder<AppDBContext>().UseSqlServer(connection).Options);
+            db.Database.EnsureDeleted();
+        }
     }
 }
 

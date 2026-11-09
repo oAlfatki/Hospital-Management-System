@@ -1,4 +1,4 @@
-﻿using HSMBusiness.Mappers;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
@@ -54,6 +54,7 @@ namespace HSMBusiness.Services
             var ServiceCategory =  new ServiceCategoryMapper().ToEntity(servicesCategoryDTO);
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
             var AddNew = await _servicesCategoryRepository.AddAsync(ServiceCategory);
+            servicesCategoryDTO.ID = AddNew.ID;
             return (response.Status, AddNew.ID != "");
         }
         private async Task<(int, string?, bool)>_Update(string ID,ServicesCategoryDTO servicesCategoryDTO)
@@ -64,7 +65,7 @@ namespace HSMBusiness.Services
                 return (response.Status, response.Response, response.IsSuccess);
             }
             var CurrServiceCategory = await _servicesCategoryRepository.GetByIDAsync(ID);
-            CurrServiceCategory = new ServiceCategoryMapper().ToEntity(servicesCategoryDTO);
+            CurrServiceCategory = new ServiceCategoryMapper().ToEntity(servicesCategoryDTO, CurrServiceCategory, ServiceCategoryMapper.enMode.Update);
             return ((response.Status, response.Response, await _servicesCategoryRepository.UpdateAsync(CurrServiceCategory)));
             
         }

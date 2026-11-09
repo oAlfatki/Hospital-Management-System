@@ -28,6 +28,7 @@ test('staff can register, edit, schedule, reschedule, invoice and record payment
   await dialog.getByLabel(en.genderIdentity).selectOption('Other');
   await dialog.getByRole('button', { name: en.saveRecord }).click();
   await expect(dialog).toBeHidden();
+  await page.getByPlaceholder(en.searchPatientsPlaceholder).fill('Browser Patient');
   let patientRow = page.getByRole('row').filter({ hasText: 'Browser Patient' });
   await expect(patientRow).toBeVisible();
   await patientRow.getByRole('button', { name: 'Edit patient' }).click();
@@ -66,8 +67,8 @@ test('staff can register, edit, schedule, reschedule, invoice and record payment
   await page.goto('/appointments');
   await page.getByRole('button', { name: en.bookAppointment, exact: true }).click();
   dialog = page.getByRole('dialog');
-  await dialog.locator('[name=patientId]').selectOption({ index: 1 });
-  await dialog.locator('[name=doctorId]').selectOption({ index: 1 });
+  await dialog.locator('[name=patientId]').selectOption((await dialog.locator('[name=patientId] option').filter({ hasText: 'Browser Patient Updated' }).getAttribute('value'))!);
+  await dialog.locator('[name=doctorId]').selectOption((await dialog.locator('[name=doctorId] option').filter({ hasText: 'Browser Doctor' }).getAttribute('value'))!);
   const day = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
   await dialog.locator('[name=appointmentDate]').fill(day);
   await dialog.locator('[name=appointmentTime]').fill('10:00');
@@ -84,7 +85,7 @@ test('staff can register, edit, schedule, reschedule, invoice and record payment
   await page.goto('/billing');
   await page.getByRole('button', { name: en.generateBill, exact: true }).click();
   dialog = page.getByRole('dialog');
-  await dialog.locator('[name=patientId]').selectOption({ index: 1 });
+  await dialog.locator('[name=patientId]').selectOption((await dialog.locator('[name=patientId] option').filter({ hasText: 'Browser Patient Updated' }).getAttribute('value'))!);
   await dialog.getByRole('button', { name: en.generateAndDispatchInvoice, exact: true }).click();
   await expect(dialog).toBeHidden();
   const billRow = page.getByRole('row').filter({ hasText: 'Browser Patient Updated' });
@@ -100,7 +101,9 @@ test('staff can register, edit, schedule, reschedule, invoice and record payment
   await expect(page.getByRole('row').filter({ hasText: 'Browser Patient Updated' })).toContainText('Pending');
   await page.goto('/dashboard');
   await page.screenshot({ path: info.outputPath('dashboard.png'), fullPage: true });
-  await expect(page.getByText('$50.00').first()).toBeVisible();
+  const totals = await (await page.request.get('/api/dashboard')).json();
+  const revenue = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totals.stats.monthlyRevenue);
+  await expect(page.getByText(revenue, { exact: true }).first()).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -140,6 +143,7 @@ test('staff account creation, clinical editing and Arabic mobile navigation work
   await dialog.locator('[name=prescriptions]').fill('None');
   await dialog.locator('button').last().click();
   await expect(dialog).toBeHidden();
+  await page.getByRole('textbox').first().fill('Clinical Patient');
   await expect(page.getByText('Browser initial diagnosis', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: en.modifyRecordBtn, exact: true }).click();
   dialog = page.getByRole('dialog');

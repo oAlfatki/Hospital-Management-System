@@ -20,24 +20,13 @@ import {
   BarChart,
   Bar
 } from 'recharts';
-import { useQuery } from '@tanstack/react-query';
-import axios from '@/src/core/config/axios';
-interface DashboardData {
-  financeVisible: boolean;
-  stats: { totalPatients: number; appointmentsToday: number; monthlyRevenue: number | null; pendingDues: number | null };
-  upcomingAppts: { appointmentId: string; appointmentDate: string; appointmentTime: string; status: string; patientName: string; doctorName: string; specialty: string }[];
-  revenueData: { date: string; revenue: number }[];
-  doctorApptData: { name: string; appointments: number }[];
-}
+import { useDashboard } from '../hooks/useDashboard';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { language, t } = useLanguage();
 
-  const { data, isLoading: isGlobalLoading, error, refetch } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: async () => (await axios.get<DashboardData>('/api/dashboard')).data,
-  });
+  const { data, isLoading: isGlobalLoading, error, refetch } = useDashboard();
   const handleRefresh = () => refetch();
   if (isGlobalLoading) return <LoadingState message={t('commonLoading')} />;
   if (error || !data) return <ErrorState message={t('commonSomethingWentWrong')} />;

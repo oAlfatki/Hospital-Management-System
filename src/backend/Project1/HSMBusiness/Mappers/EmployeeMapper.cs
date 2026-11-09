@@ -1,4 +1,4 @@
-﻿using HSMBusiness.Services;
+using HSMBusiness.Services;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
 using System;
@@ -24,6 +24,7 @@ namespace HSMBusiness.Mappers
                 return new Employee
                 {
                     
+                    ID = Guid.NewGuid().ToString("N")[..10],
                     PersonID = employeeDTO.PersonID,
                     Salary = employeeDTO.Salary,
                     HireDate = employeeDTO.HireDate,

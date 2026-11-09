@@ -1,4 +1,4 @@
-﻿using HSMBusiness.Mappers;
+using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.Entities;
@@ -42,20 +42,21 @@ namespace HSMBusiness.Services
             var employeeEntity = new EmployeeMapper().ToEntity(employeeDTO);
             if (!await _personService.IsPersonExist(employeeEntity.PersonID))
             {
-                return (500, false);
+                return (404, false);
             }
             if (await CountNumberOfPersonIDIsOne(employeeDTO.PersonID))
             {
-                return (500, false);
+                return (409, false);
             }
             
             var AddNew = await _employeeRepository.AddAsync(employeeEntity);
             employeeEntity.ID = AddNew.ID;
+            employeeDTO.ID = AddNew.ID;
             if(employeeEntity.ID == "")
             {
                 return (500, false);
             }
-            return (200, false);
+            return (200, true);
         }
         private async Task<(int,string?,bool)> _Update(string ID,EmployeeDTO employeeDTO)
         {
@@ -65,7 +66,7 @@ namespace HSMBusiness.Services
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess);
             }
-            if (!await _personService.IsPersonExist(employee.PersonID))
+            if (!await _personService.IsPersonExist(employeeDTO.PersonID))
             {
                 response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess);

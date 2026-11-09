@@ -21,6 +21,7 @@ namespace HSMBusiness.Mappers
                 return new Report
                 {
 
+                    ID = Guid.NewGuid().ToString("N")[..10],
                     Type = reportDTO.Type,
                     GeneratedOn = reportDTO.GeneratedOn,
                     GeneratedBy = reportDTO.GeneratedBy,
