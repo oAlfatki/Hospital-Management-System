@@ -7,6 +7,7 @@ using HSMDataAccess.Data;
 using HSMDataAccess.DTOs;
 using HSMDataAccess.RepositoryServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 namespace HSMAPI
 {
     public class Program
@@ -18,12 +19,40 @@ namespace HSMAPI
             builder.Services.AddControllers(options=>{ 
                 options.Filters.Add<LogActivityFilter>(); 
             });
+            builder.Services.AddProblemDetails(options =>
+            {
+                options.CustomizeProblemDetails = context =>
+                {
+                    context.ProblemDetails.Instance = null;
+                    context.ProblemDetails.Extensions.Remove("traceId");
+                };
+            });
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var problem = new ValidationProblemDetails(context.ModelState)
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Title = "One or more validation errors occurred."
+                    };
+                    problem.Instance = null;
+                    problem.Extensions.Remove("traceId");
+                    return new BadRequestObjectResult(problem)
+                    {
+                        ContentTypes = { "application/problem+json" }
+                    };
+                };
+            });
             // options.Filters.Add<LogActivityFilter>(); 
             //لما اكون بدي احط 
             // Global filter:بيشتغل عاي اكشن بال بالكونترولير
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.EnableAnnotations();
+            });
 
             // Allow Frontend (React dev server) to call the API
             builder.Services.AddCors(options =>
@@ -83,6 +112,7 @@ namespace HSMAPI
             builder.Services.AddScoped<BillServiceService>();
             var app = builder.Build();  
             // Configure the HTTP request pipeline.
+            app.UseExceptionHandler();
             if (app.Environment.IsDevelopment())
             {
                 //Any thing app.Use it means middleware

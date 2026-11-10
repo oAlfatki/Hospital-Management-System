@@ -15,6 +15,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get an audit log", Description = "Gets an audit log by its identifier.")]
+        [ProducesResponseType(typeof(AuditLogDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAuditLogByIdAsync(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -30,6 +32,8 @@ namespace HSMAPI.Controllers
         [HttpGet("", Name = "GetAllAuditLogs")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all audit logs", Description = "Gets all audit logs.")]
+        [ProducesResponseType(typeof(IEnumerable<AuditLogDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAuditLogs()
         {
             var ListAuditLogs = await auditLogService.GetAll();
@@ -43,6 +47,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Create an audit log", Description = "Creates a new audit log.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateAuditLog(AuditLogDTO auditLog)
         {
             if (auditLog == null)
@@ -92,6 +98,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Update an audit log", Description = "Updates an existing audit log by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateAuditLog(string ID, AuditLogDTO auditLog)
         {
             if (string.IsNullOrWhiteSpace(auditLog.UserID) || auditLog.ID == "" || string.IsNullOrWhiteSpace(auditLog.Entity) || string.IsNullOrWhiteSpace(auditLog.Action))
@@ -140,6 +148,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Delete an audit log", Description = "Deletes an audit log by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteAuditLog(string id)
         {
             if (string.IsNullOrEmpty(id))

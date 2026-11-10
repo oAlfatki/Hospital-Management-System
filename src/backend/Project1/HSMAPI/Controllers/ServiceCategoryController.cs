@@ -17,6 +17,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a service category", Description = "Gets a service category by its identifier.")]
+        [ProducesResponseType(typeof(ServicesCategoryDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetServiceCategoryByIdAsync(string Id)
         {
             var appointment = await servicesCategoryService.GetByID(Id);
@@ -35,6 +37,8 @@ namespace HSMAPI.Controllers
         [Route("All", Name = "GetAllServiceCategories")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all service categories", Description = "Gets all service categories.")]
+        [ProducesResponseType(typeof(IEnumerable<ServicesCategoryDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllServiceCategories()
         {
             var serviceCategoriesList = await servicesCategoryService.GetAll();
@@ -54,6 +58,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Create a service category", Description = "Creates a new service category.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateServiceCategory(ServicesCategoryDTO serviceCategory)
         {
             if (string.IsNullOrWhiteSpace(serviceCategory.CategoryName))
@@ -90,6 +96,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Update a service category", Description = "Updates an existing service category by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateServiceCategory(string ID, ServicesCategoryDTO serviceCategory)
         {
             if (string.IsNullOrEmpty(ID))
@@ -152,6 +160,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Delete a service category", Description = "Deletes a service category by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteServiceCategory(string id)
         {
             if (string.IsNullOrEmpty(id))

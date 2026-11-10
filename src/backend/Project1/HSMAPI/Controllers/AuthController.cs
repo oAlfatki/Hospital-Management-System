@@ -19,6 +19,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(Summary = "Log in", Description = "Authenticates a user and returns the authenticated user information.")]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
@@ -61,6 +63,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a user", Description = "Gets a user by its identifier.")]
+        [ProducesResponseType(typeof(UserDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetUserByIdAsync(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -76,6 +80,8 @@ namespace HSMAPI.Controllers
         [HttpGet("users", Name = "GetAllUsers")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all users", Description = "Gets all users.")]
+        [ProducesResponseType(typeof(IEnumerable<UserDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllUsers()
         {
             var usersList = await userService.GetAll();
@@ -88,6 +94,8 @@ namespace HSMAPI.Controllers
         [HttpPost("register", Name = "CreateUser")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(Summary = "Register a user", Description = "Creates a new user account.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateUser(UserDTO user)
         {
             if (user == null)
@@ -130,6 +138,8 @@ namespace HSMAPI.Controllers
         [HttpPut("{ID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(Summary = "Update a user", Description = "Updates an existing user by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateUser(string ID, UserDTO user)
         {
             if (user == null || string.IsNullOrEmpty(ID))
@@ -159,6 +169,8 @@ namespace HSMAPI.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(Summary = "Delete a user", Description = "Deletes a user by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteUser(string id)
         {
             if (string.IsNullOrEmpty(id))

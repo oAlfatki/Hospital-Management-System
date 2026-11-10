@@ -18,6 +18,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a person", Description = "Gets a person by its identifier.")]
+        [ProducesResponseType(typeof(PersonDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPersonByIdAsync(string Id)
         {
             var person = await personService.GetByID(Id);
@@ -37,6 +39,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all people", Description = "Gets all people.")]
+        [ProducesResponseType(typeof(IEnumerable<PersonDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllPeople()
         {
             var peopleList = await personService.GetAll();
@@ -58,6 +62,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Create a person", Description = "Creates a new person.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreatePerson(PersonDTO people)
         {
             var response = await new ResultPatern().GiveResponse(200, null);
@@ -110,6 +116,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Update a person", Description = "Updates an existing person by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdatePerson(string ID, PersonDTO people)
         {
 
@@ -170,6 +178,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Delete a person", Description = "Deletes a person by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeletePerson(string id)
         {
             if (string.IsNullOrEmpty(id))
