@@ -1,5 +1,6 @@
 using HSMBusiness.Pattern;
 using HSMBusiness.Services;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.DTOs.Patients;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -44,7 +45,7 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreatePatient(PatientDTO patientDTO)
         {
-            if (string.IsNullOrWhiteSpace(patientDTO.MedicalHistory) || string.IsNullOrEmpty(patientDTO.PersonID))
+            if (string.IsNullOrWhiteSpace(patientDTO.MedicalHistory) )
             {
                 var response = await new ResultPatern().GiveResponse(400, null);
                 return BadRequest(new
@@ -82,7 +83,7 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdatePatient(string ID, PatientDTO patientDTO)
         {
-            if (string.IsNullOrWhiteSpace(patientDTO.MedicalHistory) || string.IsNullOrEmpty(patientDTO.PersonID) || string.IsNullOrWhiteSpace(ID))
+            if (string.IsNullOrWhiteSpace(patientDTO.MedicalHistory)  || string.IsNullOrWhiteSpace(ID))
             {
                 var response = await new ResultPatern().GiveResponse(400, null);
                 return BadRequest(new

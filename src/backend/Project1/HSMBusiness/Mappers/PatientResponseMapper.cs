@@ -13,7 +13,7 @@ namespace HSMBusiness.Mappers
     {
         public  async Task<PatientResponseDTO> ToResponse(Patient patient, PersonService personService)
         {
-            var person =await personService.Find(patient.PersonID);
+            var person =await personService.Find(patient.ID);
             if (person == null)
             {
                 throw new ArgumentNullException(nameof(person));

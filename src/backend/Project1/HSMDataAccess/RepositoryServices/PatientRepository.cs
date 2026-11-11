@@ -14,10 +14,10 @@ namespace HSMDataAccess.RepositoryServices
         public PatientRepository(AppDBContext context) : base(context)
         {
         }
-        public async Task<int> CountNumberOfPersonIsOne(string PersonID)
-        {
-            var count = _context.Patients.CountAsync(p => p.PersonID == PersonID);
-            return await count;
-        }
+        //public async Task<int> CountNumberOfPersonIsOne(string PersonID)
+        //{
+        //    var count = _context.Patients.CountAsync(p => p.PersonID == PersonID);
+        //    return await count;
+        //}
     }
 }

@@ -1,5 +1,6 @@
 ﻿using HSMBusiness.Mappers;
 using HSMBusiness.Pattern;
+using HSMDataAccess.DTOs;
 using HSMDataAccess.DTOs.Appointments;
 using HSMDataAccess.DTOs.Patients;
 using HSMDataAccess.Entities;
@@ -25,7 +26,7 @@ namespace HSMBusiness.Services
             _personService = personService;
             _Mode = Mode;
         }
-        public async Task<(int Status,string?Response,bool IsSuccess,List<PatientResponseDTO>?ListOfPatients)> GetAll()
+        public async Task<(int Status,string?Response,bool IsSuccess,List<PatientDTO>?ListOfPatients)> GetAll()
         {
             var patients = await _patientRepository.GetAllAsync();
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
@@ -36,18 +37,18 @@ namespace HSMBusiness.Services
             }
             var result = new List<PatientResponseDTO>();
             
-            foreach (var patient in patients)
-            {
-                var patientResponse = await new PatientResponseMapper().ToResponse(patient, _personService);
+            //foreach (var patient in patients)
+            //{
+            //    var patientResponse = await new PatientResponseMapper().ToResponse(patient, _personService);
 
-                result.Add(patientResponse);
-            }
-            if (result == null)
-            {
-                response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
-                return (response.Status, response.Response, response.IsSuccess, null);
-            }
-            return (response.Status, response.Response,response.IsSuccess, result.ToList());
+            //    result.Add(patientResponse);
+            //}
+            //if (result == null)
+            //{
+            //    response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
+            //    return (response.Status, response.Response, response.IsSuccess, null);
+            //}
+            return (response.Status, response.Response,response.IsSuccess, patients.Select(p=>new PatientMapper().ToDTO(p)).ToList());
         }
         public async Task<(int Status, string?Response, bool IsSuccess, PatientResponseDTO? patientDTO1)> GetByID(string PatientID)
         {
@@ -58,29 +59,29 @@ namespace HSMBusiness.Services
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess, null);
             }
-            var person = await _personService.Find(patient.PersonID);
-            if (person == null)
-            {
-                response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
-                return (response.Status, response.Response, response.IsSuccess, null);
-            }
-            return (response.Status, response.Response, response.IsSuccess, new PatientResponseDTO(patient.ID, person.Name, (person.DateOfBirth).ToString(), person.Gender, person.ContactNumber, person.Email, patient.MedicalHistory, person.Address, (patient.Status == true ? "Active" : "InActive"), "", "", ""));
+            //var person = await _personService.Find(patient.PersonID);
+            //if (person == null)
+            //{
+            //    response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
+            //    return (response.Status, response.Response, response.IsSuccess, null);
+            //}
+            return (response.Status, response.Response, response.IsSuccess, new PatientResponseDTO(patient.ID, patient.Name, (patient.DateOfBirth).ToString(), patient.Gender, patient.ContactNumber, patient.Email, patient.MedicalHistory, patient.Address, (patient.Status == true ? "Active" : "InActive"), "", "", ""));
         }
-        private async Task<bool> CountNumberOfPersonIsOne(string ID)
-        {
-            return await _patientRepository.CountNumberOfPersonIsOne(ID) == 1;
-        }
+        //private async Task<bool> CountNumberOfPersonIsOne(string ID)
+        //{
+        //    return await _patientRepository.CountNumberOfPersonIsOne(ID) == 1;
+        //}
         private async Task<(int Status,bool IsSuccess)> _AddNew(PatientDTO patientDTO)
         {
             Patient? patientEntity =new PatientMapper().ToEntity(patientDTO);
-            if(!await _personService.IsPersonExist(patientEntity.PersonID))
-            {
-                return (500, false);
-            }
-            if(await CountNumberOfPersonIsOne(patientDTO.PersonID))
-            {
-                return (500, false);
-            }
+            //if(!await _personService.IsPersonExist(patientEntity.PersonID))
+            //{
+            //    return (500, false);
+            //}
+            //if(await CountNumberOfPersonIsOne(patientDTO.PersonID))
+            //{
+            //    return (500, false);
+            //}
             var NewPatient = await _patientRepository.AddAsync(patientEntity);
             patientEntity.ID = NewPatient.ID;
             return (200,patientEntity.ID != "");
@@ -94,23 +95,23 @@ namespace HSMBusiness.Services
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess);
             }
-            if (!await _personService.IsPersonExist(patientDTO.PersonID))
-            {
-                response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
-                return (response.Status, response.Response, response.IsSuccess);
-            }
-            if (patientEntity.PersonID.Trim() == patientDTO.PersonID)
-            {
+            //if (!await _personService.IsPersonExist(patientDTO.PersonID))
+            //{
+            //    response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
+            //    return (response.Status, response.Response, response.IsSuccess);
+            //}
+            //if (patientEntity.PersonID.Trim() == patientDTO.PersonID)
+            //{
                 
-            }
-            else if (patientEntity.PersonID != patientDTO.PersonID)
-            {
-                if (await CountNumberOfPersonIsOne(patientDTO.PersonID))
-                {
-                    response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
-                    return (response.Status, response.Response, response.IsSuccess);
-                }
-            }
+            //}
+            //else if (patientEntity.PersonID != patientDTO.PersonID)
+            //{
+            //    if (await CountNumberOfPersonIsOne(patientDTO.PersonID))
+            //    {
+            //        response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
+            //        return (response.Status, response.Response, response.IsSuccess);
+            //    }
+            //}
             patientEntity =new PatientMapper().ToEntity(patientDTO,PatientMapper.enMode.Update,patientEntity);
             return (response.Status, response.Response, await _patientRepository.UpdateAsync(patientEntity));
         }

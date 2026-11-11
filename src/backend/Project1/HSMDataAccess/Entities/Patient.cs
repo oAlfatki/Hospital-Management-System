@@ -13,8 +13,14 @@ namespace HSMDataAccess.Entities
         public string ID { get; set; } = null!;
         public string MedicalHistory { get; set; } = null!;
         public bool Status { get; set; } = false;
-        public string PersonID { get; set; } = null!;
-        public virtual Person Person { get; set; } = null!;
+        //public string PersonID { get; set; } = null!;
+        public string? Name { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Gender { get; set; }
+        public string? Email { get; set; }
+        public string? Address { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        // public virtual Person Person { get; set; } = null!;
         public ICollection<Notification> notification { get; set; } = new List<Notification>();
         public ICollection<Appointment> appointment { get; set; } = new List<Appointment>();
         public ICollection<Bill> bill { get; set; } = new List<Bill>();
