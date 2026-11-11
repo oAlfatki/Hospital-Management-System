@@ -17,6 +17,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a doctor", Description = "Gets a doctor by its identifier.")]
+        [ProducesResponseType(typeof(DoctorDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDoctorByIdAsync(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -32,6 +34,8 @@ namespace HSMAPI.Controllers
         [HttpGet("", Name = "GetAllDoctors")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all doctors", Description = "Gets all doctors.")]
+        [ProducesResponseType(typeof(IEnumerable<DoctorDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllDoctors()
         {
             var usersList = await doctorService.GetAll();
@@ -45,6 +49,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(Summary = "Create a doctor", Description = "Creates a new doctor.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateDoctor(DoctorDTO doctor)
         {
             if (string.IsNullOrWhiteSpace(doctor.DepartmentID) || string.IsNullOrWhiteSpace(doctor.Specialization))
@@ -89,6 +95,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Update a doctor", Description = "Updates an existing doctor by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateDoctor(string ID, DoctorDTO doctor)
         {
             if (string.IsNullOrEmpty(ID))
@@ -151,6 +159,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Delete a doctor", Description = "Deletes a doctor by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteDoctor(string id)
         {
             if (string.IsNullOrEmpty(id))

@@ -16,6 +16,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a bill service", Description = "Gets a bill service by bill and service identifiers.")]
+        [ProducesResponseType(typeof(BillServiceDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetBillServiceByIdAsync(string ServiceID, string BillID)
         {
             var billService = await billServiceService.GetByID(ServiceID,BillID);
@@ -35,6 +37,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all bill services", Description = "Gets all bill services.")]
+        [ProducesResponseType(typeof(IEnumerable<BillServiceDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllBillServices()
         {
             var BillServiceList = await billServiceService.GetAll();
@@ -55,6 +59,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Create a bill service", Description = "Creates a new bill service.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateGetAllBillServices(BillServiceDTO billservice)
         {
             var response = await new ResultPatern().GiveResponse(200, null);
@@ -104,6 +110,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Update a bill service", Description = "Updates a bill service by bill and service identifiers.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateBillService(string ServiceID,string BillID, BillServiceDTO billserviceDTO)
         {
 
@@ -159,6 +167,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Delete a bill service", Description = "Deletes a bill service by bill and service identifiers.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteBillService(string ServiceID,string BillID)
         {
             var response = await new ResultPatern().GiveResponse(200, null);

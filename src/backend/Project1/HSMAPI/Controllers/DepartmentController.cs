@@ -15,6 +15,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a department", Description = "Gets a department by its identifier.")]
+        [ProducesResponseType(typeof(DepartmentDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDepartmentByIdAsync(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -30,6 +32,8 @@ namespace HSMAPI.Controllers
         [HttpGet("", Name = "GetAllDepartments")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all departments", Description = "Gets all departments.")]
+        [ProducesResponseType(typeof(IEnumerable<DepartmentDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllDepartments()
         {
             var ListDepartments = await departmentService.GetAll();
@@ -45,6 +49,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Create a department", Description = "Creates a new department.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateDepartment(DepartmentDTO department)
         {
             if (department == null)
@@ -95,6 +101,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Update a department", Description = "Updates an existing department by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateDepartment(string ID, DepartmentDTO department)
         {
             if (string.IsNullOrWhiteSpace(department.Name) || string.IsNullOrEmpty(ID))
@@ -144,6 +152,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Delete a department", Description = "Deletes a department by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteDepartment(string id)
         {
             if (string.IsNullOrEmpty(id))

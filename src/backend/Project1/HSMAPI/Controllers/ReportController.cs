@@ -16,6 +16,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a report", Description = "Gets a report by its identifier.")]
+        [ProducesResponseType(typeof(ReportDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetReportByIdAsync(string Id)
         {
             var report = await reportService.GetByID(Id);
@@ -33,6 +35,8 @@ namespace HSMAPI.Controllers
         [Route("All", Name = "GetAllReports")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all reports", Description = "Gets all reports.")]
+        [ProducesResponseType(typeof(IEnumerable<ReportDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllReports()
         {
             var MedicalRecordsList = await reportService.GetAll();
@@ -52,6 +56,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Create a report", Description = "Creates a new report.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateReport(ReportDTO reportDTO)
         {
             if (string.IsNullOrWhiteSpace(reportDTO.GeneratedBy)||string.IsNullOrEmpty(reportDTO.ExportFormat))
@@ -91,6 +97,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Update a report", Description = "Updates an existing report by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateReport(string ID, ReportDTO reportDTO)
         {
             if (string.IsNullOrWhiteSpace(reportDTO.GeneratedBy) || string.IsNullOrWhiteSpace(ID) || string.IsNullOrEmpty(reportDTO.ExportFormat))
@@ -136,6 +144,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Delete a report", Description = "Deletes a report by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteReport(string id)
         {
             var response = await new ResultPatern().GiveResponse(400, null);

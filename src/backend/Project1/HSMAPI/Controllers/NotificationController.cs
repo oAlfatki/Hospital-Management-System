@@ -14,6 +14,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a notification", Description = "Gets a notification by its identifier.")]
+        [ProducesResponseType(typeof(NotificationDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetNotificationByIdAsync(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -29,6 +31,8 @@ namespace HSMAPI.Controllers
         [HttpGet("", Name = "GetAllNotifications")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all notifications", Description = "Gets all notifications.")]
+        [ProducesResponseType(typeof(IEnumerable<NotificationDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllNotifications()
         {
             var notificationsList = await notificationService.GetAll();
@@ -43,6 +47,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(Summary = "Create a notification", Description = "Creates a new notification.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateNotification(NotificationDTO notificationDTO)
         {
             if (string.IsNullOrWhiteSpace(notificationDTO.PatientID) || string.IsNullOrWhiteSpace(notificationDTO.UserID) || string.IsNullOrEmpty(notificationDTO.Type) || string.IsNullOrWhiteSpace(notificationDTO.Message) || string.IsNullOrWhiteSpace(notificationDTO.Status))
@@ -81,6 +87,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Update a notification", Description = "Updates an existing notification by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateNotification(string ID, NotificationDTO notificationDTO)
         {
             if (string.IsNullOrWhiteSpace(notificationDTO.PatientID) || string.IsNullOrWhiteSpace(notificationDTO.UserID) || string.IsNullOrEmpty(notificationDTO.Type) || string.IsNullOrWhiteSpace(notificationDTO.Message) || string.IsNullOrWhiteSpace(notificationDTO.Status))
@@ -127,6 +135,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Delete a notification", Description = "Deletes a notification by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteNotification(string id)
         {
             if (string.IsNullOrEmpty(id))

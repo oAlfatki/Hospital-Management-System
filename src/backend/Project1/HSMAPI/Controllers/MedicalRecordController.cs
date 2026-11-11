@@ -17,6 +17,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get a medical record", Description = "Gets a medical record by its identifier.")]
+        [ProducesResponseType(typeof(MedicalRecordDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetMedicalRecordByIdAsync(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -32,6 +34,8 @@ namespace HSMAPI.Controllers
         [HttpGet("", Name = "GetAllMedicalRecords")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all medical records", Description = "Gets all medical records.")]
+        [ProducesResponseType(typeof(IEnumerable<MedicalRecordDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllMedicalRecords()
         {
             var MedicalRecordsList = await medicalRecordService.GetAll();
@@ -45,6 +49,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(Summary = "Create a medical record", Description = "Creates a new medical record.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateMedicalRecord(MedicalRecordDTO medicalRecord)
         {
             if (string.IsNullOrWhiteSpace(medicalRecord.PatientID) || string.IsNullOrWhiteSpace(medicalRecord.AccessLevel))
@@ -83,6 +89,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Update a medical record", Description = "Updates an existing medical record by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateMedicalRecord(string ID, MedicalRecordDTO medicalRecord)
         {
             if (string.IsNullOrWhiteSpace(medicalRecord.PatientID) || string.IsNullOrWhiteSpace(medicalRecord.AccessLevel))
@@ -128,6 +136,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Delete a medical record", Description = "Deletes a medical record by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteMedicalRecord(string id)
         {
             if (string.IsNullOrEmpty(id))

@@ -21,6 +21,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get an appointment", Description = "Gets an appointment by its identifier.")]
+        [ProducesResponseType(typeof(AppointmentDTO), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAppointmentByIdAsync(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -36,6 +38,8 @@ namespace HSMAPI.Controllers
         [HttpGet("", Name = "GetAllAppointments")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(Summary = "Get all appointments", Description = "Gets all appointments.")]
+        [ProducesResponseType(typeof(IEnumerable<AppointmentDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAppointments()
         {
             var appointmentsList = await appointmentService.GetAll();
@@ -49,6 +53,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Create an appointment", Description = "Creates a new appointment.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateAppointment(AppointmentDTO appointment)
         {
             if (string.IsNullOrWhiteSpace(appointment.DoctorID) || string.IsNullOrWhiteSpace(appointment.PatientID) || string.IsNullOrWhiteSpace(appointment.Status) || appointment.Duration <= 0)
@@ -86,6 +92,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Update an appointment", Description = "Updates an existing appointment by its identifier.")]
+        [ProducesResponseType(typeof(ApiOperationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateAppointment(string ID, AppointmentDTO appointment)
         {
             if (string.IsNullOrEmpty(ID))
@@ -151,6 +159,8 @@ namespace HSMAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "Delete an appointment", Description = "Deletes an appointment by its identifier.")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteAppointment(string id)
         {
             if (string.IsNullOrEmpty(id))
