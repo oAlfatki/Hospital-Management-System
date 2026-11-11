@@ -176,7 +176,13 @@ namespace HSMDataAccess.Data
                        .HasCheckConstraint
                        ("CK_Patients_Status", "([Status]=(1) OR [Status]=(0))");
                    });
-
+                entity.ToTable(
+                   t =>
+                   {
+                       t
+                       .HasCheckConstraint
+                       ("CK_Patients_Gender", "([Gender] = 'Male' OR [Gender] = 'Female' OR [Gender] = 'Other' OR [Gender] = 'Prefer not to say' )");
+                   });
                 entity.Property(e => e.ID)
                   .HasColumnType("nchar(10)")
                  .HasMaxLength(10)
@@ -188,13 +194,25 @@ namespace HSMDataAccess.Data
                 .HasColumnType("text");
                 entity.Property(e => e.Status)
                 .HasColumnType("bit");
-                entity.Property(e => e.PersonID)
-                .HasMaxLength(10);
-                entity.HasOne(d => d.Person)
-                 .WithOne(e => e.Patient)
-                  .HasForeignKey<Patient>(d => d.PersonID)
-                  .OnDelete(DeleteBehavior.Restrict)
-                  ;
+                entity.Property(e => e.Name)
+                .HasColumnType("nvarchar(200)");
+                entity.Property(e => e.ContactNumber)
+                .HasColumnType("nchar(10)");
+                entity.Property(e => e.Gender)
+                .HasColumnType("nchar(10)");
+                entity.Property(e => e.Email)
+                .HasColumnType("nvarchar(250)");
+                entity.Property(e => e.Address)
+                .HasColumnType("nchar(10)");
+                entity.Property(e => e.DateOfBirth)
+               .HasColumnType("datetime");
+                //entity.Property(e => e.PersonID)
+                //.HasMaxLength(10);
+                //entity.HasOne(d => d.Person)
+                // .WithOne(e => e.Patient)
+                //  .HasForeignKey<Patient>(d => d.PersonID)
+                //  .OnDelete(DeleteBehavior.Restrict)
+                ;
             });
             modelBuilder.Entity<Employee>(entity =>
             {

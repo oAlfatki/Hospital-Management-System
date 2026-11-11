@@ -15,7 +15,7 @@ namespace HSMBusiness.Mappers
         public enum enMode { Add, Update }
         public  PatientDTO ToDTO(Patient patient)
         {
-            return new PatientDTO(patient.ID, patient.MedicalHistory, patient.Status, patient.PersonID);
+            return new PatientDTO(patient.ID, patient.MedicalHistory, patient.Status,patient.Name,patient.ContactNumber,patient.Gender,patient.Email,patient.Address,patient.DateOfBirth);
         }
         public Patient ToEntity(PatientDTO patientDTO,enMode mode =enMode.Add,Patient patient=null)
         {
@@ -24,15 +24,15 @@ namespace HSMBusiness.Mappers
                 return new Patient
                 {
                     MedicalHistory = patientDTO.MedicalHistory,
-                    Status = patientDTO.Status,
-                    PersonID = patientDTO.PersonID
+                    Status = patientDTO.Status
+                    //PersonID = patientDTO.PersonID
                 };
             }
             else
             {
                 patient.MedicalHistory = patientDTO.MedicalHistory;
                 patient.Status = patientDTO.Status;
-                patient.PersonID = patientDTO.PersonID;
+                //patient.PersonID = patientDTO.PersonID;
             }
             return patient;
         }

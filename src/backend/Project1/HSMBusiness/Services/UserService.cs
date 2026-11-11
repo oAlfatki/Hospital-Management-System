@@ -15,18 +15,18 @@ namespace HSMBusiness.Services
     {
         private readonly UserRepository _repository;
         private readonly UserError _userError;
-        private readonly PersonService _personService;
+        //private readonly PersonService _personService;
         ResultPatern resultPattern = new ResultPatern();
         public enum enMode { Add = 0, Update }
         public enMode Mode = enMode.Add;
 
         public UserService(UserRepository repository,
-    UserError userError,PersonService personService, enMode Mode = enMode.Add) 
+    UserError userError, enMode Mode = enMode.Add) 
         {
           
             _repository = repository;
             _userError = userError;
-            _personService = personService;
+            //_personService = personService;
             this.Mode = Mode;
         }
         public UserRepository userRepository
@@ -39,16 +39,15 @@ namespace HSMBusiness.Services
         private async Task<bool> _AddNew(UserDTO userDTO)
         {
             var user = new UserMapper().ToEntity(userDTO);
-            if(!await _personService.IsPersonExist(userDTO.PersonID))
-            {
-                return false;
-            }
-            if(await _repository.CountNumberOfPerson(user.PersonID) == 1)
-            {
-                return false;
-            }
+            //if(!await _personService.IsPersonExist(userDTO.PersonID))
+            //{
+            //    return false;
+            //}
+            //if(await _repository.CountNumberOfPerson(user.PersonID) == 1)
+            //{
+            //    return false;
+            //}
            var NewUser = await _repository.AddAsync(user);
-
             user.ID = NewUser.ID;
             return user.ID != "";
         }
@@ -56,44 +55,36 @@ namespace HSMBusiness.Services
         {
             User user = await _repository.GetByIDAsync(ID);
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
-            if (await _repository.CountNumberOfPerson(ID) == 1)
-            {
-                response =
-                await resultPattern.GiveResponse(500,null);
-                return (
-                    response.Status,
-                    response.Response,
-                    response.IsSuccess,
-                    response.Errors
-                );
-            }
-            return (
-                    response.Status,
-                    response.Response,
-                    response.IsSuccess,
-                    response.Errors
-                );
+            //if (await _repository.CountNumberOfPerson(ID) == 1)
+            //{
+            //    response =
+            //    await resultPattern.GiveResponse(500,null);
+            //    return (
+            //        response.Status,
+            //        response.Response,
+            //        response.IsSuccess,
+            //        response.Errors
+            //    );
+            //}
+            return (response.Status,response.Response,response.IsSuccess,response.Errors);
         }
         private async Task<(int Status, string? Response, bool IsSuccess, Dictionary<string, string>? errors)> _Update(string ID,UserDTO userDTO)
         {
-
             User user = await _repository.GetByIDAsync(ID);
-            
             var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
-            var errors = await _userError.ValidateUser(userDTO);
-            
-            if (!await _personService.IsPersonExist(userDTO.PersonID))
-            {
-                response =
-                await resultPattern.GiveResponse(400, errors);
-                return (
-                    response.Status,
-                    response.Response,
-                    response.IsSuccess,
-                    response.Errors
-                );
-            }
-                if (errors.Count > 0)
+            var errors = await _userError.ValidateUser(userDTO);    
+            //if (!await _personService.IsPersonExist(userDTO.PersonID))
+            //{
+            //    response =
+            //    await resultPattern.GiveResponse(400, errors);
+            //    return (
+            //        response.Status,
+            //        response.Response,
+            //        response.IsSuccess,
+            //        response.Errors
+            //    );
+            //}
+            if (errors.Count > 0)
             {
                 response =
                 await resultPattern.GiveResponse(400, errors);
@@ -110,23 +101,22 @@ namespace HSMBusiness.Services
                 return (response.Status, response.Response, response.IsSuccess,response.Errors);
             }
             
-            if (await _repository.CountNumberOfPerson(user.PersonID) > 1)
-            {
-                response =
-                await resultPattern.GiveResponse(500, errors);
-                return (
-                    response.Status,
-                    response.Response,
-                    response.IsSuccess,
-                    response.Errors
-                );
-            }
+            //if (await _repository.CountNumberOfPerson(user.PersonID) > 1)
+            //{
+            //    response =
+            //    await resultPattern.GiveResponse(500, errors);
+            //    return (
+            //        response.Status,
+            //        response.Response,
+            //        response.IsSuccess,
+            //        response.Errors
+            //    );
+            //}
             user = new UserMapper().ToEntity(userDTO, UserMapper.enMode.Update, user);
             await _repository.UpdateAsync(user);
            
             return  (response.Status, response.Response, response.IsSuccess, response.Errors);
         }
-
         public async Task<(int Status, string? Response, bool IsSucess, UserDTO? userDTO ,Dictionary<string, string>?errors)> GetByID(string ID)
         {
             UserDTO? CurrentUser = null;
@@ -156,87 +146,50 @@ namespace HSMBusiness.Services
         }
         public async Task<(int Status, string? Response, bool IsSuccess)> Delete(string ID)
         {
-            var report =
-                await _repository.GetByIDAsync(ID);
-
-            var response =
-                await resultPattern.GiveResponse(200, new Dictionary<string, string>());
-
+            var report = await _repository.GetByIDAsync(ID);
+            var response = await resultPattern.GiveResponse(200, new Dictionary<string, string>());
             if (report == null)
             {
-                response =
-                    await resultPattern.GiveResponse(404, new Dictionary<string, string>());
-
-                return (
-                    response.Status,
-                    response.Response,
-                    response.IsSuccess
-                );
+                response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
+                return ( response.Status, response.Response, response.IsSuccess );
             }
-
             bool IsDeleted =await _repository.DeleteAsync(report);
-
             if (!IsDeleted)
             {
-                response =
-                    await resultPattern.GiveResponse(400, new Dictionary<string, string>());
-
-                return (
-                    response.Status,
-                    response.Response,
-                    response.IsSuccess
-                );
+                response = await resultPattern.GiveResponse(400, new Dictionary<string, string>());
+                return ( response.Status, response.Response, response.IsSuccess  );
             }
-
-            return (
-                response.Status,
-                response.Response,
-                response.IsSuccess
-            );
+            return (response.Status, response.Response,response.IsSuccess);
         }
         public async Task<bool> IsUserExist(Doctor doctorEntity, DoctorDTO doctorDTO)
         {
-
             var user = await GetByID(doctorEntity.UserID);
             if (user.userDTO == null)
             {
                 return false;
             }
-
             return true;
         }
         public async Task<bool> IsUserExist(string ID)
         {
-
             var user = await GetByID(ID);
             if (user.userDTO == null)
             {
                 return false;
             }
-
             return true;
         }
         public async Task<(int Status, string? Response, bool IsSuccess, Dictionary<string, string>? errors)> Save(UserDTO userDTO,string ID="")
         {
-            var response =
-                await resultPattern.GiveResponse(200, new Dictionary<string, string>());
-           
+            var response =await resultPattern.GiveResponse(200, new Dictionary<string, string>());
             var errors =await _userError.ValidateUser(userDTO);
-           
             if (errors.Count > 0)
             {
-                response =
-                await resultPattern.GiveResponse(400, errors);
-                return (
-                    response.Status,
-                    response.Response,
-                    response.IsSuccess,
-                    response.Errors
-                );
+                response =await resultPattern.GiveResponse(400, errors);
+                return (response.Status,response.Response,response.IsSuccess,response.Errors);
             }
             switch (Mode)
             {
-
                 case enMode.Update:
                     return await _Update(ID,userDTO);
                 case enMode.Add:
@@ -249,23 +202,10 @@ namespace HSMBusiness.Services
                         response =
                             await resultPattern.GiveResponse(400, new Dictionary<string, string>());
                     }
-
-                    return (
-                        response.Status,
-                        response.Response,
-                        response.IsSuccess,
-                        response.Errors
-                    );
+                    return (response.Status,response.Response, response.IsSuccess,response.Errors);
             }
-            response =
-               await resultPattern.GiveResponse(500, new Dictionary<string, string>());
-
-            return (
-                response.Status,
-                response.Response,
-                response.IsSuccess,
-                        response.Errors
-            );
+            response =await resultPattern.GiveResponse(500, new Dictionary<string, string>());
+            return (response.Status,response.Response,response.IsSuccess,response.Errors);
         }
     }
 }

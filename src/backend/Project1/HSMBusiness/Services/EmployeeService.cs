@@ -40,14 +40,14 @@ namespace HSMBusiness.Services
         private async Task<(int Status,bool IsSuccess)> _AddNew(EmployeeDTO employeeDTO)
         {
             var employeeEntity = new EmployeeMapper().ToEntity(employeeDTO);
-            if (!await _personService.IsPersonExist(employeeEntity.PersonID))
-            {
-                return (500, false);
-            }
-            if (await CountNumberOfPersonIDIsOne(employeeDTO.PersonID))
-            {
-                return (500, false);
-            }
+            //if (!await _personService.IsPersonExist(employeeEntity.PersonID))
+            //{
+            //    return (500, false);
+            //}
+            //if (await CountNumberOfPersonIDIsOne(employeeDTO.PersonID))
+            //{
+            //    return (500, false);
+            //}
             
             var AddNew = await _employeeRepository.AddAsync(employeeEntity);
             employeeEntity.ID = AddNew.ID;
@@ -65,11 +65,11 @@ namespace HSMBusiness.Services
                 response = await resultPattern.GiveResponse(404, new Dictionary<string, string>());
                 return (response.Status, response.Response, response.IsSuccess);
             }
-            if (!await _personService.IsPersonExist(employee.PersonID))
-            {
-                response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
-                return (response.Status, response.Response, response.IsSuccess);
-            }
+            //if (!await _personService.IsPersonExist(employee.PersonID))
+            //{
+            //    response = await resultPattern.GiveResponse(500, new Dictionary<string, string>());
+            //    return (response.Status, response.Response, response.IsSuccess);
+            //}
             
             employee = new EmployeeMapper().ToEntity(employeeDTO,EmployeeMapper.enMode.Update,employee);
             await _employeeRepository.UpdateAsync(employee);
